@@ -18,7 +18,7 @@ STUB = """<!DOCTYPE html>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Fraunces:wght@500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="/resume/css/styles.css" />
 </head>
 <body class="layout-docs" data-page-id="{page_id}">
   <aside id="site-sidebar" aria-label="Topics"></aside>
@@ -69,8 +69,8 @@ STUB = """<!DOCTYPE html>
       </section>
     </article>
   </main>
-  <script src="/js/nav-data.js"></script>
-  <script src="/js/sidebar.js"></script>
+  <script src="/resume/js/nav-data.js"></script>
+  <script src="/resume/js/sidebar.js"></script>
 </body>
 </html>
 """

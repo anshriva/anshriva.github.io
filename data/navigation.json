@@ -20,49 +20,49 @@
         {
           "id": "intuit-overview",
           "title": "Platform scope & role",
-          "path": "/work/intuit/platform-overview.html",
+          "path": "/resume/work/intuit/platform-overview.html",
           "status": "ready"
         },
         {
           "id": "intuit-tray",
           "title": "Notification Tray",
-          "path": "/work/intuit/notification-tray.html",
+          "path": "/resume/work/intuit/notification-tray.html",
           "status": "draft"
         },
         {
           "id": "intuit-ck-sms",
           "title": "Credit Karma SMS",
-          "path": "/work/intuit/credit-karma-sms.html",
+          "path": "/resume/work/intuit/credit-karma-sms.html",
           "status": "draft"
         },
         {
           "id": "intuit-mailchimp",
           "title": "Mailchimp Tray",
-          "path": "/work/intuit/mailchimp-tray.html",
+          "path": "/resume/work/intuit/mailchimp-tray.html",
           "status": "draft"
         },
         {
           "id": "intuit-authoring",
           "title": "Authoring roadmap",
-          "path": "/work/intuit/authoring-roadmap.html",
+          "path": "/resume/work/intuit/authoring-roadmap.html",
           "status": "draft"
         },
         {
           "id": "intuit-pulsar",
           "title": "Kafka → Pulsar",
-          "path": "/work/intuit/pulsar-migration.html",
+          "path": "/resume/work/intuit/pulsar-migration.html",
           "status": "draft"
         },
         {
           "id": "intuit-reliability",
           "title": "Tax season reliability",
-          "path": "/work/intuit/tax-season-reliability.html",
+          "path": "/resume/work/intuit/tax-season-reliability.html",
           "status": "draft"
         },
         {
           "id": "intuit-genai",
           "title": "GenAI authoring",
-          "path": "/work/intuit/genai-authoring.html",
+          "path": "/resume/work/intuit/genai-authoring.html",
           "status": "draft"
         }
       ]
@@ -74,31 +74,31 @@
         {
           "id": "ms-overview",
           "title": "Graph Connectors overview",
-          "path": "/work/microsoft/graph-connectors-overview.html",
+          "path": "/resume/work/microsoft/graph-connectors-overview.html",
           "status": "ready"
         },
         {
           "id": "ms-csr",
           "title": "Crawl Success Rate",
-          "path": "/work/microsoft/crawl-success-rate.html",
+          "path": "/resume/work/microsoft/crawl-success-rate.html",
           "status": "draft"
         },
         {
           "id": "ms-fileshare",
           "title": "File Share exclusions",
-          "path": "/work/microsoft/file-share-exclusion.html",
+          "path": "/resume/work/microsoft/file-share-exclusion.html",
           "status": "draft"
         },
         {
           "id": "ms-servicenow",
           "title": "ServiceNow ACL",
-          "path": "/work/microsoft/servicenow-acl.html",
+          "path": "/resume/work/microsoft/servicenow-acl.html",
           "status": "draft"
         },
         {
           "id": "ms-latency",
           "title": "Move-next latency",
-          "path": "/work/microsoft/move-next-latency.html",
+          "path": "/resume/work/microsoft/move-next-latency.html",
           "status": "draft"
         }
       ]
@@ -110,19 +110,19 @@
         {
           "id": "yatra-booking",
           "title": "Booking API latency",
-          "path": "/work/yatra/booking-api-latency.html",
+          "path": "/resume/work/yatra/booking-api-latency.html",
           "status": "draft"
         },
         {
           "id": "yatra-redis",
           "title": "Redis cost optimization",
-          "path": "/work/yatra/redis-cost-optimization.html",
+          "path": "/resume/work/yatra/redis-cost-optimization.html",
           "status": "draft"
         },
         {
           "id": "yatra-supplier",
           "title": "Supplier framework",
-          "path": "/work/yatra/supplier-framework.html",
+          "path": "/resume/work/yatra/supplier-framework.html",
           "status": "draft"
         }
       ]
@@ -134,7 +134,7 @@
         {
           "id": "adobe-signing",
           "title": "Code-signing platform",
-          "path": "/work/adobe/code-signing.html",
+          "path": "/resume/work/adobe/code-signing.html",
           "status": "draft"
         }
       ]
@@ -146,13 +146,13 @@
         {
           "id": "oss-rate-limiter",
           "title": "Rate limiter",
-          "path": "/work/oss/rate-limiter.html",
+          "path": "/resume/work/oss/rate-limiter.html",
           "status": "draft"
         },
         {
           "id": "oss-redis-chat",
           "title": "Redis + WebSockets chat",
-          "path": "/work/oss/redis-websockets-chat.html",
+          "path": "/resume/work/oss/redis-websockets-chat.html",
           "status": "draft"
         }
       ]
@@ -164,25 +164,25 @@
         {
           "id": "youtube",
           "title": "Channel overview",
-          "path": "/work/youtube.html",
+          "path": "/resume/work/youtube.html",
           "status": "ready"
         },
         {
           "id": "youtube-bootcamp",
           "title": "SDE Bootcamp series",
-          "path": "/work/youtube.html#sde-bootcamp",
+          "path": "/resume/work/youtube.html#sde-bootcamp",
           "status": "ready"
         },
         {
           "id": "youtube-ecommerce",
           "title": "E-commerce platform build",
-          "path": "/work/youtube.html#ecommerce-series",
+          "path": "/resume/work/youtube.html#ecommerce-series",
           "status": "ready"
         },
         {
           "id": "youtube-architecture",
           "title": "Architecture & microservices",
-          "path": "/work/youtube.html#architecture",
+          "path": "/resume/work/youtube.html#architecture",
           "status": "ready"
         }
       ]

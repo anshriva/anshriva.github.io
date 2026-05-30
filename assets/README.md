@@ -14,7 +14,7 @@ assets/
 Reference from HTML:
 
 ```html
-<img src="/assets/intuit-tray/architecture.svg" alt="Tray architecture" />
+<img src="/resume/assets/intuit-tray/architecture.svg" alt="Tray architecture" />
 ```
 
 Or use Mermaid in the `.diagram-mermaid` block on each topic page.

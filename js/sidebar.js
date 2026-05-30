@@ -44,7 +44,7 @@
     parts.push(
       '<div class="sidebar-footer">' +
         '<a href="https://github.com/anubhav3008/resume/blob/main/resume.md" target="_blank" rel="noopener">Resume ↗</a>' +
-        '<a href="/work/youtube.html">YouTube</a>' +
+        '<a href="/resume/work/youtube.html">YouTube</a>' +
         '<a href="https://github.com/anshriva" target="_blank" rel="noopener">GitHub ↗</a>' +
         '<a href="https://www.linkedin.com/in/anubhavsri" target="_blank" rel="noopener">LinkedIn ↗</a>' +
         "</div>"
