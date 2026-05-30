@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Microsoft Graph Connectors — Overview — Anubhav Shrivastava</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Fraunces:wght@500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body class="layout-docs" data-page-id="ms-overview">
+  <aside id="site-sidebar" aria-label="Topics"></aside>
+<main class="topic-main">
+    <article class="article topic-page">
+      <header class="page-header">
+        <p class="page-status">Status: <strong>ready</strong></p>
+        <h1>Graph Connectors — zero to GA</h1>
+        <p class="subtitle">Founding engineer (2019) → Senior L63 tech lead (2024)</p>
+      </header>
+
+      <section class="content-section" id="problem">
+        <h2>Problem statement</h2>
+        <p>
+          Enterprise customers need Microsoft Search and Copilot to index content outside M365 —
+          file shares, Azure DevOps, SQL, SharePoint, ServiceNow, and more. Connectors crawl,
+          normalize, and feed the index with high reliability at enterprise scale.
+        </p>
+      </section>
+
+      <section class="content-section" id="context">
+        <h2>Two phases</h2>
+        <h3>2019 – 2022 — Founding</h3>
+        <p>Architecture decisions, 25+ items/sec crawl pipeline, 5 connectors to GA, primary enterprise contact.</p>
+        <h3>2022 – 2024 — Tech lead</h3>
+        <p>Owned Crawl Success Rate (99%+), major connector revamps, 60× move-next latency, enterprise incident ownership.</p>
+        <p>Use the left nav for each problem deep-dive.</p>
+      </section>
+
+      <section class="content-section" id="architecture">
+        <h2>Crawl platform (placeholder diagram)</h2>
+        <div class="diagram-slot">
+          <pre class="diagram">[Data source] → [Connector worker] → [Crawl pipeline] → [Index service] → Search / Copilot</pre>
+        </div>
+      </section>
+    </article>
+</main>
+  <script src="/js/nav-data.js"></script>
+  <script src="/js/sidebar.js"></script>
+</body>
+</html>

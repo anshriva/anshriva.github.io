@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Intuit — Platform scope &amp; role — Anubhav Shrivastava</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Fraunces:wght@500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body class="layout-docs" data-page-id="intuit-overview">
+  <aside id="site-sidebar" aria-label="Topics"></aside>
+<main class="topic-main">
+    <article class="article topic-page">
+      <header class="page-header">
+        <p class="page-status">Status: <strong>ready</strong></p>
+        <h1>One Intuit Notification Platform</h1>
+        <p class="subtitle">Senior Software Engineer · Mar 2024 – Present · Org-wide technical authority</p>
+        <div class="tag-list">
+          <span class="tag">20–32M emails/day</span><span class="tag">2–4M SMS/day</span>
+          <span class="tag">2,200+ tray TPS (peak)</span>
+        </div>
+      </header>
+
+      <section class="content-section" id="problem">
+        <h2>Problem statement</h2>
+        <p>
+          Dozens of product teams need transactional and marketing notifications without each running
+          redundant vendor stacks. After acquisitions, Credit Karma and Mailchimp added more fragmentation.
+          The platform must scale through tax season, stay reliable, and reduce time-to-ship for new notifications.
+        </p>
+      </section>
+
+      <section class="content-section" id="context">
+        <h2>My role</h2>
+        <ul>
+          <li>Technical lead and single escalation point across 10+ product teams.</li>
+          <li>Named lead for <strong>Notification Authoring</strong> and <strong>Notification Tray</strong>.</li>
+          <li>Drive cross-org integrations, roadmap, incidents, and RFC-level design others implement.</li>
+        </ul>
+        <p>See dedicated topics in the left nav for each major thread.</p>
+      </section>
+
+      <section class="content-section" id="architecture">
+        <h2>Platform (high level)</h2>
+        <div class="diagram-slot">
+          <p class="diagram-slot-label">Diagram slot — replace with your architecture SVG</p>
+          <pre class="diagram">[Product teams] → [Authoring] → [Delivery pipeline] → Email / SMS / Push / Tray
+                              ↘ [Consent / events] → Kafka / Pulsar → [Consumers]</pre>
+        </div>
+      </section>
+
+      <section class="content-section" id="impact">
+        <h2>Impact</h2>
+        <ul>
+          <li>Consolidated CK SMS (~1M/day) and Mailchimp tray (700 peak TPS) onto shared platform.</li>
+          <li>Authoring roadmap: 1 week → 3 hours target (currently ~3 days).</li>
+          <li>Quarterly Values Award (VP-level), Lightning Award (GenAI hackathon), 16 peer recognitions.</li>
+        </ul>
+      </section>
+    </article>
+</main>
+  <script src="/js/nav-data.js"></script>
+  <script src="/js/sidebar.js"></script>
+</body>
+</html>
