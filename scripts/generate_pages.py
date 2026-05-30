@@ -82,7 +82,7 @@ def main() -> None:
 
     for section in data["sections"]:
         for item in section["items"]:
-            if item["path"] in ("/index.html", "/"):
+            if item["path"] in ("/resume/index.html", "/"):
                 continue
             path = ROOT / item["path"].lstrip("/")
             if path.exists():

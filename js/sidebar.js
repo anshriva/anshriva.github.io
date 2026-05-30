@@ -12,7 +12,7 @@
     const expanded = getExpandedState(data);
     const parts = [
       '<div class="sidebar-brand">',
-      `<a href="/index.html">${PortfolioNav.escapeHtml(data.siteTitle)}</a>`,
+      `<a href="/resume/index.html">${PortfolioNav.escapeHtml(data.siteTitle)}</a>`,
       '<span class="sidebar-tagline">Work topics</span>',
       "</div>",
       '<nav class="sidebar-tree" aria-label="Topics">',
