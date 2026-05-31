@@ -6,6 +6,9 @@
     const pathname = window.location.pathname;
     window.BASE_PATH = pathname.includes('/resume/') ? '/resume/' : '/';
   </script>
+  <script>
+    document.write('<link rel=\"stylesheet\" href=\"' + window.BASE_PATH + 'css/styles.css\" />');
+  </script>
 
 <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -13,10 +16,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Fraunces:wght@500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" id="styles-link" href="/resume/css/styles.css" />
-  <script>
-    document.getElementById('styles-link').href = window.BASE_PATH + 'css/styles.css';
-  </script>
 </head>
 <body class="layout-docs" data-page-id="ms-servicenow">
   <aside id="site-sidebar" aria-label="Topics"></aside>

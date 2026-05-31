@@ -3,10 +3,7 @@
   const sidebarEl = document.getElementById("site-sidebar");
   if (!sidebarEl) return;
 
-  const currentPath = PortfolioNav.normalizePath(window.location.pathname);
   const STORAGE_KEY = "portfolio-sidebar-sections";
-
-  PortfolioNav.load().then(render).catch(console.error);
 
   function render(data) {
     const expanded = getExpandedState(data);
@@ -100,4 +97,14 @@
       });
     });
   }
+
+  function init() {
+    if (!window.PortfolioNav) {
+      setTimeout(init, 50);
+      return;
+    }
+    PortfolioNav.load().then(render).catch(console.error);
+  }
+
+  init();
 })();

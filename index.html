@@ -10,10 +10,7 @@
   <script>
     const pathname = window.location.pathname;
     window.BASE_PATH = pathname.includes('/resume/') ? '/resume/' : '/';
-  </script>
-  <link rel="stylesheet" id="styles-link" href="/resume/css/styles.css" />
-  <script>
-    document.getElementById('styles-link').href = window.BASE_PATH + 'css/styles.css';
+    document.write('<link rel="stylesheet" href="' + window.BASE_PATH + 'css/styles.css" />');
   </script>
 </head>
 <body class="layout-docs layout-index">
@@ -58,10 +55,16 @@
   <script id="nav-data-script"></script>
   <script id="sidebar-script"></script>
   <script>
-    const navDataScript = document.getElementById('nav-data-script');
-    navDataScript.src = window.BASE_PATH + 'js/nav-data.js';
+    const navScript = document.getElementById('nav-data-script');
+    navScript.src = window.BASE_PATH + 'js/nav-data.js';
+
     const sidebarScript = document.getElementById('sidebar-script');
-    sidebarScript.src = window.BASE_PATH + 'js/sidebar.js';
+    navScript.onload = () => {
+      sidebarScript.src = window.BASE_PATH + 'js/sidebar.js';
+    };
+    navScript.onerror = (e) => {
+      console.error('Failed to load nav-data.js:', e);
+    };
 
     document.querySelectorAll('[data-basepath="true"]').forEach(link => {
       const href = link.getAttribute('href');
