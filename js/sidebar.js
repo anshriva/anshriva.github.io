@@ -12,7 +12,7 @@
     const expanded = getExpandedState(data);
     const parts = [
       '<div class="sidebar-brand">',
-      `<a href="/resume/index.html">${PortfolioNav.escapeHtml(data.siteTitle)}</a>`,
+      `<a href="${window.BASE_PATH}index.html">${PortfolioNav.escapeHtml(data.siteTitle)}</a>`,
       '<span class="sidebar-tagline">Work topics</span>',
       "</div>",
       '<nav class="sidebar-tree" aria-label="Topics">',
@@ -44,7 +44,7 @@
     parts.push(
       '<div class="sidebar-footer">' +
         '<a href="https://github.com/anubhav3008/resume/blob/main/resume.md" target="_blank" rel="noopener">Resume ↗</a>' +
-        '<a href="/resume/work/youtube.html">YouTube</a>' +
+        `<a href="${window.BASE_PATH}work/youtube.html">YouTube</a>` +
         '<a href="https://github.com/anshriva" target="_blank" rel="noopener">GitHub ↗</a>' +
         '<a href="https://www.linkedin.com/in/anubhavsri" target="_blank" rel="noopener">LinkedIn ↗</a>' +
         "</div>"

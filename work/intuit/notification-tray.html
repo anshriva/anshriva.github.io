@@ -1,13 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script src="../../js/base-path.js"></script>
+  <script>
+    const pathname = window.location.pathname;
+    window.BASE_PATH = pathname.includes('/resume/') ? '/resume/' : '/';
+  </script>
+
 <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Notification Tray (real-time) — Anubhav Shrivastava</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Fraunces:wght@500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/resume/css/styles.css" />
+  <link rel="stylesheet" id="styles-link" href="/resume/css/styles.css" />
+  <script>
+    document.getElementById('styles-link').href = window.BASE_PATH + 'css/styles.css';
+  </script>
 </head>
 <body class="layout-docs" data-page-id="intuit-tray">
   <aside id="site-sidebar" aria-label="Topics"></aside>
@@ -64,7 +73,14 @@ flowchart LR
       </section>
     </article>
 </main>
-  <script src="/resume/js/nav-data.js"></script>
-  <script src="/resume/js/sidebar.js"></script>
+    <script id="nav-data-script"></script>
+  <script id="sidebar-script"></script>
+  <script>
+    const navDataScript = document.getElementById('nav-data-script');
+    navDataScript.src = window.BASE_PATH + 'js/nav-data.js';
+    const sidebarScript = document.getElementById('sidebar-script');
+    sidebarScript.src = window.BASE_PATH + 'js/sidebar.js';
+  </script>
+
 </body>
 </html>

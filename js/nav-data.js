@@ -4,7 +4,7 @@ window.PortfolioNav = (function () {
   return {
     load() {
       if (cache) return Promise.resolve(cache);
-      return fetch("/resume/data/navigation.json")
+      return fetch(window.BASE_PATH + "data/navigation.json")
         .then((r) => r.json())
         .then((data) => {
           cache = data;
