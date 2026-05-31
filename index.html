@@ -30,8 +30,8 @@
         </p>
         <div class="hero-actions">
           <a class="btn btn-primary" href="https://github.com/anubhav3008/resume/blob/main/resume.md" target="_blank" rel="noopener">Resume ↗</a>
-          <a class="btn btn-ghost" href="${window.BASE_PATH}work/intuit/platform-overview.html">Work at Intuit →</a>
-          <a class="btn btn-ghost" href="${window.BASE_PATH}work/youtube.html">YouTube channel →</a>
+          <a class="btn btn-ghost" href="/work/intuit/platform-overview.html" data-basepath="true">Work at Intuit →</a>
+          <a class="btn btn-ghost" href="/work/youtube.html" data-basepath="true">YouTube channel →</a>
         </div>
       </section>
 
@@ -51,7 +51,7 @@
               How I explain systems publicly — complements the depth in each work topic.
             </p>
             <div class="hero-actions">
-              <a class="btn btn-primary" href="${window.BASE_PATH}work/youtube.html">Explore channel →</a>
+              <a class="btn btn-primary" href="/work/youtube.html" data-basepath="true">Explore channel →</a>
               <a class="btn btn-ghost" href="https://www.youtube.com/@anubhav_shrivastava" target="_blank" rel="noopener">Watch on YouTube ↗</a>
             </div>
           </div>
@@ -81,6 +81,11 @@
     navDataScript.src = window.BASE_PATH + 'js/nav-data.js';
     const sidebarScript = document.getElementById('sidebar-script');
     sidebarScript.src = window.BASE_PATH + 'js/sidebar.js';
+
+    document.querySelectorAll('[data-basepath="true"]').forEach(link => {
+      const href = link.getAttribute('href');
+      link.setAttribute('href', window.BASE_PATH + href.replace(/^\//, ''));
+    });
   </script>
 </body>
 </html>

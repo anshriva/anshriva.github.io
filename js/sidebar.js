@@ -33,8 +33,9 @@
       parts.push('<ul class="tree-items">');
       section.items.forEach((item) => {
         const active = itemIsActive(item.path);
+        const href = window.BASE_PATH + item.path.replace(/^\//, '');
         parts.push(
-          `<li><a href="${item.path}" class="${active ? "active" : ""}">${PortfolioNav.escapeHtml(item.navTitle || item.title)}</a></li>`
+          `<li><a href="${href}" class="${active ? "active" : ""}">${PortfolioNav.escapeHtml(item.navTitle || item.title)}</a></li>`
         );
       });
       parts.push("</ul></div>");
@@ -55,7 +56,11 @@
   }
 
   function itemIsActive(itemPath) {
-    const page = PortfolioNav.normalizePath(window.location.pathname);
+    let page = window.location.pathname;
+    if (window.BASE_PATH && window.BASE_PATH !== '/' && page.startsWith(window.BASE_PATH)) {
+      page = page.slice(window.BASE_PATH.length - 1);
+    }
+    page = PortfolioNav.normalizePath(page);
     const base = PortfolioNav.normalizePath(itemPath.split("#")[0]);
     if (itemPath.includes("#")) {
       const hash = "#" + itemPath.split("#")[1];
