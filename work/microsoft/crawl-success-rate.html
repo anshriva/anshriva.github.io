@@ -19,45 +19,53 @@
 <main class="topic-main">
     <article class="article topic-page">
       <header class="page-header">
-        <p class="page-status">Status: <strong>draft</strong> — expand sections below</p>
+        <p class="page-status">Status: <strong>ready</strong></p>
         <h1>Crawl Success Rate (99%+)</h1>
         <p class="subtitle">Topic · Microsoft · Graph Connectors</p>
       </header>
 
       <section class="content-section" id="problem">
         <h2>Problem statement</h2>
-        <p class="placeholder">What was broken or missing? Who was affected? What scale?</p>
+        <p>Connector crawls were failing silently, creating gaps in indexed data for enterprise customers. Without visibility into failure patterns, the team had no systematic way to prioritize reliability improvements or track progress toward operational targets. Customers had 5M+ items at stake but visibility was scattered across logs and manual investigation.</p>
       </section>
 
       <section class="content-section" id="context">
         <h2>Context &amp; constraints</h2>
-        <p class="placeholder">Org boundaries, timeline, tech stack, NDA-safe scope.</p>
+        <p>
+          Multiple connector types (File Share, Media Wiki, SharePoint on-prem, ServiceNow, SQL) operated independently. Each had different failure modes — some transient, some data-source-specific. The team needed a unified Quality-of-Service (QoS) metric to drive reliability work across all connectors, regardless of root cause.
+        </p>
       </section>
 
       <section class="content-section" id="architecture">
-        <h2>Architecture</h2>
-        <div class="diagram-slot">
-          <p class="diagram-slot-label">Diagram slot</p>
-          <p>Add <code>assets/ms-csr/architecture.svg</code> or paste Mermaid here.</p>
-          <pre class="diagram diagram-mermaid">%% Mermaid example
-flowchart LR
-  A[Client] --> B[Service]
-  B --> C[(Store)]</pre>
-        </div>
+        <h2>Approach</h2>
+        <ul>
+          <li><strong>Instrumentation:</strong> Created automated script to generate failure breakdowns per connector, committed to repo for reproducibility</li>
+          <li><strong>Dashboard:</strong> Updated CSR queries in the tracking dashboard for real-time visibility</li>
+          <li><strong>Root-cause taxonomy:</strong> Fixed error category classifications for Media Wiki and SharePoint on-prem connectors</li>
+          <li><strong>Operational support:</strong> Debugged corrupt responses from DocParser (file share) that blocked ingestion</li>
+        </ul>
       </section>
 
       <section class="content-section" id="decisions">
         <h2>Key decisions &amp; tradeoffs</h2>
-        <ul class="placeholder-list">
-          <li>Decision 1 — …</li>
-          <li>Decision 2 — …</li>
-          <li>What we rejected and why</li>
+        <ul>
+          <li><strong>Per-connector dashboard:</strong> Tracked CSR separately by connector type to expose outliers and enable targeted fixes</li>
+          <li><strong>Automated failure breakdown:</strong> Script runs on-demand to avoid stale manual reports and scale across growing connector portfolio</li>
+          <li><strong>Error classification first:</strong> Invested in fixing root-cause taxonomy before optimization — can't improve what you can't measure</li>
         </ul>
       </section>
 
       <section class="content-section" id="impact">
         <h2>Impact</h2>
-        <p class="placeholder">Metrics, rollout, who adopted it.</p>
+        <p>
+          <strong>Metric:</strong> Achieved <strong>99%+ crawl success rate</strong> across most connectors (File Share, Media Wiki, SharePoint on-prem).
+        </p>
+        <p>
+          <strong>Operational leverage:</strong> Weekly CSR status now maintained in OneNote + dashboard, enabling quick triage and escalation. Debugging scripts committed to repo accelerated customer issue resolution and reduced redundant investigation.
+        </p>
+        <p>
+          <strong>Customer wins:</strong> High-profile customers (Napier City Council 5M items, Equinor, FTB) unblocked by removing specific failure classes. Managed transition of 3+ connectors from Redmond team ownership.
+        </p>
       </section>
 
       <section class="content-section" id="faq">

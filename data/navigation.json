@@ -87,25 +87,31 @@
           "id": "ms-csr",
           "title": "Crawl Success Rate",
           "path": "/work/microsoft/crawl-success-rate.html",
-          "status": "draft"
+          "status": "ready"
         },
         {
           "id": "ms-fileshare",
           "title": "File Share exclusions",
           "path": "/work/microsoft/file-share-exclusion.html",
-          "status": "draft"
+          "status": "ready"
         },
         {
           "id": "ms-servicenow",
           "title": "ServiceNow ACL",
           "path": "/work/microsoft/servicenow-acl.html",
-          "status": "draft"
+          "status": "ready"
         },
         {
           "id": "ms-latency",
-          "title": "Move-next latency",
+          "title": "Move-next latency (60×)",
           "path": "/work/microsoft/move-next-latency.html",
-          "status": "draft"
+          "status": "ready"
+        },
+        {
+          "id": "ms-admin",
+          "title": "Admin self-serve",
+          "path": "/work/microsoft/admin-self-serve.html",
+          "status": "ready"
         }
       ]
     },

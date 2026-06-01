@@ -19,45 +19,53 @@
 <main class="topic-main">
     <article class="article topic-page">
       <header class="page-header">
-        <p class="page-status">Status: <strong>draft</strong> — expand sections below</p>
+        <p class="page-status">Status: <strong>ready</strong></p>
         <h1>Move-next latency (60×)</h1>
         <p class="subtitle">Topic · Microsoft · Graph Connectors</p>
       </header>
 
       <section class="content-section" id="problem">
         <h2>Problem statement</h2>
-        <p class="placeholder">What was broken or missing? Who was affected? What scale?</p>
+        <p>Crawls of large file share repositories were extremely slow. Move-next operations (iterating through data source items) took ~30 seconds per call, making crawl time prohibitive for customers like Equinor and Napier City Council. Without investigation, we assumed network latency was the bottleneck — but the real issue was hidden in memory pressure.</p>
       </section>
 
       <section class="content-section" id="context">
         <h2>Context &amp; constraints</h2>
-        <p class="placeholder">Org boundaries, timeline, tech stack, NDA-safe scope.</p>
+        <p>
+          This was one of the highest-value customer adoption blockers. Large enterprises need to crawl millions of items. At 30s per move-next, we couldn't reach crawl completion. Investigation required access to customer telemetry and the ability to profile actual workloads.
+        </p>
       </section>
 
       <section class="content-section" id="architecture">
-        <h2>Architecture</h2>
-        <div class="diagram-slot">
-          <p class="diagram-slot-label">Diagram slot</p>
-          <p>Add <code>assets/ms-latency/architecture.svg</code> or paste Mermaid here.</p>
-          <pre class="diagram diagram-mermaid">%% Mermaid example
-flowchart LR
-  A[Client] --> B[Service]
-  B --> C[(Store)]</pre>
-        </div>
+        <h2>Investigation approach</h2>
+        <ul>
+          <li><strong>Instrumentation:</strong> Added logs to isolate move-next time from other operations</li>
+          <li><strong>Profiling:</strong> Captured Windows performance dumps and memory snapshots from customer setups</li>
+          <li><strong>Root cause:</strong> Discovered excessive logging was thrashing memory, causing GC pauses during critical sections</li>
+          <li><strong>Fix:</strong> Made logging conditional via flight flags, reducing noise while preserving debuggability</li>
+        </ul>
       </section>
 
       <section class="content-section" id="decisions">
         <h2>Key decisions &amp; tradeoffs</h2>
-        <ul class="placeholder-list">
-          <li>Decision 1 — …</li>
-          <li>Decision 2 — …</li>
-          <li>What we rejected and why</li>
+        <ul>
+          <li><strong>Logging over visibility:</strong> Initially assumed network latency, but profiling revealed memory bottleneck — invested in tools before jumping to fixes</li>
+          <li><strong>Flight-based logging:</strong> Rather than disable logging entirely, gated it behind flights so we can turn it on per-customer for debugging without affecting baseline performance</li>
+          <li><strong>Cross-team collaboration:</strong> Paired with architect (Yogesh) to validate assumptions and unblock investigation early</li>
         </ul>
       </section>
 
       <section class="content-section" id="impact">
         <h2>Impact</h2>
-        <p class="placeholder">Metrics, rollout, who adopted it.</p>
+        <p>
+          <strong>Metric:</strong> Reduced move-next latency from <strong>30 seconds to 0.5 seconds</strong> — a <strong>60× improvement</strong>.
+        </p>
+        <p>
+          <strong>Customer adoption:</strong> Unblocked Equinor, Napier City Council, and FTB to reach crawl completion. These customers went from impossible timelines to viable deployments.
+        </p>
+        <p>
+          <strong>Scale impact:</strong> Expected to index millions of items across large enterprises once crawls became feasible.
+        </p>
       </section>
 
       <section class="content-section" id="faq">

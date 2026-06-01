@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../js/base-path.js"></script>
+
+  <script>
+    document.write('<link rel=\"stylesheet\" href=\"' + window.BASE_PATH + 'css/styles.css\" />');
+  </script>
+
+<meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin Self-Serve — Anubhav Shrivastava</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Fraunces:wght@500;600&display=swap" rel="stylesheet" />
+</head>
+<body class="layout-docs" data-page-id="ms-admin">
+  <aside id="site-sidebar" aria-label="Topics"></aside>
+<main class="topic-main">
+    <article class="article topic-page">
+      <header class="page-header">
+        <p class="page-status">Status: <strong>ready</strong></p>
+        <h1>Admin Self-Serve visibility and tooling</h1>
+        <p class="subtitle">Feature · Microsoft · Graph Connectors</p>
+      </header>
+
+      <section class="content-section" id="problem">
+        <h2>Problem statement</h2>
+        <p>Admins couldn't see what was happening to their crawls. When issues occurred, they had no visibility into error details, failure reasons, or remediation steps — forcing them to file support tickets for every problem. The team's velocity was bottlenecked by customer escalations that could have been self-resolved.</p>
+      </section>
+
+      <section class="content-section" id="context">
+        <h2>Context &amp; constraints</h2>
+        <p>
+          This was one of the biggest operational pain points identified by leadership. A Future Hack Lounge (FHL) was organized to explore "ideal admin experience." The feature team included designers, PMs, and engineers. Success meant reducing escalations and giving admins actionable intelligence directly in the UI.
+        </p>
+      </section>
+
+      <section class="content-section" id="architecture">
+        <h2>Approach</h2>
+        <ul>
+          <li><strong>FHL design sprint:</strong> Hackathon-style workshop where the team mocked up the ideal admin experience — what would admins need to see and do without calling support?</li>
+          <li><strong>Backend APIs:</strong> Designed new admin APIs to expose crawl state, error details, and remediation actions</li>
+          <li><strong>Connector integration:</strong> Updated connector code to populate new data fields and status transitions</li>
+          <li><strong>UI/UX:</strong> Built admin dashboard showing real-time crawl status, error messages, and suggested next steps</li>
+        </ul>
+      </section>
+
+      <section class="content-section" id="decisions">
+        <h2>Key decisions &amp; tradeoffs</h2>
+        <ul>
+          <li><strong>Actionable errors over generic messages:</strong> Instead of "crawl failed," show specific errors like "file permissions denied" with remediation steps</li>
+          <li><strong>Real-time visibility:</strong> Dashboard updates live as crawls progress, so admins can monitor without polling support channels</li>
+          <li><strong>Cross-functional design:</strong> Invested in workshops with designers and PMs upfront to get the UX right before heavy backend work</li>
+        </ul>
+      </section>
+
+      <section class="content-section" id="impact">
+        <h2>Impact</h2>
+        <p>
+          <strong>Recognition:</strong> The FHL hack received <strong>special mention from judges</strong> at the company-wide hackathon and was recognized by multiple stakeholders as a breakthrough idea.
+        </p>
+        <p>
+          <strong>Operational shift:</strong> Expected to reduce customer escalations significantly by enabling admins to diagnose and resolve issues independently. Success metric: reduction in days needed to resolve a customer issue.
+        </p>
+        <p>
+          <strong>Team velocity:</strong> Freed the engineering team from low-value triage work, enabling focus on platform improvements rather than support firefighting.
+        </p>
+        <p>
+          <strong>Ongoing:</strong> Engineering requirements and module design in progress. Expected rollout in 2024.
+        </p>
+      </section>
+    </article>
+</main>
+    <script id="nav-data-script"></script>
+  <script id="sidebar-script"></script>
+  <script>
+    const navDataScript = document.getElementById('nav-data-script');
+    navDataScript.src = window.BASE_PATH + 'js/nav-data.js';
+    const sidebarScript = document.getElementById('sidebar-script');
+    sidebarScript.src = window.BASE_PATH + 'js/sidebar.js';
+  </script>
+
+</body>
+</html>

@@ -19,45 +19,50 @@
 <main class="topic-main">
     <article class="article topic-page">
       <header class="page-header">
-        <p class="page-status">Status: <strong>draft</strong> — expand sections below</p>
+        <p class="page-status">Status: <strong>ready</strong></p>
         <h1>File Share exclusion revamp</h1>
         <p class="subtitle">Topic · Microsoft · Graph Connectors</p>
       </header>
 
       <section class="content-section" id="problem">
         <h2>Problem statement</h2>
-        <p class="placeholder">What was broken or missing? Who was affected? What scale?</p>
+        <p>File share connectors were missing content from valid file types because of overly restrictive exclusion rules. Admins couldn't easily exclude unwanted file extensions on a per-tenant basis, forcing a one-size-fits-all policy. Customers had to settle for incomplete search indexes.</p>
       </section>
 
       <section class="content-section" id="context">
         <h2>Context &amp; constraints</h2>
-        <p class="placeholder">Org boundaries, timeline, tech stack, NDA-safe scope.</p>
+        <p>
+          The feature required careful rollout: migration of existing connections, validation of new behavior, and rollback capability if issues surfaced. Large customers (Napier City Council with 5M items, Equinor) depended on this change to adopt the product.
+        </p>
       </section>
 
       <section class="content-section" id="architecture">
-        <h2>Architecture</h2>
-        <div class="diagram-slot">
-          <p class="diagram-slot-label">Diagram slot</p>
-          <p>Add <code>assets/ms-fileshare/architecture.svg</code> or paste Mermaid here.</p>
-          <pre class="diagram diagram-mermaid">%% Mermaid example
-flowchart LR
-  A[Client] --> B[Service]
-  B --> C[(Store)]</pre>
-        </div>
+        <h2>Approach</h2>
+        <ul>
+          <li><strong>Feature engineering:</strong> Revamped exclusion rule logic to be tenant-configurable and transparent</li>
+          <li><strong>Safety:</strong> Built migration job to backfill existing connections with new rules and rollback job for fast recovery</li>
+          <li><strong>Validation:</strong> Wrote comprehensive test suite to cover edge cases and prevent regression</li>
+          <li><strong>Monitoring:</strong> Tracked item count gain in dashboard during and after rollout</li>
+        </ul>
       </section>
 
       <section class="content-section" id="decisions">
         <h2>Key decisions &amp; tradeoffs</h2>
-        <ul class="placeholder-list">
-          <li>Decision 1 — …</li>
-          <li>Decision 2 — …</li>
-          <li>What we rejected and why</li>
+        <ul>
+          <li><strong>Tenant-scoped configuration:</strong> Allowed admins to customize exclusion rules per tenant rather than forcing all changes globally</li>
+          <li><strong>Migration + rollback:</strong> Prioritized safety over speed — batch migration of existing connections plus rollback job gave ops confidence to proceed</li>
+          <li><strong>Test-driven migration:</strong> Invested in test coverage upfront to avoid customer-impacting bugs during rollout</li>
         </ul>
       </section>
 
       <section class="content-section" id="impact">
         <h2>Impact</h2>
-        <p class="placeholder">Metrics, rollout, who adopted it.</p>
+        <p>
+          <strong>Feature status:</strong> Coded and rollout underway (Nov 2023 onwards). Expected to increase indexed items across all file share connectors.
+        </p>
+        <p>
+          <strong>Customer adoption:</strong> Unblocked high-value customers (Napier City Council with 5M+ items, Equinor) who were seeing incomplete indexes due to overly strict rules. Migration enabled smooth tenant-by-tenant rollout without downtime.
+        </p>
       </section>
 
       <section class="content-section" id="faq">
