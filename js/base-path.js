@@ -1,12 +1,6 @@
-/** Detect and set the base path for both local and GitHub Pages environments */
+/** Set the base path for the root domain */
 (function () {
-  const pathname = window.location.pathname;
-
-  // If running on GitHub Pages at /resume/, base is /resume/
-  // If running locally, base is /
-  const basePath = pathname.includes('/resume/') ? '/resume/' : '/';
-
-  window.BASE_PATH = basePath;
+  window.BASE_PATH = '/';
 
   // For easier path construction
   window.getAssetPath = function(path) {
