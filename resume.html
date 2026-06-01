@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anubhav Shrivastava - Senior Software Engineer Resume</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Calibri, sans-serif;
+            line-height: 1.5;
+            color: #333;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            background: white;
+            margin: 0 auto;
+            padding: 40px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #003d7a;
+        }
+
+        .name {
+            font-size: 28px;
+            font-weight: bold;
+            color: #003d7a;
+            margin-bottom: 5px;
+        }
+
+        .title {
+            font-size: 14px;
+            color: #666;
+            font-style: italic;
+            margin-bottom: 10px;
+        }
+
+        .contact {
+            font-size: 12px;
+            color: #666;
+            letter-spacing: 0.5px;
+        }
+
+        .contact a {
+            color: #003d7a;
+            text-decoration: none;
+        }
+
+        .contact a:hover {
+            text-decoration: underline;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #003d7a;
+            text-decoration: underline;
+            margin-top: 25px;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .summary {
+            font-size: 12px;
+            line-height: 1.7;
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+
+        .subsection-title {
+            font-size: 12px;
+            font-weight: bold;
+            color: #000;
+            margin-top: 12px;
+            margin-bottom: 8px;
+        }
+
+        .job-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 5px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .company {
+            font-weight: bold;
+            color: #003d7a;
+            font-size: 12px;
+        }
+
+        .job-title {
+            font-weight: bold;
+            color: #003d7a;
+            font-size: 12px;
+        }
+
+        .job-meta {
+            font-size: 11px;
+            color: #666;
+            font-style: italic;
+        }
+
+        .job-description {
+            font-size: 11px;
+            color: #666;
+            margin-bottom: 8px;
+            font-style: italic;
+        }
+
+        .bullet-list {
+            margin-left: 20px;
+            margin-bottom: 12px;
+        }
+
+        .bullet-list li {
+            font-size: 11px;
+            margin-bottom: 5px;
+            line-height: 1.6;
+        }
+
+        .bullet-list li strong {
+            font-weight: 600;
+        }
+
+        .tech-line {
+            font-size: 11px;
+            margin-top: 8px;
+            margin-bottom: 12px;
+            color: #555;
+        }
+
+        .tech-label {
+            font-weight: bold;
+            color: #000;
+        }
+
+        .skills-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .skill-category {
+            font-size: 11px;
+        }
+
+        .skill-category strong {
+            color: #000;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 3px;
+        }
+
+        .skill-items {
+            font-size: 11px;
+            color: #555;
+            line-height: 1.5;
+        }
+
+        .education-item {
+            font-size: 11px;
+            margin-bottom: 8px;
+        }
+
+        .degree {
+            font-weight: bold;
+            color: #000;
+        }
+
+        .institution {
+            color: #666;
+            font-size: 11px;
+        }
+
+        .scope-list {
+            margin-bottom: 15px;
+        }
+
+        .scope-list li {
+            font-size: 11px;
+            margin-bottom: 6px;
+            line-height: 1.6;
+        }
+
+        .scope-list li strong {
+            font-weight: 600;
+        }
+
+        .print-button {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+        }
+
+        .print-button button {
+            background: #003d7a;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .print-button button:hover {
+            background: #002a5a;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .container {
+                max-width: 100%;
+                padding: 0;
+                box-shadow: none;
+                margin: 0;
+            }
+            .print-button {
+                display: none;
+            }
+            .skills-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            .skills-container {
+                grid-template-columns: 1fr;
+            }
+            .job-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="name">ANUBHAV SHRIVASTAVA</div>
+            <div class="title">Senior Software Engineer | Platform Architecture & Distributed Systems</div>
+            <div class="contact">
+                Bengaluru, India • +91 8588876192 • <a href="mailto:anubhav.workemail@gmail.com">anubhav.workemail@gmail.com</a> •
+                <a href="https://linkedin.com/in/anubhavsri" target="_blank">linkedin.com/in/anubhavsri</a> •
+                <a href="https://github.com/anshriva" target="_blank">github.com/anshriva</a>
+            </div>
+        </div>
+
+        <div class="section-title">SUMMARY</div>
+        <div class="summary">
+            Platform engineer with 12+ years building and owning high-scale distributed systems. At Intuit, technical authority for the One Intuit Notification Platform — processing 20–32M notifications/day across every major product. Drove consolidation of Credit Karma and Mailchimp onto the platform, eliminating redundant vendor stacks across two acquisitions. Co-authored and executing a roadmap cutting notification authoring time from 1 week to 3 hours. At Microsoft, took Graph Connectors from zero to General Availability, driving 99%+ crawl success rates across Fortune 500 enterprise customers. Known for identifying platform opportunities others miss, driving cross-org alignment without authority, and shipping at scale with high reliability.
+        </div>
+
+        <div class="section-title">PLATFORM & ORG-WIDE SCOPE</div>
+        <ul class="scope-list">
+            <li><strong>Platform scale:</strong> 20–32M emails/day, 2–4M SMS/day, 1–1.6M in-app notifications/day — processing across QBO, TurboTax, Mint, ProSeries, Lacerte, Expert Hiring, and 10+ product teams</li>
+            <li><strong>Org-wide technical authority:</strong> Single escalation point for all notification platform issues across Intuit — architecture decisions, critical incidents, vendor integrations, and cross-team unblocking</li>
+            <li><strong>Cross-org integration ownership:</strong> Drove consolidation of Credit Karma SMS (1M/day) and Mailchimp in-app notifications (700 TPS peak) onto Intuit's platform — eliminating redundant vendor stacks, solving cross-cloud and identity challenges, and shipping both to production within 5 months each</li>
+            <li><strong>Cross-team influence:</strong> Named technical lead for two platform-wide components (Notification Authoring and Notification Tray) used by every product team in the company</li>
+            <li><strong>Recognition:</strong> Quarterly Values Award (VP-level), 3x Stronger Together Awards, Lightning Award for fastest GenAI prototype at company-wide hackathon, 16 peer recognitions from cross-functional partners and senior leadership</li>
+        </ul>
+
+        <div class="section-title">EXPERIENCE</div>
+
+        <div class="job-header">
+            <span class="company">Intuit</span>
+            <span class="job-meta">March 2024 – Present | Bengaluru, India</span>
+        </div>
+        <div class="job-title">Senior Software Engineer — Notifications Platform</div>
+        <div class="job-description">Technical lead for the One Intuit Notification Platform — the shared infrastructure processing all transactional and marketing notifications across every Intuit product. 5–7M emails/day, 2–4M SMS/day, 1.6M+ in-app notifications/day. Tray sustains 2,200+ TPS during peak tax season.</div>
+
+        <div class="subsection-title">Architecture & Technical Leadership</div>
+        <ul class="bullet-list">
+            <li><strong>Notification Tray backend ownership:</strong> Designed and owns the real-time per-user notification delivery system (Server-Sent Events over Intuit's real-time infra, backed by DynamoDB). Sole technical owner of this component across the company.</li>
+            <li><strong>Credit Karma SMS integration:</strong> Identified and drove the consolidation of Credit Karma's SMS notifications (1M/day) onto Intuit's platform — initiated at a company hackathon, aligned CK engineering lead and Intuit PMs, and shipped to production in 5 months. Solved cross-cloud challenges (GCP vs AWS logging/eventing), navigated dual-company security reviews for data handling, built a consent passthrough layer honoring CK's user preferences, and coordinated Twilio short code carrier approval end-to-end.</li>
+            <li><strong>Mailchimp Notification Tray integration:</strong> Onboarded Mailchimp onto Intuit's shared notification tray (in-app bell) — replacing Mailchimp's independently maintained frontend, backend, and experimentation stack. Sustained 300 avg / 700 peak TPS. Solved user identity mismatch between Mailchimp and Intuit's SSO by building a converter against the Identity team's API, with careful throttle management at spike traffic. Shipped to full production in 4 months.</li>
+            <li><strong>Org-wide technical authority:</strong> Primary escalation point for 10+ product teams (QBO, TurboTax, ProSeries, Lacerte, Expert Hiring, and more) via a dedicated cross-team support channel. Consistently unblocked teams on architecture, vendor config, and production issues.</li>
+            <li><strong>GenAI platform initiative:</strong> Leading the AI-assisted notification authoring initiative — exploring MCP (Model Context Protocol) for screenshot-to-search and LLM-powered content generation. Built the fastest GenAI prototype at a company-wide hackathon.</li>
+            <li><strong>ElasticSearch integration:</strong> Drove notification search integration in the authoring portal, improving discoverability across thousands of configured notifications.</li>
+        </ul>
+
+        <div class="subsection-title">Platform Roadmap & Technical Direction</div>
+        <ul class="bullet-list">
+            <li><strong>Notification authoring time reduction:</strong> Co-authored and drove the technical roadmap to reduce notification authoring time from 1 week to 3 hours — targeting every layer of the process. Shipped improvements across error handling, automated consent capture, seamless promotion-to-production with rollback support, and removal of manual config steps. Currently at 3 days; final milestone is eliminating manual Twilio webhook configuration via a programmable routing layer, removing cross-geo testing dependency on US teams.</li>
+        </ul>
+
+        <div class="subsection-title">Reliability & Incident Leadership</div>
+        <ul class="bullet-list">
+            <li><strong>Tax season incident command:</strong> Primary technical lead for production incident response during peak tax season — coordinating real-time across 6+ partner teams on a platform processing 30M+ notifications on peak days.</li>
+            <li><strong>Critical incident resolution:</strong> Owned resolution of zero-notification outages from payload mismatches, duplicate notification bugs, pod termination root-caused via JVM heap/G1GC profiling, and event streaming tracing gaps with no existing tooling.</li>
+            <li><strong>Platform observability:</strong> Built end-to-end observability across the notification stack — availability dashboards, per-service TPS monitoring, P99 latency alerting, and error-rate tracking across 6 microservices.</li>
+        </ul>
+
+        <div class="subsection-title">Mentorship & Technical Bar-Raising</div>
+        <ul class="bullet-list">
+            <li><strong>Design leadership:</strong> Authored the RFC for migrating the user consent capture service from Kafka to Apache Pulsar — key driver was Pulsar's native header-based topic routing, which allowed multiple teams to receive targeted notification subsets without consuming millions of events from a single topic. SDE-1 implemented against the design; shipped to production.</li>
+            <li><strong>Engineer coaching:</strong> Mentored 3 engineers at Intuit (intern → full-time offer, SDE-1 ownership of platform features) and several engineers at Microsoft. Participated in Microsoft's College Connect program, mentoring final-year students on career direction — with ongoing mentee relationships post-program.</li>
+        </ul>
+
+        <div class="subsection-title">Product Launches</div>
+        <ul class="bullet-list">
+            <li><strong>Generic OTP:</strong> Shipped consistent one-time password delivery across all Intuit products.</li>
+            <li><strong>RCS channel:</strong> Built the first RCS notification launch on the platform (2026).</li>
+        </ul>
+
+        <div class="tech-line"><span class="tech-label">Tech:</span> Java, Spring Boot, DynamoDB, PostgreSQL, Kafka, Pulsar, Redis, ElasticSearch, AWS, Kubernetes, Splunk</div>
+
+        <div class="job-header">
+            <span class="company">Microsoft India Development Center</span>
+            <span class="job-meta">Sep 2022 – Feb 2024 | Bengaluru, India</span>
+        </div>
+        <div class="job-title">Senior Software Engineer (L63) — Graph Connectors</div>
+        <div class="job-description">Tech lead for Microsoft Graph Connectors — the platform crawling enterprise data sources (file shares, Azure DevOps, SQL, SharePoint, MediaWiki, ServiceNow) and indexing them into Microsoft Search and Microsoft 365 Copilot.</div>
+
+        <div class="subsection-title">Technical Leadership & System Design</div>
+        <ul class="bullet-list">
+            <li><strong>Platform reliability ownership:</strong> Owned Crawl Success Rate (CSR) as a platform-wide reliability metric — drove all connectors to 99%+ CSR, built automated tracking scripts and dashboards, and led root-cause investigations across 4 connectors.</li>
+            <li><strong>File Share Exclusion Rule Revamp:</strong> Designed the full solution including migration jobs, rollback jobs, backward compatibility handling, and item-count gain dashboard. Shipped with zero regressions.</li>
+            <li><strong>ServiceNow ACL model revamp:</strong> Co-designed API architecture, crawl flow, negative caching, and session caching. Validated by multiple Fortune 500 enterprise customers pre-GA.</li>
+            <li><strong>Admin Self-Serve hackathon:</strong> Led engineering for a project enabling admins to self-diagnose connector failures without engineering support. Received special mention from judges and senior leadership recognition.</li>
+        </ul>
+
+        <div class="subsection-title">Enterprise Customer Impact</div>
+        <ul class="bullet-list">
+            <li><strong>60x latency improvement:</strong> Reduced data source move-next latency from 30s to 0.5s for key enterprise customers via Windows Performance Recorder profiling and memory analysis.</li>
+            <li><strong>Cross-team bug ownership:</strong> Took ownership of a long-standing customer-facing filter bug passed across 4 teams without resolution — root-caused through an internal content indexing service and shipped the fix.</li>
+        </ul>
+
+        <div class="tech-line"><span class="tech-label">Tech:</span> C#, .NET, Akka Framework, Azure, Redis, SQL</div>
+
+        <div class="job-header">
+            <span class="company">Microsoft India Development Center</span>
+            <span class="job-meta">April 2019 – Sep 2022 | Bengaluru, India</span>
+        </div>
+        <div class="job-title">Software Engineer 2 (L61–L62) — Graph Connectors</div>
+        <div class="job-description">Founding engineer for Microsoft Graph Connectors, contributing from zero to General Availability across 5 shipped connectors.</div>
+
+        <ul class="bullet-list">
+            <li><strong>Foundational architecture:</strong> Made low-level design decisions that shaped the crawler architecture with lasting product impact across the platform.</li>
+            <li><strong>Crawl pipeline performance:</strong> Engineered pipeline to 25+ items/second throughput via algorithm redesign and bottleneck analysis — a core performance benchmark for the product.</li>
+            <li><strong>Primary enterprise customer contact:</strong> Served as the sole technical contact for all connector feature requests and production issues across major enterprise accounts.</li>
+        </ul>
+
+        <div class="tech-line"><span class="tech-label">Tech:</span> C#, .NET, Akka Framework, Azure, Redis, SQL</div>
+
+        <div class="job-header">
+            <span class="company">Yatra Online</span>
+            <span class="job-meta">Sep 2016 – Mar 2019 | Gurgaon, India</span>
+        </div>
+        <div class="job-title">Senior Software Engineer</div>
+
+        <ul class="bullet-list">
+            <li><strong>15x latency improvement:</strong> Reduced GET Booking API latency from 3s to 0.2s for Yatra's core financial verification system serving millions of bookings.</li>
+            <li><strong>3x cost reduction:</strong> Reduced third-party API call costs via a Redis caching layer.</li>
+            <li><strong>Supplier integration framework:</strong> Built a framework reducing new supplier onboarding time from months to weeks.</li>
+        </ul>
+
+        <div class="tech-line"><span class="tech-label">Tech:</span> Java, Spring, MySQL, Redis, MongoDB, Kafka, Zookeeper, Dropwizard</div>
+
+        <div class="job-header">
+            <span class="company">Adobe Systems</span>
+            <span class="job-meta">July 2014 – Aug 2016 | Noida, India</span>
+        </div>
+        <div class="job-title">Software Engineer — Engineering Security</div>
+
+        <ul class="bullet-list">
+            <li><strong>Built and maintained Adobe's internal code-signing platform</strong> used across all Adobe products on Windows, macOS, and Java — a publisher-subscriber architecture processing code signing at scale.</li>
+        </ul>
+
+        <div class="tech-line"><span class="tech-label">Tech:</span> Java, Spring, Redis, Oracle DB, Java Messaging Service</div>
+
+        <div class="section-title">SKILLS</div>
+        <div class="skills-container">
+            <div class="skill-category">
+                <strong>Languages</strong>
+                <div class="skill-items">Java, C#, .NET, Python</div>
+            </div>
+            <div class="skill-category">
+                <strong>Backend</strong>
+                <div class="skill-items">Microservices, Spring Boot, Akka Framework, gRPC, Dropwizard</div>
+            </div>
+            <div class="skill-category">
+                <strong>Databases</strong>
+                <div class="skill-items">DynamoDB, Cassandra, PostgreSQL, MySQL, MongoDB, Redis</div>
+            </div>
+            <div class="skill-category">
+                <strong>Messaging</strong>
+                <div class="skill-items">Kafka, Pulsar, Zookeeper</div>
+            </div>
+            <div class="skill-category">
+                <strong>Search</strong>
+                <div class="skill-items">ElasticSearch</div>
+            </div>
+            <div class="skill-category">
+                <strong>Cloud & Infra</strong>
+                <div class="skill-items">AWS, Azure, Kubernetes, Docker</div>
+            </div>
+            <div class="skill-category">
+                <strong>Observability</strong>
+                <div class="skill-items">Splunk, dashboards, alerts, log analysis</div>
+            </div>
+            <div class="skill-category">
+                <strong>AI / GenAI</strong>
+                <div class="skill-items">LLM integration, MCP, GenAI tooling</div>
+            </div>
+            <div class="skill-category">
+                <strong>Core</strong>
+                <div class="skill-items">System Design, Distributed Systems, Data Structures & Algorithms, OOD</div>
+            </div>
+        </div>
+
+        <div class="section-title">EDUCATION</div>
+        <div class="education-item">
+            <span class="degree">B.Tech — Computer Science and Engineering</span>
+            <span class="institution">Institute of Engineering and Technology, Lucknow | 2010–2014 | 74.4%</span>
+        </div>
+
+        <div class="print-button">
+            <button onclick="window.print()">Print / Save as PDF</button>
+        </div>
+    </div>
+</body>
+</html>

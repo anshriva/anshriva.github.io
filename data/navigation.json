@@ -10,6 +10,12 @@
           "title": "Overview",
           "path": "/index.html",
           "status": "ready"
+        },
+        {
+          "id": "resume",
+          "title": "Resume",
+          "path": "/resume.html",
+          "status": "ready"
         }
       ]
     },
