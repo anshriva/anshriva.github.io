@@ -76,6 +76,12 @@
           "title": "Notification Tray reliability",
           "path": "/work/intuit/notification-tray.html",
           "status": "ready"
+        },
+        {
+          "id": "intuit-recognition",
+          "title": "Recognition — Spotlight awards",
+          "path": "/work/intuit/recognition.html",
+          "status": "ready"
         }
       ]
     },
