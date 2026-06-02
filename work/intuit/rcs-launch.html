@@ -27,10 +27,10 @@
       <section class="content-section" id="problem">
         <h2>Problem statement</h2>
         <p>
-          RCS (Rich Communication Services) is the carrier-native successor to SMS — rich cards, suggested replies, media, two-way conversations, all on the user's default messaging app with no install required. For Intuit, RCS unlocks experiences SMS can't: Field Service confirmations with quick-reply buttons, Critical Money Alerts with embedded actions, Triton conversations with structured media. It's also a channel none of OINP had built before.
+          RCS (Rich Communication Services) is the carrier-native successor to SMS — rich cards, suggested replies, media, two-way conversations, all on the user's default messaging app with no install required. For Intuit, RCS unlocks experiences SMS can't: service-appointment confirmations with quick-reply buttons, Critical Money Alerts with embedded actions, customer-support conversations with structured media. It's also a channel none of OINP had built before.
         </p>
         <p>
-          I owned the RCS channel end-to-end on OINP: vendor integration (Twilio), schema and API design on the new authoring stack, the two-way (inbound) message path, the cross-swim-lane routing to consumer teams, consent and SMS-fallback semantics, the canonical onboarding docs the rest of the org uses, and the working-group leadership that aligned three internal teams (Triton / VEP, Field Service, Credit Karma) on a single delivery path.
+          I owned the RCS channel end-to-end on OINP: vendor integration (Twilio), schema and API design on the new authoring stack, the two-way (inbound) message path, the cross-swim-lane Pulsar routing to consumer teams, consent and SMS-fallback semantics, the canonical onboarding docs the rest of the org uses, and the working-group leadership that aligned multiple consumer teams (across service operations, customer messaging, and Credit Karma) on a single delivery path.
         </p>
       </section>
 
@@ -40,7 +40,7 @@
           <li><strong>No prior RCS at Intuit on OINP.</strong> Zero in-house schema, no adapter precedent, no debugability playbook — everything from "how does an author configure an RCS template in RFM" to "how do we know if an inbound reply was received" had to be defined.</li>
           <li><strong>Twilio's new RCS API was in preview.</strong> The richer <code>comms.twilio.com/preview/Messages</code> API (priority-based bearer selection, structured rich-content modules, native SMS fallback in one call) was emerging while we were building. I had to choose between shipping on the stable Content Templates path now vs. waiting for the new API.</li>
           <li><strong>Two-way RCS is structurally different.</strong> Inbound RCS replies arrive via Twilio's SMS-shaped webhook (<code>SmsMessageSid</code>, <code>MessagingServiceSid</code>) but carry the RCS payload inside a <code>ChannelMetadata</code> JSON blob with provider-specific fields (Google's RBM sender id, googleapis blob URLs with 4-hour expiry alongside Twilio CDN URLs). Parsing this correctly is non-obvious from the docs.</li>
-          <li><strong>Multiple consumer teams, different swim-lanes.</strong> Triton (VEP) and Field Service both wanted RCS replies routed to their topics — but they sit in different OMS swim-lanes from OINP. Cross-swim-lane routing is a 7-day-of-work ask from the OMS team and they initially resisted enabling it in prod.</li>
+          <li><strong>Multiple consumer teams, different organisational swim-lanes.</strong> Two separate consumer teams both wanted RCS replies routed to their topics — but they sit in different Pulsar swim-lanes from OINP. Cross-swim-lane routing is a seven-day-of-work ask from the messaging-infra team and they initially resisted enabling it in prod.</li>
           <li><strong>SMS fallback expected, not optional.</strong> Not every recipient phone is RCS-eligible (carrier, device, region). If RCS-ineligible users get nothing, the feature is unusable. Fallback has to happen at delivery time, transparently to the author.</li>
         </ul>
       </section>
@@ -72,30 +72,29 @@
         <pre class="diagram" style="font-size: 10px;">{
   "type": "rcs",
   "data": { "context": { "channelPayload": {
-    "senderPhoneNumber": "+919538512471",
-    "messageId": "Mxus9eLogOQdmAPTikVw4x4A",
-    "sendTime": "2026-04-24T04:38:03.105134Z",
-    "agentId": "test_oinp_zmxsa4tu_agent@rbm.goog",
+    "senderPhoneNumber": "&lt;e164-number&gt;",
+    "messageId": "&lt;twilio-message-id&gt;",
+    "sendTime": "&lt;iso-timestamp&gt;",
+    "agentId": "&lt;rcs-agent&gt;@rbm.goog",
     "text": "Okay",
     "provider": "google"
   } } }
 }</pre>
         <p>
-          I drove the parsing logic in <code>textmsginboundsvc</code>, set up the webhook against the RCS sender in the Twilio console, and validated end-to-end including media uploads (a separate path where inbound carries <code>NumMedia</code>, <code>MediaUrl0</code>, and <code>MediaContentType0</code>). Caught and escalated a Twilio doc gap to Govind / Michael at Twilio: the inbound media URLs (one from <code>rcs-copper-ap.googleapis.com</code>, one from <code>mms.twiliocdn.com</code>) don't require authentication despite the docs claiming they should, and have different expiry semantics — important for any downstream service that re-serves the media.
+          I drove the parsing logic in the inbound-message service, set up the webhook against the RCS sender in the Twilio console, and validated end-to-end including media uploads (a separate path where inbound carries <code>NumMedia</code>, <code>MediaUrl0</code>, and <code>MediaContentType0</code>). Caught and escalated a Twilio docs gap with the Twilio engineering contact: the inbound media URLs (one served by Google's RBM CDN, one by Twilio's CDN) don't require authentication despite the docs claiming they should, and have different expiry semantics — important for any downstream service that re-serves the media.
         </p>
 
-        <h3>4. Cross-swim-lane OMS routing — two-way replies to consumer teams</h3>
+        <h3>4. Cross-swim-lane Pulsar routing — two-way replies to consumer teams</h3>
         <p>
-          Inbound RCS replies have to reach the team that owns the conversation — Triton (in the VEP swim-lane) for general two-way RCS, the Sales Feeder Service (in the SBSEG swim-lane) for specific flows. Designed and drove the OMS multicast routing setup:
+          Inbound RCS replies have to reach the team that owns the conversation — different consumer teams own different sender ids, and they sit in different organisational swim-lanes from OINP. Designed and drove the multicast routing setup:
         </p>
         <ul>
-          <li><strong>Source topic</strong> (OINP swim-lane): <code>persistent://oinp/regcomm/public.user.reply</code></li>
-          <li><strong>Destination 1</strong> (VEP swim-lane): <code>persistent://vep/collaboration/public.oinp.smsRcsEvent7216</code></li>
-          <li><strong>Destination 2</strong> (SBSEG swim-lane): <code>persistent://sbseg/payments/public.salesfeederservice</code></li>
-          <li><strong>Filter</strong>: header-based, e.g. <code>to == 'rcs:test_oinp_zmxsa4tu_agent'</code> — each consumer team gets only the replies addressed to their sender.</li>
+          <li><strong>Source topic</strong> (OINP swim-lane): one shared inbound-reply topic for all RCS senders OINP owns.</li>
+          <li><strong>Destinations</strong>: one topic per consumer team, each in its own swim-lane.</li>
+          <li><strong>Filter</strong>: header-based on the recipient sender id (the <code>to</code> field of the inbound message) — each consumer team only sees replies addressed to their sender, no application-level filtering needed.</li>
         </ul>
         <p>
-          When the OMS team approved this routing in e2e but resisted enabling it in prod (citing 7 days of work, and stopping our new e2e routing in the process — blocking VEP integration entirely), I escalated to leaders channel asking for OMS manager-level contacts, scheduled the cross-team meeting with Abhinesh / Anaghesh / Gaurav from OMS, and unblocked both e2e and a prod timeline within a week.
+          When the messaging-infra team approved this routing in staging but resisted enabling it in prod (citing seven days of work, and stopping our new staging routing in the process — blocking the integration entirely), I escalated to the platform leaders forum asking for messaging-infra leadership contacts, scheduled the cross-team meeting with the messaging-infra leads, and unblocked both staging and a prod timeline within a week.
         </p>
 
         <h3>5. SMS fallback when RCS is ineligible</h3>
@@ -105,30 +104,30 @@
 
         <h3>6. Consent capture</h3>
         <p>
-          RCS in the US uses an <code>applicationId</code> + <code>consentType</code> + <code>purpose</code> tuple from the consent platform. I drove the cross-team request to <code>#iip-consent-help</code> for a new consent application id covering SMS + RCS for the Critical Money Alerts use case. Keyword-based consent capture (STOP / UNSUBSCRIBE / CANCEL → opt-out; START → opt-in) is configured per workspace per channel in the SMS adapter config — the same config primitive serves both bearers, with the <code>shortOrLongCode</code> being either an SMS phone number (<code>+18669553710</code>) or an RCS sender (<code>rcs:test_oinp_zmxsa4tu_agent</code>).
+          RCS in the US uses an <code>applicationId</code> + <code>consentType</code> + <code>purpose</code> tuple from the internal consent platform. I drove the cross-team request for a new consent application id covering SMS + RCS for the Critical Money Alerts use case. Keyword-based consent capture (STOP / UNSUBSCRIBE / CANCEL → opt-out; START → opt-in) is configured per workspace per channel in the SMS adapter config — the same config primitive serves both bearers, with the sender id being either an SMS phone number or an <code>rcs:</code>-prefixed sender.
         </p>
 
         <h3>7. The canonical onboarding docs</h3>
         <p>
-          Wrote the full RCS section of the OINP onboarding guide (PR <code>OINP-21070</code>, doc PR <code>docs/pull/107</code>) — 8 pages covering:
+          Wrote the full RCS section of the OINP onboarding guide — an 8-section guide on the platform docs site covering:
         </p>
         <ul>
-          <li><a href="https://github.intuit.com/pages/one-intuit-notification-platform/docs/newRFMOnBoardingGuide/rcs/prerequisites/">Prerequisites</a></li>
-          <li><a href="https://github.intuit.com/pages/one-intuit-notification-platform/docs/newRFMOnBoardingGuide/rcs/setup/">Setup walkthrough</a></li>
-          <li><a href="https://github.intuit.com/pages/one-intuit-notification-platform/docs/newRFMOnBoardingGuide/rcs/testing/">Testing the flow</a></li>
-          <li><a href="https://github.intuit.com/pages/one-intuit-notification-platform/docs/newRFMOnBoardingGuide/rcs/templating/">Twilio templating reference</a></li>
-          <li><a href="https://github.intuit.com/pages/one-intuit-notification-platform/docs/newRFMOnBoardingGuide/rcs/incoming-messages/">Incoming messages (two-way RCS)</a></li>
-          <li><a href="https://github.intuit.com/pages/one-intuit-notification-platform/docs/newRFMOnBoardingGuide/rcs/consent/">Consent capture</a></li>
-          <li><a href="https://github.intuit.com/pages/one-intuit-notification-platform/docs/newRFMOnBoardingGuide/rcs/debugging/">Debugging RCS delivery</a></li>
-          <li><a href="https://github.intuit.com/pages/one-intuit-notification-platform/docs/newRFMOnBoardingGuide/rcs/going-live/">Going live (e2e → prod)</a></li>
+          <li>Prerequisites (Twilio sender procurement, backup short-code wiring, consent app-id)</li>
+          <li>Setup walkthrough (creating templates, wiring vendor config, hooking up the webhook)</li>
+          <li>Testing the flow (staging end-to-end, common pitfalls)</li>
+          <li>Twilio templating reference (variable mapping, fallback semantics)</li>
+          <li>Incoming messages (two-way RCS payload structure and parsing)</li>
+          <li>Consent capture (keyword actions, opt-in/opt-out flows)</li>
+          <li>Debugging RCS delivery (where to look in vendor and platform logs)</li>
+          <li>Going live (staging → prod cutover checklist)</li>
         </ul>
         <p>
-          Then took it one step further: shipped an <code>rcs-docs</code> skill (PR <code>oinp-skills/pull/59</code>, OINP-21322) that lets engineers query the RCS docs via Claude Code locally without browsing — answers RCS questions from the canonical doc set so the docs aren't just static reference but a queryable knowledge base.
+          Then took it one step further: shipped an internal Claude Code skill that lets engineers query the RCS docs from their local terminal without browsing — answers RCS questions from the canonical doc set so the docs aren't just static reference but a queryable knowledge base.
         </p>
 
         <div class="diagram-slot">
           <p class="diagram-slot-label">Diagram slot</p>
-          <p>Add <code>assets/intuit-rcs/rcs-flow.svg</code> showing: Author → RFM → comms-authoring → SMS adapter (RCS path) → Twilio Content Templates → user phone, with the two-way path (user reply → Twilio webhook → textmsginboundsvc → OMS public.user.reply → cross-swim-lane to VEP / SBSEG).</p>
+          <p>Add <code>assets/intuit-rcs/rcs-flow.svg</code> showing: Author → RFM → comms-authoring → SMS adapter (RCS path) → Twilio Content Templates → user phone, with the two-way path (user reply → Twilio webhook → inbound-message service → shared reply topic → cross-swim-lane multicast to consumer-team topics).</p>
         </div>
       </section>
 
@@ -139,19 +138,19 @@
             <strong>Ship on the stable Content Templates path first; new preview API as Phase 2.</strong> Waiting for Twilio's new <code>comms.twilio.com/preview/Messages</code> API would have delayed first-customer launch on RCS by an undefined window. Shipping on Content Templates now means first customers can onboard immediately. I also flagged the migration cost early to leaders so we'd adopt the new API <em>before</em> first customer onboards (≤2 days of backend change) rather than retrofitting customer templates later. <em>Tradeoff: a small window where templates live in Twilio console rather than authored entirely in RFM; closed before first prod customer.</em>
           </li>
           <li>
-            <strong>Reuse SMS adapter for RCS rather than build a new rcsadapter.</strong> RCS and SMS share the Twilio Messaging Service, the consent semantics, the keyword-action mappings, and the inbound webhook shape. A separate rcsadapter would have doubled the operational surface for ~0 net benefit. Extended the existing SMS adapter config (the <code>shortOrLongCode</code> field already accepts the <code>rcs:</code>-prefixed sender id) — same code path, different bearer. <em>Tradeoff: one service handles both channels; mitigated by per-channel config and clear logging.</em>
+            <strong>Reuse the SMS adapter for RCS rather than build a new rcsadapter.</strong> RCS and SMS share the Twilio Messaging Service, the consent semantics, the keyword-action mappings, and the inbound webhook shape. A separate rcsadapter would have doubled the operational surface for ~0 net benefit. Extended the existing SMS adapter config (the sender-id field already accepts both an SMS phone number and an <code>rcs:</code>-prefixed sender) — same code path, different bearer. <em>Tradeoff: one service handles both channels; mitigated by per-channel config and clear logging.</em>
           </li>
           <li>
-            <strong>Header-based OMS routing, not application-level filtering.</strong> Could have routed all inbound replies to every consumer team and let each filter their own. Header-based filtering at the broker means each team only ever sees the messages addressed to their sender — less code in each consumer, no risk of a consumer accidentally processing another team's replies. <em>Tradeoff: more upfront work with the OMS team; pays off as we add more consumer teams.</em>
+            <strong>Header-based Pulsar routing, not application-level filtering.</strong> Could have routed all inbound replies to every consumer team and let each filter their own. Header-based filtering at the broker means each team only ever sees the messages addressed to their sender — less code in each consumer, no risk of a consumer accidentally processing another team's replies. <em>Tradeoff: more upfront work with the messaging-infra team; pays off as we add more consumer teams.</em>
           </li>
           <li>
-            <strong>Escalate, don't wait, when the OMS team blocks.</strong> The OMS approval for cross-swim-lane prod routing was stalled in a customer-facing chatops channel. I escalated to platform leaders for OMS manager-level contacts and scheduled the cross-team meeting myself rather than waiting. <em>Tradeoff: spends political capital; the alternative was VEP and Field Service blocked indefinitely, which was worse.</em>
+            <strong>Escalate, don't wait, when the messaging-infra team blocks.</strong> The approval for cross-swim-lane prod routing was stalled in a customer-facing chatops channel. I escalated to platform leaders for messaging-infra leadership contacts and scheduled the cross-team meeting myself rather than waiting. <em>Tradeoff: spends political capital; the alternative was the consumer-team integrations blocked indefinitely, which was worse.</em>
           </li>
           <li>
             <strong>Permissive parsing on inbound RCS payloads.</strong> The vendor's webhook payload has fields that vary by message type (with-media vs text-only), provider (Google RBM today; Apple in future), and Twilio API version. Strict schema validation would have rejected legitimate inbound messages. Defensive parsing — extract what's there, log anomalies, don't fail. (Same principle I applied to SMS phone-number parsing; see the SMS launch page.) <em>Tradeoff: less clean validation; matches what the vendor actually sends.</em>
           </li>
           <li>
-            <strong>Authored the canonical docs + the Claude Code skill, not just code.</strong> A new channel that only the author understands isn't really shipped. The 8-section onboarding guide turns RCS into a self-serve capability for partner teams. The <code>rcs-docs</code> skill makes those docs queryable from any engineer's local Claude Code. <em>Tradeoff: ~1 week of writing on top of the code work; the alternative is being the bottleneck for every partner team's RCS onboarding indefinitely.</em>
+            <strong>Authored the canonical docs + an internal Claude Code skill, not just code.</strong> A new channel that only the author understands isn't really shipped. The 8-section onboarding guide turns RCS into a self-serve capability for partner teams. The skill on top makes those docs queryable from any engineer's local Claude Code. <em>Tradeoff: ~1 week of writing on top of the code work; the alternative is being the bottleneck for every partner team's RCS onboarding indefinitely.</em>
           </li>
         </ul>
       </section>
@@ -159,12 +158,12 @@
       <section class="content-section" id="impact">
         <h2>Impact</h2>
         <ul>
-          <li><strong>RCS shipped as a first-class channel on OINP</strong> — authoring, delivery, two-way, SMS-fallback, consent, cross-swim-lane routing to consumer teams. Both Triton/VEP and Sales Feeder Service consuming inbound RCS replies via the OMS routing.</li>
-          <li><strong>Field Service / VEP / Credit Karma integrations unblocked.</strong> The two-way path (user replies routed to the consumer team's topic) is what these teams needed. Without the cross-swim-lane OMS routing, none of them could have launched.</li>
-          <li><strong>Critical Money Alerts (Apr 2026 Salute award)</strong> uses the SMS+RCS infrastructure — the Critical Money Alerts experiment is one of the first production consumers of this work.</li>
-          <li><strong>OINP onboarding guide for RCS is the canonical doc</strong> on the platform docs site — every partner team that onboards RCS uses it; PR <code>OINP-21070</code> brought it in, PR <code>OINP-21322</code> made it queryable via the <code>rcs-docs</code> Claude Code skill.</li>
-          <li><strong>Volunteered in leaders channel to lead through prod:</strong> <em>"Will lead this till production if that is ok by GED end it should be live."</em></li>
-          <li><strong>Pattern reuse:</strong> the SMS-adapter-handles-RCS pattern, the header-based OMS routing pattern, and the docs-as-skill pattern have all become defaults for the next bearer onboarding.</li>
+          <li><strong>RCS shipped as a first-class channel on OINP</strong> — authoring, delivery, two-way inbound, SMS-fallback, consent, cross-swim-lane routing to consumer teams. Multiple consumer teams now consuming inbound RCS replies via the multicast routing.</li>
+          <li><strong>Consumer-team integrations unblocked.</strong> The two-way path (user replies routed to each consumer team's own topic) was the blocker for several partner teams. Without the cross-swim-lane Pulsar routing, none of them could have launched.</li>
+          <li><strong>Critical Money Alerts (Apr 2026 Salute award)</strong> uses this SMS+RCS infrastructure — one of the first production consumers of the work.</li>
+          <li><strong>The RCS onboarding guide is the canonical doc</strong> on the platform docs site — every partner team that onboards RCS uses it. The internal Claude Code skill on top makes it queryable from any engineer's terminal.</li>
+          <li><strong>Volunteered in the platform leaders forum to lead through prod:</strong> <em>"Will lead this till production. By GED end it should be live."</em></li>
+          <li><strong>Pattern reuse:</strong> the SMS-adapter-handles-RCS pattern, the header-based broker-routing pattern, and the docs-as-skill pattern have all become defaults for the next bearer onboarding.</li>
         </ul>
       </section>
 
@@ -175,7 +174,7 @@
           <dd>Access was gated and the API was still moving. Shipping Phase 1 on Content Templates meant first customers could onboard without waiting on Twilio. I flagged the migration cost early to leaders (≤2 days backend) so we'd switch <em>before</em> first prod customer rather than retrofitting customer templates later.</dd>
 
           <dt>How do you debug a missing RCS delivery?</dt>
-          <dd>The <a href="https://github.intuit.com/pages/one-intuit-notification-platform/docs/newRFMOnBoardingGuide/rcs/debugging/">debugging guide</a> walks through it: check Twilio console for the message status, check the OINP send logs for the outbound webhook to Twilio, check the consent state (RCS without explicit consent doesn't send), and if the user is RCS-ineligible verify the SMS fallback is wired on the same Messaging Service as the RCS sender.</dd>
+          <dd>The internal debugging guide walks through it: check Twilio console for the message status, check the platform send logs for the outbound webhook to Twilio, check the consent state (RCS without explicit consent doesn't send), and if the user is RCS-ineligible verify the SMS fallback is wired on the same Messaging Service as the RCS sender.</dd>
 
           <dt>What about Apple's RCS rollout — won't that change things?</dt>
           <dd>The bearer layer is abstracted behind Twilio's provider field — current inbound payloads carry <code>"provider": "google"</code> (Google RBM). When Apple Messages-for-Business comes online, Twilio handles the bearer; the OINP layer needs zero code changes as long as the Channel Metadata shape stays as documented.</dd>

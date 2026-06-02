@@ -32,10 +32,19 @@
       <section class="content-section" id="problem">
         <h2>What OINP is</h2>
         <p>
-          OINP is the company-wide platform every Intuit product team (QuickBooks, TurboTax, Credit Karma, Mailchimp, Field Service, IEP, ProSeries, Lacerte, Acadia) uses to deliver transactional and marketing notifications across <strong>Email, SMS, RCS, Voice, Push, Tray, In-App, and ICE</strong>. The platform spans authoring (RFM), delivery (channel adapters), event ingestion (OMS/Pulsar), and the management surfaces (search, dashboards, promotion).
+          OINP is the company-wide platform every Intuit product team (QuickBooks, TurboTax, Credit Karma, Mailchimp, ProSeries, Lacerte, plus several internal product surfaces) uses to deliver transactional and marketing notifications across <strong>Email, SMS, RCS, Voice, Push, Tray, In-App, and ICE</strong>. The platform spans authoring (RFM), delivery (channel adapters), event ingestion (Pulsar), and the management surfaces (search, dashboards, promotion).
         </p>
         <p>
-          I own the engineering for the modernised authoring stack, the platform's tax-peak reliability program, and the cross-org integration surface. Concretely: five backend services (<code>comms-authoring-service</code>, <code>authoring-delivery-sync</code>, <code>comms-comparator</code>, <code>comms-promotion-service</code>, the legacy <code>notificationadmin</code> being retired), two channel adapters (<code>smsadapter</code>, <code>oinp-tray</code>), the OINP onboarding documentation that partner teams consume, and the game-day / HPA / scaling program that gates each tax peak.
+          I own four domains on OINP end-to-end:
+        </p>
+        <ul>
+          <li><strong>Authoring experience</strong> — the modernised RFM portal (schema, APIs, search, preview, promotion to prod), the parity-validation layer against the legacy stack, and the onboarding documentation partner teams consume.</li>
+          <li><strong>RCS delivery</strong> — vendor integration, schema and API design, two-way inbound, cross-swim-lane Pulsar routing to consumer teams, consent, SMS fallback.</li>
+          <li><strong>SMS delivery</strong> — the SMS launch on the modernised stack, Critical Money Alerts SMS integration, multi-subaccount Twilio support, consent flows.</li>
+          <li><strong>Notification Tray</strong> — the in-product inbox across Intuit surfaces. Reliability forensics, the proposal to migrate off Cassandra+Solr, in-app incident leadership.</li>
+        </ul>
+        <p>
+          Beyond the four domains, I own the platform's <strong>tax-peak reliability program</strong> (game-days, HPA scaling reviews, backup paths) and the <strong>cross-org integration surface</strong> — single escalation point for partner teams across 10+ products who can't tell whether a missing notification is upstream, OINP, or vendor.
         </p>
       </section>
 
@@ -44,7 +53,7 @@
         <ul>
           <li><strong>2024.</strong> Shipped RFM search on the legacy stack (Sep 2024) — DynamoDB → Kinesis → IPS Search ingestion, sort-field policy I set against product's "sort by everything" ask, gateway routing for the GenAI integration. Solo build, prod-stable, still serving.</li>
           <li><strong>2025.</strong> Drove TY24 tax-peak reliability (Bravo from Shanti Kuropati: "OINP resilient, stable and serve with high availability"). Led RFM Voice (Nov 2025, Bravo) and SMS (Dec 2025, Bravo) launches on the new stack. Won the Lightning Award at GED 2025 for the fastest 48-hr POC — a LangGraph-based AI-assisted notification authoring agent, now in prod as <code>ccx-oinp-guide-agent</code>.</li>
-          <li><strong>2026.</strong> Drove TY25 tax-peak reliability — 100% availability, "the smoothest OINP has seen in two years" per Sheetal Sureka's Salute-tier citation. Owned the RCS channel end-to-end — Twilio integration, schema, two-way inbound, cross-swim-lane OMS routing, consent, canonical onboarding docs. Currently running three concurrent initiatives: the GED 2026 search rollout, the OMS routing unblock for VEP / Field Service, and the Preview-API-powered home-page redesign (3,550 prod notifications rendered as evidence).</li>
+          <li><strong>2026.</strong> Drove TY25 tax-peak reliability — 100% availability, "the smoothest OINP has seen in two years" per Sheetal Sureka's Salute-tier citation. Owned the RCS channel end-to-end — Twilio integration, schema, two-way inbound, cross-swim-lane Pulsar routing, consent, canonical onboarding docs. Currently running three concurrent initiatives: the GED 2026 search rollout, the cross-swim-lane Pulsar routing unblock for two consumer teams, and the Preview-API-powered home-page redesign (3,550 prod notifications rendered as evidence).</li>
         </ul>
       </section>
 
@@ -52,19 +61,19 @@
         <h2>The platform (high level)</h2>
         <div class="diagram-slot">
           <p class="diagram-slot-label">Diagram slot</p>
-          <pre class="diagram">[Product teams: QBO, TT, CK, Mailchimp, IEP, Field Service, …]
+          <pre class="diagram">[Product teams: QuickBooks, TurboTax, Credit Karma, Mailchimp, …]
    ↓
-[RFM / ccx-authoring-ui]                              ← new authoring surface
+[RFM / authoring UI]                                  ← new authoring surface
    ↓
 [comms-authoring-service]  →  [comms-comparator]      ← parity vs. legacy
    ↓                              ↓
-[authoring-delivery-sync]      [notificationadmin]    ← legacy stack (being retired)
+[authoring-delivery-sync]      [legacy authoring]     ← being retired
    ↓
-[OMS / Pulsar event bus]   ← cross-swim-lane routing (FS, VEP)
+[Pulsar event bus]         ← cross-swim-lane routing to consumer teams
    ↓
-[mailadapter] [smsadapter] [rcsadapter] [voice-adapter] [oinp-tray] [ICE]
+[mail adapter] [SMS adapter] [voice adapter] [tray] [in-app push]
    ↓
-SendGrid · Twilio (multi-subaccount) · Braze · TXE · IDPS · Cassandra+Solr (tray)</pre>
+SendGrid · Twilio (multi-subaccount) · Braze · push providers · Cassandra+Solr (tray)</pre>
         </div>
       </section>
 
@@ -72,7 +81,7 @@ SendGrid · Twilio (multi-subaccount) · Braze · TXE · IDPS · Cassandra+Solr 
         <h2>Directional decisions across the work</h2>
         <ul>
           <li>
-            <strong>Migrate, don't patch, when patch budget exceeds migration budget.</strong> Made this call publicly in <code>#customer-comms-pd</code> for the Notification Tray (40 GB Cassandra+Solr → managed DB), drove it for the legacy authoring stack (RFM Revamp), and pushed for elimination of the legacy scheduling service before TY25. Each removed a chronic failure source.
+            <strong>Migrate, don't patch, when patch budget exceeds migration budget.</strong> Made this call publicly to the customer-comms team for the Notification Tray (40 GB Cassandra+Solr → managed DB), drove it for the legacy authoring stack (RFM Revamp), and pushed for elimination of the legacy scheduling service before TY25. Each removed a chronic failure source.
           </li>
           <li>
             <strong>Parity over hope.</strong> Stood up <code>comms-comparator</code> as the parity backbone for the entire RFM migration. Ran a 7-day prod audit: 2.9M reads, 99.987% parity, every failing class root-caused. Without it, we could not have moved 100% of traffic to the new stack before tax peak.
@@ -81,10 +90,10 @@ SendGrid · Twilio (multi-subaccount) · Braze · TXE · IDPS · Cassandra+Solr 
             <strong>Phased rollout to avoid throwaway work.</strong> S3 thumbnails → Elasticsearch → domain-event resiliency, each phase usable in its own right. Default approach across the team now for "add capability X to product Y."
           </li>
           <li>
-            <strong>API contract before implementation.</strong> Pushed this with every junior engineer touching a new surface. Pushed back in <code>#customer-comms-pd-leaders</code> against a peer's BFF proposal — used notif-common's history of scope-creep as the precedent, and proposed gateway routing as the simpler primitive. The decision held; no BFF.
+            <strong>API contract before implementation.</strong> Pushed this with every junior engineer touching a new surface. Pushed back in the platform leaders forum against a peer's BFF proposal — used notif-common's history of scope-creep as the precedent, and proposed gateway routing as the simpler primitive. The decision held; no BFF.
           </li>
           <li>
-            <strong>Escalate to leadership when peer-level chatops stalls.</strong> When the OMS team's customer-facing channel wouldn't approve cross-swim-lane routing to prod (blocking VEP and Field Service integration), escalated in leaders channel for manager contacts, scheduled the cross-team meeting myself, negotiated a prod rollout timeline.
+            <strong>Escalate to leadership when peer-level chatops stalls.</strong> When the messaging-infra team wouldn't approve cross-swim-lane routing to prod (blocking two consumer-team integrations), escalated in the platform leaders forum for manager contacts, scheduled the cross-team meeting myself, negotiated a prod rollout timeline.
           </li>
           <li>
             <strong>Demonstrate before proposing.</strong> Rather than write a doc for the home-page redesign, generated previews of 3,550 production notifications using the new Preview API and hosted the visual mockup. The proposal landed because the data was already there.

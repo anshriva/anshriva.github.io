@@ -39,7 +39,7 @@
         <ul>
           <li><strong>Live traffic during migration.</strong> The legacy stack was processing prod notifications for QBO, QBSE, Credit Karma, Mailchimp, TurboTax and others. Any downtime or correctness regression was visible to end customers.</li>
           <li><strong>Two stacks running simultaneously.</strong> For the migration window we had to operate <code>notificationadmin</code> (old) and <code>comms-authoring-service</code> (new) in parallel, with a per-notification "stack flag" deciding which one served each request.</li>
-          <li><strong>Cross-team dependencies.</strong> Migration spanned five backend services, two UIs (legacy Mint-era and new <code>ccx-authoring-ui</code>), the IPS Managed Relational team, the gateway team, the OMS team, and product owners for every notification.</li>
+          <li><strong>Cross-team dependencies.</strong> Migration spanned five backend services, two UIs (legacy Mint-era and the new authoring UI), the IPS Managed Relational team, the gateway team, the Pulsar infra team, and product owners for every notification.</li>
           <li><strong>Phased rollout.</strong> Phase 1 (single-channel, simple triggers), Phase 2 (templates needing flattening — templates shared via N:1 references and had to be flattened to 1:1 for the new schema), and Phase 3 (multi-channel notifications — 278 of them, each had to be split into per-channel notifications in the old RFM, promoted, then migrated).</li>
         </ul>
       </section>
@@ -77,7 +77,7 @@
           The legacy promotion flow only promoted communications. For the new stack I scoped the promotion service to handle communications <em>and</em> their associated entities — message templates, vendor configs, fragments, report datasets. Voice was the first channel we promoted through it. I gated prod cutover on three things <strong>not</strong> strictly required for voice but required before we trust prod promotion for the rest of the migration: access control on who can promote, an audit trail (who promoted what, when), and a "list associated communications when promoting an event" API so promoters know the blast radius before they click the button.
         </p>
         <p>
-          When the prod promotion flow broke on Apr 3 2026, I worked through the day and late into the night to ship a working fix — caught and corrected an auth config bug (OINP-21158, two PRs) where the new service was hitting the e2e auth endpoint from prod, causing 401s. Rajesh Gaur's "Integrity Without Compromise" award called this out specifically.
+          When the prod promotion flow broke on Apr 3 2026, I worked through the day and late into the night to ship a working fix — caught and corrected an auth config bug where the new service was hitting the staging auth endpoint from prod, causing 401s. Rajesh Gaur's "Integrity Without Compromise" award called this out specifically.
         </p>
       </section>
 
@@ -100,16 +100,16 @@
             <strong>5xx alert threshold from 0 → 5.</strong> Setting 0 means every transient 5xx pages oncall. Once Day-1 metrics confirmed comparator was stable I bumped the threshold so real regressions stay paged but flakes don't.
           </li>
           <li>
-            <strong>Pushed back on a BFF (backend-for-frontend) proposal in leaders channel.</strong> When a peer proposed a BFF layer on top of the new stack, I argued in <code>#customer-comms-pd-leaders</code> that the cited use cases (QuickBase, change management, HCAP calendar status) belonged either to <code>comms-authoring-service</code> directly or to <code>comms-promotion-service</code> — not to a new aggregation layer. Cited <code>notif-common</code>'s history of scope-creep (delivery flow, inbound messages, in-app notifications, customer preview all ended up in one service) as the cautionary tale, and proposed gateway routing as the simpler primitive when the goal is just request fan-out. <em>The decision held; we did not build a BFF.</em>
+            <strong>Pushed back on a BFF (backend-for-frontend) proposal in the platform leaders forum.</strong> When a peer proposed a BFF layer on top of the new stack, I argued that the cited use cases (quickbase integration, change management, HCAP calendar status) belonged either to <code>comms-authoring-service</code> directly or to <code>comms-promotion-service</code> — not to a new aggregation layer. Cited <code>notif-common</code>'s history of scope-creep (delivery flow, inbound messages, in-app notifications, customer preview all ended up in one service) as the cautionary tale, and proposed gateway routing as the simpler primitive when the goal is just request fan-out. <em>The decision held; we did not build a BFF.</em>
           </li>
           <li>
-            <strong>Owned the cross-swim-lane OMS routing escalation.</strong> The OMS team approved cross-swim-lane routing in e2e (working cleanly) but resisted enabling it in prod, citing 7 days of work, and stopped our new e2e routing — blocking the VEP team integration. I escalated to leaders channel asking for manager-level OMS contacts, scheduled the cross-team meeting myself with Abhinesh / Anaghesh / Gaurav, got onboarding to e2e unblocked, and negotiated a prod rollout timeline. Result: cost estimate now in hand, prod by mid-next-week (per the MOM I posted).
+            <strong>Owned the cross-swim-lane Pulsar routing escalation.</strong> The messaging-infra team approved cross-swim-lane routing in staging (working cleanly) but resisted enabling it in prod, citing seven days of work, and stopped our new staging routing — blocking a consumer-team integration entirely. I escalated to the platform leaders forum asking for manager-level contacts, scheduled the cross-team meeting myself with the messaging-infra leads, got onboarding to staging unblocked, and negotiated a prod rollout timeline. Result: cost estimate in hand, prod rollout scoped to the following week.
           </li>
           <li>
-            <strong>Authored the official OINP onboarding guides.</strong> Wrote the RCS onboarding guide (<code>github.intuit.com/pages/one-intuit-notification-platform/docs/newRFMOnBoardingGuide/rcs/</code>) and shared it with leaders channel for review. The team's documentation site is the source of truth partner teams consume — owning the canonical doc set is part of the role.
+            <strong>Authored the official OINP onboarding guides.</strong> Wrote the canonical RCS onboarding guide for the platform docs site and shared it with the leaders forum for review. The team's documentation site is the source of truth partner teams consume — owning the canonical doc set is part of the role.
           </li>
           <li>
-            <strong>Volunteered to lead the RCS go-live to production.</strong> In <code>#customer-comms-pd-leaders</code>: <em>"Will lead this till production if that is ok by GED end it should be live."</em> Cross-team initiatives with public commitments to leadership are how I claim scope.
+            <strong>Volunteered to lead the RCS go-live to production.</strong> In the platform leaders forum: <em>"Will lead this till production. By GED end it should be live."</em> Cross-team initiatives with public commitments to leadership are how I claim scope.
           </li>
         </ul>
       </section>
@@ -121,8 +121,8 @@
           <li><strong>Comms-comparator handled peak 507 TPS / avg ~26 TPS</strong> through the parity window.</li>
           <li><strong>Voice channel</strong> shipped as the first end-to-end notification on the new promotion flow (Nov 2025 Bravo).</li>
           <li><strong>SMS channel</strong> shipped Dec 2025 (Bravo) — full feature-flagged rollout, rollback plan, observability on every new component.</li>
-          <li><strong>Phase 1 (single-channel) migrated, Phase 2 (template flattening) executed via CHG9359960 (E2E) / CHG9359354 (PROD), Phase 3 (278 multi-channel notifications)</strong> planned and in-flight.</li>
-          <li><strong>Preview API at scale:</strong> rendered 3,550 production notifications through the new Preview API, surfaced as the basis for the <a href="oinp-accelerate.html" data-basepath="true">OINP Accelerate</a> home-page redesign initiative.</li>
+          <li><strong>Phase 1 (single-channel) migrated, Phase 2 (template flattening) executed via formal change-request review across staging then prod, Phase 3 (278 multi-channel notifications)</strong> planned and in-flight.</li>
+          <li><strong>Preview API at scale:</strong> rendered 3,550 production notifications through the new Preview API, surfaced as the basis for the <a href="oinp-accelerate.html" data-basepath="true">home-page redesign initiative</a>.</li>
           <li><strong>Patterns established for the team:</strong> the 3-phase rollout (S3-thumbnails → Elasticsearch → domain events), the working-evidence-before-proposal model, and "API contract before implementation" — all now defaults for new workstreams.</li>
         </ul>
       </section>

@@ -27,7 +27,7 @@
       <section class="content-section" id="problem">
         <h2>Problem statement</h2>
         <p>
-          The OINP Notification Tray powers the in-product inbox across Intuit surfaces (QBO, Mailchimp's tray, IEP, TurboTax, etc.) — short-lived messages, mostly 15-day TTL, ~40 GB of live data, served from a Cassandra cluster with a Solr index for query. Tray is on the hot path for every in-product notification.
+          The OINP Notification Tray powers the in-product inbox across Intuit surfaces (QuickBooks, Mailchimp's tray, TurboTax, and several internal product surfaces) — short-lived messages, mostly 15-day TTL, ~40 GB of live data, served from a Cassandra cluster with a Solr index for query. Tray is on the hot path for every in-product notification.
         </p>
         <p>
           Over the course of 2024–2025 the tray developed intermittent <code>SolrCore is not available due to init failure</code> errors that were not visible to customers (we survived on retries) but were degrading availability margin and creating perpetual oncall noise. I owned the forensics, the workaround, and ultimately the proposal to migrate the tray off Cassandra+Solr to a managed DB.
@@ -58,13 +58,13 @@
             <strong>Cassandra retries papered over user impact.</strong> A Resilience4j <code>cassandraRetry</code> wrapper was succeeding on retry — so customers didn't see failures, but every retry was burning latency and the underlying issue was still there. As I called out in late Nov 2025: <em>"this issue has been going on for a month. Even now I see retrials on tray. We are just surviving on retrials. I have not been able to run proper load test due to such errors coming up."</em>
           </li>
           <li>
-            <strong>Realm-level fan-out amplified pressure.</strong> Edge cases like one test realm fanning out to 559 users in a single API call were creating mini-load-spikes that interacted badly with the Solr core init issues — caught one such spike for a perf-test realm and escalated to the upstream Acadia team to confirm it was a test workload, not real customer traffic.
+            <strong>Realm-level fan-out amplified pressure.</strong> Edge cases like one test realm fanning out to 559 users in a single API call were creating mini-load-spikes that interacted badly with the Solr core init issues — caught one such spike for a perf-test realm and escalated to the upstream-product team to confirm it was a test workload, not real customer traffic.
           </li>
         </ul>
 
         <h3>The migration proposal</h3>
         <p>
-          By late 2025 I argued in <code>#customer-comms-pd</code> that we should stop patching this and migrate:
+          By late 2025 I argued to the customer-comms team that we should stop patching this and migrate:
         </p>
         <blockquote>
           "Either we fix this, or we can spend a month and migrate this 40 GB tray data to a managed DB. Tray messages are short lived (mostly 15 days of TTL) so it won't be too difficult to migrate."
@@ -101,7 +101,7 @@
         <h2>Impact</h2>
         <ul>
           <li><strong>Sheetal Sureka, In-App incident leadership (Aug 1 2025):</strong> <em>"thank you for your leadership in handling the In-App incident and working through the day with the team, to restore the production feature. This required you to deep dive in to the legacy aspects of the code and while this was eventually not a tray issue, you worked through the closure of the issue."</em></li>
-          <li><strong>Katya Krauchanka (Nov 13 2025):</strong> <em>"meticulously analyze and resolve an issue with one of the OINP templates we had posted in the #intuit-iris-oinp channel. The problem had been holding us back for several days… debugged the issue and identified its root cause… accommodating the US team's schedule."</em></li>
+          <li><strong>Katya Krauchanka (Nov 13 2025):</strong> <em>"meticulously analyze and resolve an issue with one of the OINP templates we had posted in the cross-team support channel. The problem had been holding us back for several days… debugged the issue and identified its root cause… accommodating the US team's schedule."</em></li>
           <li><strong>Tray remained functional through TY24 and TY25 peak</strong> — the retry layer held, customer impact stayed at zero, and the migration proposal landed on the planning board for early TY26 cycles.</li>
           <li><strong>Cross-team partnership:</strong> Daniel Thrall (Jul 27 2025): <em>"always willing to meet early, meet late, explain things to us with patience, plug us in with the right people, and make sure we've got what we need to take care of customers."</em></li>
         </ul>
