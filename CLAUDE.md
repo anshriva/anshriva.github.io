@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Personal portfolio site live at **https://anshriva.github.io** — static HTML/CSS/JS, no build step, served by GitHub Pages from the repository root on push to `main`.
 
+The portfolio is structured as one topic page per project. The Intuit section (`work/intuit/*.html`) is the most actively developed — it's the user's pitch for a Staff Engineer role.
+
 ## Run locally
 
 ```bash
@@ -31,7 +33,41 @@ If you add a new page, follow one of these two patterns exactly — don't hand-a
 
 **Sidebar.** Rendered at runtime by `js/sidebar.js` from `data/navigation.json` (loaded via `PortfolioNav.load()` in `js/nav-data.js`). Active-item detection in `itemIsActive()` strips `BASE_PATH` from `window.location.pathname` before comparing to the item's `path`. Expanded-section state is persisted to `sessionStorage` under key `portfolio-sidebar-sections`. Section titles are shortened for display via `shortSection()` — add new substring strippers there if you add a long section title.
 
-**Topic page convention.** Each topic page is a self-contained `<article class="article topic-page">` with `<section class="content-section" id="...">` blocks for `problem`, `context`, `architecture`, `decisions`, `impact`, `faq`. The `data-page-id` attribute on `<body>` matches the `id` in `navigation.json`.
+**Topic page convention.** Each topic page is a self-contained `<article class="article topic-page">` with `<section class="content-section" id="...">` blocks. The standard sections (most pages have most of these, not all): `problem`, `context`, `architecture`, `decisions`, `impact`, `faq`. The `data-page-id` attribute on `<body>` matches the `id` in `navigation.json`.
+
+**Cross-page links** inside the same directory (e.g. RFM Revamp page linking to Tax Season page) use `<a href="other-page.html" data-basepath="true">`. The trailing JS on each topic page rewrites these via the `BASE_PATH` mechanism — same pattern as the index/resume root pages.
+
+## Content conventions (load-bearing for the Intuit section)
+
+The Intuit pages are the active pitch artifact. Several conventions emerged from substantial editing and should not be re-introduced:
+
+**External-audience sanitization.** The portfolio is for recruiters outside Intuit. NEVER add:
+- Links to `github.intuit.com`, `splunk.intuit.com`, `jira.cloud.intuit.com`, `devportal.intuit.com`, `*.api.intuit.com`, internal `*.app.intuit.com` URLs.
+- JIRA/PR/CHG IDs (e.g. `OINP-21070`, `CCX-727`, `CHG9359960`).
+- Slack channel names (`#customer-comms-pd`, `#oinp-prs`, `#intuit-iris-oinp`, etc.) — refer to them descriptively ("the platform leaders forum", "the cross-team support channel").
+- Literal Pulsar topic paths (`persistent://oinp/...`) — describe the routing, not the path strings.
+- Internal username `ashrivastav6` in any path or example.
+- Internal team / product codenames where they aren't public Intuit products. **Keep**: QuickBooks, TurboTax, Credit Karma, Mailchimp, ProSeries, Lacerte. **Genericize**: Triton, VEP, SBSEG, Field Service, Acadia, IEP, Expert Hiring → "consumer teams", "upstream-product team", "internal product surfaces".
+- "OMS" → use "Pulsar" (OMS is Intuit's internal name for their Pulsar wrapper).
+
+The two exceptions where internal names appear verbatim are inside **quoted award citations** on the Recognition page (`work/intuit/recognition.html`) — those are Sheetal Sureka's actual words and shouldn't be edited.
+
+**Title bar honesty.** The user is currently a Senior Software Engineer and pitching for Staff. Resume title and headers must match what's on Workday ("Senior Software Engineer · Platform & Reliability"). The Staff pitch happens via the evidence, never via the title.
+
+**Don't "tell" the Staff case — show it.** Earlier revisions included sections like "Why Staff, not Senior, fits the work" — these read as pleading and were removed. Let the work argue for itself: scope statements, decision ownership, recognition citations, quantitative impact.
+
+**Recognition is its own page now** (`work/intuit/recognition.html`), accessible from the left nav. Spotlight email cards are rendered inline with sanitized HTML (Award IDs / Redeem URLs / Say Thanks mailtos / Use By dates stripped from the original Workhuman email HTML). Platform overview links to Recognition; do not re-introduce the citation list on platform-overview itself.
+
+**Awards count and tiers.** When updating the recognition list, match what's currently on the Recognition page. The Spotlight tier ordering is: Applause < Acclaim < Encore < Salute < Bravo. Sheetal Sureka is a Group Engineering Manager (GEM); Shanti Kuropati is a Director — keep these titles accurate.
+
+## Resume specifics (`resume.html`)
+
+Self-contained HTML — its own inline `<style>` block (not the portfolio dark theme), light background designed for printing. Recruiters print/PDF it.
+
+- **3 pages max.** ~1700 words fits 3 pages with the current styles. Watch for repetition between SCOPE block, EXPERIENCE bullets, and SUMMARY — easy to accidentally describe the same thing three times.
+- **Print rules.** `@media print { .print-button { display: none } }` already hides bottom buttons. If you add buttons or CTAs, make sure they're inside `.print-button` (or another container with `display: none` on print) — recruiters who print the resume shouldn't see web-only UI.
+- **Bottom buttons.** Two buttons: "View detailed portfolio →" (secondary style) and "Print / Save as PDF" (primary). Both hidden on print. There's no top-of-page portfolio CTA — adding one looked awkward in the centered header.
+- **Microsoft is a single company block** with two sub-headings (L63 and L61–L62) under it. Don't split it back into two separate company entries — that was the previous structure and was confusing.
 
 ## Deploy
 
