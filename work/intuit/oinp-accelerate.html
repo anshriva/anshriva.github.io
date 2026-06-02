@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../js/base-path.js"></script>
+
+  <script>
+    document.write('<link rel=\"stylesheet\" href=\"' + window.BASE_PATH + 'css/styles.css\" />');
+  </script>
+
+<meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OINP Accelerate — Anubhav Shrivastava</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Fraunces:wght@500;600&display=swap" rel="stylesheet" />
+</head>
+<body class="layout-docs" data-page-id="intuit-accelerate">
+  <aside id="site-sidebar" aria-label="Topics"></aside>
+<main class="topic-main">
+    <article class="article topic-page">
+      <header class="page-header">
+        <p class="page-status">Status: <strong>ready</strong></p>
+        <h1>OINP Accelerate — proposing a UX redesign by shipping the evidence first</h1>
+        <p class="subtitle">Topic · Intuit · OINP / Unsolicited initiative</p>
+      </header>
+
+      <section class="content-section" id="problem">
+        <h2>Problem statement</h2>
+        <p>
+          The new RFM home page is functional but information-dense — a table of notifications with names, statuses, and modification dates. To understand <em>what a notification actually looks like</em>, an author has to click into it, preview it, and click back. For thousands of notifications across hundreds of workspaces, this friction makes RFM feel like a database browser rather than a creative tool.
+        </p>
+        <p>
+          I proposed redesigning the home page around a visual-first model — show the notification's actual rendered preview as the primary unit on the home page, with metadata as decoration. This wasn't a roadmap item; it was an initiative I picked up unsolicited because the new Preview API made it suddenly cheap. I shipped <strong>working evidence at production scale (3,550 notification previews) before writing the proposal</strong> — and then made the case in <code>#customer-comms-pd-leaders</code>.
+        </p>
+      </section>
+
+      <section class="content-section" id="context">
+        <h2>Context &amp; constraints</h2>
+        <ul>
+          <li><strong>The Preview API was newly available.</strong> Part of the RFM Revamp work — preview generation lived behind <code>/v1/notificationdef/preview/internal</code> and the equivalent surfaces on the new authoring stack. Until this existed, doing visual rendering at scale wasn't possible without per-template manual work.</li>
+          <li><strong>3,550 notifications in prod-equivalent e2e.</strong> Real production notifications, not synthetic test data — meaning the proposal would be evaluated against actual variety: every channel, every catalog, every template complexity.</li>
+          <li><strong>Skeptical audience.</strong> Adding a visual layer to every home-page entry could mean 3 API calls per preview × N visible notifications. The "this will be slow / expensive" objection had to be answered before the meeting, not during.</li>
+          <li><strong>Leadership is impressed by working artifacts, not pitches.</strong> A doc proposing this would compete with five other docs. A drive full of rendered previews + a working mockup short-circuits the discussion.</li>
+        </ul>
+      </section>
+
+      <section class="content-section" id="architecture">
+        <h2>How I shipped the evidence</h2>
+        <ul>
+          <li>
+            <strong>Generated 3,550 previews end-to-end using the new Preview API.</strong> Ran the API against e2e for every active notification, captured the rendered output, dumped all images to a shared Google Drive. A few failed for legit reasons (asset onboarding for report datasets, mis-configured event data); the majority worked clean.
+          </li>
+          <li>
+            <strong>Built a mockup of the redesigned home page</strong> hosted on GitHub Pages at <code>github.intuit.com/pages/ashrivastav6/oinp-accelerate/mockups/notification-preview-redesign.html</code> — the visual UI authors would actually see, not a Figma drawing.
+          </li>
+          <li>
+            <strong>Pre-answered the latency objection.</strong> I worked out two implementation options: (a) build fresh on every page-load — quick to ship but each preview triggers 3 calls to comms-comparator, so the experience would be slow on dense pages; (b) pre-build previews on domain-communication-events and store in IPS Search — same pattern we already proved on legacy notif-admin two years ago. The doc I shared in leaders channel laid this tradeoff out explicitly.
+          </li>
+          <li>
+            <strong>Anchored the IPS Search proposal in existing operational data.</strong> "It just requires onboarding to IPS Search and we can support preview also. We did that analysis 2 years back for notif-admin and it has been working very reliably." Linked to the original design doc.
+          </li>
+        </ul>
+
+        <div class="diagram-slot">
+          <p class="diagram-slot-label">Diagram slot</p>
+          <p>Add <code>assets/intuit-accelerate/before-after.png</code> — split view of current dense list vs. proposed visual-first home page. The actual mockup lives at <code>github.intuit.com/pages/ashrivastav6/oinp-accelerate/</code>.</p>
+        </div>
+      </section>
+
+      <section class="content-section" id="decisions">
+        <h2>Key decisions &amp; tradeoffs</h2>
+        <ul>
+          <li>
+            <strong>Ship working evidence before proposing.</strong> The cheap path is to write a doc, attach screenshots, and ask for review. The hard path is to actually run the API at scale, host the output, and build the mockup. The hard path makes the meeting decision-mode instead of debate-mode. <em>Tradeoff: 1–2 weeks of upfront work that could be "wasted" if the idea got rejected; the proposal landed on first review precisely because it didn't feel speculative.</em>
+          </li>
+          <li>
+            <strong>Pre-build previews + IPS Search, not on-demand rendering.</strong> The simplest implementation (call comms-comparator three times on each preview load) would have been functional but slow. Recommending pre-build + index lookups makes the home page feel instant and reuses infrastructure we already operate. <em>Tradeoff: more moving parts (need to keep the index converged with the source of truth via domain events); same pattern we've proved on legacy notif-admin for 2 years.</em>
+          </li>
+          <li>
+            <strong>Use my own GitHub Pages site for the mockup.</strong> Could have shared a Figma file or a Google Slides deck. GitHub Pages is faster to iterate on (push, refresh), works for both engineers and product reviewers, and signals "this is engineering-real, not design-speculative." <em>Tradeoff: mockup looks less polished than Figma; conveys intent better.</em>
+          </li>
+          <li>
+            <strong>Estimate the work explicitly: "minor work, say 1 week / max 2 weeks."</strong> Including the timebox in the original proposal removed the "how big is this" friction. The home page can be much more interactive within a sprint, not a quarter. <em>Tradeoff: a public commitment that has to be hit; the estimate is grounded in the pre-build path already existing as a pattern.</em>
+          </li>
+        </ul>
+      </section>
+
+      <section class="content-section" id="impact">
+        <h2>Impact</h2>
+        <ul>
+          <li><strong>3,550 production-equivalent notifications rendered</strong> through the new Preview API — first time this had been done at scale and proof the API holds up against real-world variety.</li>
+          <li><strong>Mockup hosted at <code>github.intuit.com/pages/ashrivastav6/oinp-accelerate/</code></strong> — referenced from <code>#customer-comms-pd-leaders</code> and <code>#customer-comms-pd</code> as the concrete artifact for the proposal.</li>
+          <li><strong>Picked up as part of GED 2026 backend search work</strong> — backend approximately complete by end of GED week; visual home page is the user-visible payoff of the search + preview infrastructure.</li>
+          <li><strong>Established a pattern within the team.</strong> "Ship the evidence, then propose" — the GED 2026 LangGraph agent and the RCS go-live initiative both followed this same working-artifact-first pattern.</li>
+        </ul>
+      </section>
+
+      <section class="content-section" id="faq">
+        <h2>FAQ <span class="section-hint">(for future recruiter agent)</span></h2>
+        <dl class="faq">
+          <dt>What if leadership had rejected the proposal?</dt>
+          <dd>The Preview API generation work would still have been useful — it stress-tested the new API against the long tail of production notifications and surfaced real onboarding bugs (report dataset assets, mis-configured event data). And the mockup is on my personal GitHub Pages site, not the org's, so it's recoverable without political cost.</dd>
+
+          <dt>Why is the mockup site called "oinp-accelerate"?</dt>
+          <dd>It's a personal name I picked to gesture at "things that would make OINP feel faster to use" — both for authors (visual home page) and for engineers integrating with us (better onboarding docs). The visual home page is the first artifact under that umbrella; the RCS onboarding guide I wrote is another.</dd>
+
+          <dt>How does this connect to the search work?</dt>
+          <dd>Tightly. The visual home page only works if you can find notifications quickly — otherwise it's a slow grid. The GED 2026 search work (Elasticsearch-backed, mentored by me, executed by Suveeksha and Himaja) is the prerequisite. We're shipping them as one product surface.</dd>
+
+          <dt>What's the lesson you'd apply to the next initiative?</dt>
+          <dd>Working evidence beats pitch decks by a wide margin. The next time I want to change how authors interact with a 1000-notification list, I'll spend a week generating the visual artifact and skip the doc round entirely.</dd>
+        </dl>
+      </section>
+    </article>
+</main>
+    <script id="nav-data-script"></script>
+  <script id="sidebar-script"></script>
+  <script>
+    const navDataScript = document.getElementById('nav-data-script');
+    navDataScript.src = window.BASE_PATH + 'js/nav-data.js';
+    const sidebarScript = document.getElementById('sidebar-script');
+    sidebarScript.src = window.BASE_PATH + 'js/sidebar.js';
+  </script>
+
+</body>
+</html>

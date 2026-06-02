@@ -2,14 +2,14 @@
 <html lang="en">
 <head>
   <script src="../../js/base-path.js"></script>
-  
+
   <script>
     document.write('<link rel=\"stylesheet\" href=\"' + window.BASE_PATH + 'css/styles.css\" />');
   </script>
 
 <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Credit Karma SMS consolidation — Anubhav Shrivastava</title>
+  <title>SMS Launch & Critical Money Alerts — Anubhav Shrivastava</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Fraunces:wght@500;600&display=swap" rel="stylesheet" />
@@ -19,52 +19,113 @@
 <main class="topic-main">
     <article class="article topic-page">
       <header class="page-header">
-        <p class="page-status">Status: <strong>draft</strong> — expand sections below</p>
-        <h1>Credit Karma SMS consolidation</h1>
-        <p class="subtitle">Topic · Intuit · Notifications Platform</p>
+        <p class="page-status">Status: <strong>ready</strong></p>
+        <h1>SMS Launch on the new RFM — and the Critical Money Alerts experiment</h1>
+        <p class="subtitle">Topic · Intuit · OINP / Customer Communications</p>
       </header>
 
       <section class="content-section" id="problem">
         <h2>Problem statement</h2>
-        <p class="placeholder">What was broken or missing? Who was affected? What scale?</p>
+        <p>
+          SMS is one of the most heavily-used notification channels at Intuit — used for Credit Karma alerts, Mailchimp transactional, QBO payment confirmations, and tax-season time-critical updates. Bringing SMS onto the new RFM authoring stack was the second milestone (after Voice) for proving the modernised platform could carry production volume on a high-stakes channel.
+        </p>
+        <p>
+          I co-led the engineering side of the SMS launch on the new RFM stack (shipped Dec 2025) and partnered on the <strong>Critical Money Alerts SMS experiment</strong> (early 2026) where SMS was the bearer for time-sensitive money-related alerts to Credit Karma users.
+        </p>
       </section>
 
       <section class="content-section" id="context">
         <h2>Context &amp; constraints</h2>
-        <p class="placeholder">Org boundaries, timeline, tech stack, NDA-safe scope.</p>
+        <ul>
+          <li><strong>SMS is irreversible.</strong> Unlike email (which has bounces and unsubscribes as soft signals) or push (which can be silently dropped), SMS lands on the user's phone immediately and there's no recall. Wrong number, wrong content, wrong frequency — all visible.</li>
+          <li><strong>Phone-number formatting is vendor-dependent.</strong> Our SMS vendor returns numbers prefixed with <code>+1</code> sometimes and just <code>1</code> other times. We needed to parse area code consistently without failing on inputs that aren't strictly E.164.</li>
+          <li><strong>Cross-org integration.</strong> Twilio Content Template Builder on one side, the Credit Karma teams on the other, OINP in the middle. Each side has its own auth, conventions, and validation pipeline.</li>
+          <li><strong>Delivery stack impact.</strong> SMS is delivered through the SMS adapter; bringing it onto the new RFM stack meant the authoring path changed but delivery had to keep working unchanged — careful planning to keep the delivery surface stable.</li>
+        </ul>
       </section>
 
       <section class="content-section" id="architecture">
-        <h2>Architecture</h2>
+        <h2>What launching SMS on the new RFM required</h2>
+        <p>
+          The Dec 2025 launch had four engineering threads that the Spotlight citation explicitly called out:
+        </p>
+        <ul>
+          <li>
+            <strong>Functional + load testing of all new components</strong> end-to-end — comms-authoring-service, authoring-delivery-sync, comms-comparator, SMS adapter. We didn't have a real-traffic SMS workload to test against, so we used the parity work (see RFM Revamp page) to validate that authoring on the new stack produced the same delivery payloads as the legacy stack.
+          </li>
+          <li>
+            <strong>Feature flags for safe rollback.</strong> Every new SMS capability was gated so we could disable individual paths (a new trigger type, a new vendor config, a new delivery option) without rolling back the whole stack.
+          </li>
+          <li>
+            <strong>Notification-by-notification migration selection.</strong> Not every SMS notification was safe to move immediately — we identified the ones that could move first (low-frequency, well-understood content) and gated the rest behind validation.
+          </li>
+          <li>
+            <strong>Observability across new components.</strong> Splunk dashboards + alerts on the new SMS authoring + delivery path so we'd know if any SMS notification regressed in throughput, latency, or error rate immediately.
+          </li>
+        </ul>
+
+        <h3>Critical Money Alerts — the SMS experiment</h3>
+        <p>
+          Anand Abhyankar's team ran the Critical Money Alerts experiment in early 2026 — a Credit Karma initiative to use SMS as the bearer for time-sensitive money-related alerts. My side of this was OINP integration support: making sure the experiment's SMS flow worked against the new SMS adapter, debugging vendor-side issues (e.g. the <code>+1</code> vs <code>1</code> prefix parsing), and partnering with the experiment team on rollout.
+        </p>
+        <p>
+          One concrete example: testing whether the SMS adapter should fail strict-validation on a phone number that lacks the <code>+</code> prefix. I argued <em>no</em> — based on observed traffic where the vendor sometimes returns numbers without the <code>+</code> — and we kept handling permissive, parsing area code defensively rather than rejecting messages that the vendor itself was happily processing.
+        </p>
+
         <div class="diagram-slot">
           <p class="diagram-slot-label">Diagram slot</p>
-          <p>Add <code>assets/intuit-ck-sms/architecture.svg</code> or paste Mermaid here.</p>
-          <pre class="diagram diagram-mermaid">%% Mermaid example
-flowchart LR
-  A[Client] --> B[Service]
-  B --> C[(Store)]</pre>
+          <p>Add <code>assets/intuit-ck-sms/sms-flow.svg</code> showing RFM → comms-authoring → comms-comparator → SMS adapter → vendor with the new-vs-legacy stack flag.</p>
         </div>
       </section>
 
       <section class="content-section" id="decisions">
         <h2>Key decisions &amp; tradeoffs</h2>
-        <ul class="placeholder-list">
-          <li>Decision 1 — …</li>
-          <li>Decision 2 — …</li>
-          <li>What we rejected and why</li>
+        <ul>
+          <li>
+            <strong>Voice first, then SMS — not SMS first.</strong> Voice was the lowest-volume channel and the safest place to prove the new stack. SMS volume is much higher and customer-visible mistakes are louder. By shipping Voice in Nov 2025 we earned the right to ship SMS in Dec 2025. <em>Tradeoff: a few extra months before the high-value channel migrated; worth it for the de-risking.</em>
+          </li>
+          <li>
+            <strong>Permissive phone-number parsing, not strict E.164.</strong> Strict validation would have been "cleaner" in code but would have rejected real vendor inputs. Parsed defensively to extract area code, didn't fail on missing <code>+</code>, logged anomalies for review. <em>Tradeoff: less clean validation; matches what the vendor actually sends.</em>
+          </li>
+          <li>
+            <strong>Feature flags per SMS capability, not per service.</strong> Service-level flags would have meant rolling back all SMS to roll back one bad trigger. Per-capability flags meant we could turn off "new trigger type X" while keeping every other SMS notification flowing. <em>Tradeoff: more flags to manage; pays off the first time you need to revert one capability without the others.</em>
+          </li>
+          <li>
+            <strong>Migrate specific notifications, not all of SMS at once.</strong> "All SMS to new stack on day X" would have been a single point of failure. Notification-by-notification migration spread the risk and let us pause if any one notification surfaced a class of issue we hadn't seen. <em>Tradeoff: longer migration tail; safer per-step.</em>
+          </li>
         </ul>
       </section>
 
       <section class="content-section" id="impact">
         <h2>Impact</h2>
-        <p class="placeholder">Metrics, rollout, who adopted it.</p>
+        <p><strong>Sheetal Sureka — RFM SMS Launch &amp; Migration (Dec 23 2025, Bravo-tier ₹20,000):</strong></p>
+        <blockquote>
+          "You have done an outstanding job with the development and launch of SMS capabilities on modernised RFM. This required careful planning of impact to delivery stack, functional and load testing of all new components, planning feature flags to ensure we can turn off any new capabilities. You also identified notifications that can be migrated safely, a rollback plan and observability around all the new components built. Your leadership and excellence in shepherding this work has been commendable. Looking forward to launch the full new experience in 2026. This will be a game changer for our clients."
+        </blockquote>
+        <p><strong>Anand Abhyankar — Critical Money Alerts: SMS Experiment (Apr 16 2026):</strong></p>
+        <blockquote>
+          "I want to recognize the hard work and support you brought to the Critical Money Alerts project. This couldn't have happened without you — your contributions and teamwork made a real difference."
+        </blockquote>
+        <p><strong>Omri Avioz-Sarig — OINP Integration Support / SMS (Mar 3 2026):</strong></p>
+        <blockquote>
+          "I really wanted to recognize all the support you've given us from the OINP side. Your responsiveness and help with the SMS integration made a huge difference for our team, and we truly appreciate your partnership."
+        </blockquote>
       </section>
 
       <section class="content-section" id="faq">
         <h2>FAQ <span class="section-hint">(for future recruiter agent)</span></h2>
         <dl class="faq">
-          <dt>Interview question placeholder</dt>
-          <dd>Answer placeholder.</dd>
+          <dt>How is "carefully planned impact to delivery stack" actually carefully planned?</dt>
+          <dd>Specifically: the new authoring stack writes the same delivery payload format as the legacy authoring stack, validated by comms-comparator. So even though authoring moved, the SMS adapter saw bytes-identical input. That meant we didn't have to change the adapter or revalidate its delivery side; the whole question reduced to "is the new authoring output the same as the old."</dd>
+
+          <dt>Why didn't you enforce strict E.164 on inputs?</dt>
+          <dd>Because the source-of-truth — the vendor — doesn't either. Forcing stricter validation than the vendor accepts means we'd reject messages that would otherwise have delivered fine. The customer-perceived behaviour is what matters, and the customer doesn't see the <code>+</code>.</dd>
+
+          <dt>What's an example of a "notification not safe to migrate"?</dt>
+          <dd>High-frequency notifications with complex template conditions, multi-channel notifications where the new RFM didn't yet support multi-channel natively (we migrated those by creating per-channel duplicates first — see RFM Revamp page), or notifications tied to specific vendor-config quirks that hadn't been ported.</dd>
+
+          <dt>How are SMS errors monitored?</dt>
+          <dd>OINP gateway dashboards on the SMS adapter's API endpoint, Splunk alerts on 5xx in comms-comparator and SMS adapter, vendor-side delivery confirmation logs joined against our send logs to catch silent drops.</dd>
         </dl>
       </section>
     </article>

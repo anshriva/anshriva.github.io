@@ -203,6 +203,16 @@
             font-weight: 600;
         }
 
+        .recognition-quote {
+            font-size: 11px;
+            font-style: italic;
+            color: #555;
+            border-left: 2px solid #003d7a;
+            padding-left: 10px;
+            margin: 6px 0 8px 20px;
+            line-height: 1.55;
+        }
+
         .print-button {
             text-align: center;
             margin-top: 30px;
@@ -262,7 +272,7 @@
     <div class="container">
         <div class="header">
             <div class="name">ANUBHAV SHRIVASTAVA</div>
-            <div class="title">Senior Software Engineer | Platform Architecture & Distributed Systems</div>
+            <div class="title">Senior Software Engineer · Platform &amp; Reliability · 12+ years</div>
             <div class="contact">
                 Bengaluru, India • +91 8588876192 • <a href="mailto:anubhav.workemail@gmail.com">anubhav.workemail@gmail.com</a> •
                 <a href="https://linkedin.com/in/anubhavsri" target="_blank">linkedin.com/in/anubhavsri</a> •
@@ -272,16 +282,24 @@
 
         <div class="section-title">SUMMARY</div>
         <div class="summary">
-            Platform engineer with 12+ years building and owning high-scale distributed systems. At Intuit, technical authority for the One Intuit Notification Platform — processing 20–32M notifications/day across every major product. Drove consolidation of Credit Karma and Mailchimp onto the platform, eliminating redundant vendor stacks across two acquisitions. Co-authored and executing a roadmap cutting notification authoring time from 1 week to 3 hours. At Microsoft, took Graph Connectors from zero to General Availability, driving 99%+ crawl success rates across Fortune 500 enterprise customers. Known for identifying platform opportunities others miss, driving cross-org alignment without authority, and shipping at scale with high reliability.
+            Platform engineer leading the modernisation of Intuit's notification platform — the shared infrastructure delivering 20–32M notifications/day across QuickBooks, TurboTax, Credit Karma, Mailchimp, and 10+ other products. Drove two consecutive tax peaks (TY24, TY25) to 100% availability with zero customer-visible incidents, recognised by two senior-leadership Bravo awards (from a Director and a Group Engineering Manager). Shipped Voice (Nov 2025), SMS (Dec 2025) and end-to-end RCS as the first channels on the new authoring stack, validated by a parity engine I built that audited 2.9M+ production reads at 99.987% match. Won the company-wide Lightning Award at GED 2025 for the fastest 48-hour POC — a LangGraph-based AI-assisted notification authoring agent now in production. Previously at Microsoft, took Graph Connectors from zero to General Availability with 99%+ crawl success across Fortune 500 enterprises. Known for setting technical direction across team boundaries, escalating cross-org blockers to manager-level when peer-channels stall, and shipping artifacts (3,550 production previews; the comparator audit) that make the case before the proposal.
         </div>
 
-        <div class="section-title">PLATFORM & ORG-WIDE SCOPE</div>
+        <div class="section-title">SCOPE &amp; RECOGNITION</div>
         <ul class="scope-list">
-            <li><strong>Platform scale:</strong> 20–32M emails/day, 2–4M SMS/day, 1–1.6M in-app notifications/day — processing across QBO, TurboTax, Mint, ProSeries, Lacerte, Expert Hiring, and 10+ product teams</li>
-            <li><strong>Org-wide technical authority:</strong> Single escalation point for all notification platform issues across Intuit — architecture decisions, critical incidents, vendor integrations, and cross-team unblocking</li>
-            <li><strong>Cross-org integration ownership:</strong> Drove consolidation of Credit Karma SMS (1M/day) and Mailchimp in-app notifications (700 TPS peak) onto Intuit's platform — eliminating redundant vendor stacks, solving cross-cloud and identity challenges, and shipping both to production within 5 months each</li>
-            <li><strong>Cross-team influence:</strong> Named technical lead for two platform-wide components (Notification Authoring and Notification Tray) used by every product team in the company</li>
-            <li><strong>Recognition:</strong> Quarterly Values Award (VP-level), 3x Stronger Together Awards, Lightning Award for fastest GenAI prototype at company-wide hackathon, 16 peer recognitions from cross-functional partners and senior leadership</li>
+            <li><strong>Platform scale:</strong> 20–32M emails/day · 2–4M SMS/day · 2,200+ tray TPS at peak — serving QBO, TurboTax, Credit Karma, Mailchimp, Field Service, IEP, ProSeries, Lacerte, Expert Hiring, Acadia.</li>
+            <li><strong>Engineering ownership:</strong> 5 backend services (comms-authoring-service, authoring-delivery-sync, comms-comparator, comms-promotion-service, legacy notificationadmin), 2 channel adapters (smsadapter, oinp-tray), platform onboarding documentation, and the game-day / HPA / scaling program that gates each tax peak.</li>
+            <li><strong>Cross-org technical authority:</strong> Single escalation point in <code>#intuit-iris-oinp</code> for partner teams across 10+ products. Architectural authority in the platform leaders channel — successfully pushed back on a proposed BFF layer, established API-contract-before-implementation as a team default, and led the cross-swim-lane OMS routing escalation that unblocked the VEP / Field Service integration.</li>
+            <li><strong>Senior-leadership recognition (5 high-tier awards in tenure to date):</strong>
+                <ul style="margin-left: 20px; margin-top: 4px;">
+                    <li><strong>Salute (₹10K) · Apr 2026 · TY25 Tax Season Success</strong> — Sheetal Sureka (Group Engineering Manager). "The smoothest OINP has seen in the last two years, with 100% availability and zero customer impact during the most critical period of the year."</li>
+                    <li><strong>Bravo (₹20K) · Dec 2025 · RFM SMS Launch &amp; Migration</strong> — Sheetal Sureka (GEM). "Outstanding job… leadership and excellence in shepherding this work has been commendable."</li>
+                    <li><strong>Bravo (₹20K) · Nov 2025 · RFM Voice Launch</strong> — Sheetal Sureka (GEM). "First milestone for a revamped RFM experience… new data schema, services to decouple RFM from delivery engine."</li>
+                    <li><strong>Bravo (₹20K) · May 2025 · TY24 Tax Peak Resilience</strong> — Shanti Kuropati (Director). "OINP resilient, stable and serve with high availability… enabled Intuit customers to file their taxes smoothly."</li>
+                    <li><strong>Salute (₹10K) · Apr 2026 · Critical Money Alerts SMS</strong> — Anand Abhyankar (cross-org).</li>
+                </ul>
+            </li>
+            <li><strong>Plus 11 additional Spotlight awards</strong> from senior leadership, cross-org partners, and team — including the Lightning Award (Fastest GED POC, Nov 2025) for the LangGraph notification-authoring agent now in production.</li>
         </ul>
 
         <div class="section-title">EXPERIENCE</div>
@@ -290,64 +308,65 @@
             <span class="company">Intuit</span>
             <span class="job-meta">March 2024 – Present | Bengaluru, India</span>
         </div>
-        <div class="job-title">Senior Software Engineer — Notifications Platform</div>
-        <div class="job-description">Technical lead for the One Intuit Notification Platform — the shared infrastructure processing all transactional and marketing notifications across every Intuit product. 5–7M emails/day, 2–4M SMS/day, 1.6M+ in-app notifications/day. Tray sustains 2,200+ TPS during peak tax season.</div>
+        <div class="job-title">Senior Software Engineer — One Intuit Notification Platform (OINP)</div>
+        <div class="job-description">Engineering lead for the modernised authoring stack and platform reliability surface. Five backend services, two channel adapters, the cross-org integration surface, and the tax-peak readiness program.</div>
 
-        <div class="subsection-title">Architecture & Technical Leadership</div>
+        <div class="subsection-title">Platform modernisation — leading the RFM Revamp</div>
         <ul class="bullet-list">
-            <li><strong>Notification Tray backend ownership:</strong> Designed and owns the real-time per-user notification delivery system (Server-Sent Events over Intuit's real-time infra, backed by DynamoDB). Sole technical owner of this component across the company.</li>
-            <li><strong>Credit Karma SMS integration:</strong> Identified and drove the consolidation of Credit Karma's SMS notifications (1M/day) onto Intuit's platform — initiated at a company hackathon, aligned CK engineering lead and Intuit PMs, and shipped to production in 5 months. Solved cross-cloud challenges (GCP vs AWS logging/eventing), navigated dual-company security reviews for data handling, built a consent passthrough layer honoring CK's user preferences, and coordinated Twilio short code carrier approval end-to-end.</li>
-            <li><strong>Mailchimp Notification Tray integration:</strong> Onboarded Mailchimp onto Intuit's shared notification tray (in-app bell) — replacing Mailchimp's independently maintained frontend, backend, and experimentation stack. Sustained 300 avg / 700 peak TPS. Solved user identity mismatch between Mailchimp and Intuit's SSO by building a converter against the Identity team's API, with careful throttle management at spike traffic. Shipped to full production in 4 months.</li>
-            <li><strong>Org-wide technical authority:</strong> Primary escalation point for 10+ product teams (QBO, TurboTax, ProSeries, Lacerte, Expert Hiring, and more) via a dedicated cross-team support channel. Consistently unblocked teams on architecture, vendor config, and production issues.</li>
-            <li><strong>GenAI platform initiative:</strong> Leading the AI-assisted notification authoring initiative — exploring MCP (Model Context Protocol) for screenshot-to-search and LLM-powered content generation. Built the fastest GenAI prototype at a company-wide hackathon.</li>
-            <li><strong>ElasticSearch integration:</strong> Drove notification search integration in the authoring portal, improving discoverability across thousands of configured notifications.</li>
+            <li><strong>Engineering lead for the migration of OINP's authoring stack</strong> from legacy notificationadmin to a new stack (comms-authoring-service, authoring-delivery-sync, comms-promotion-service). Phased rollout (single-channel → template flattening → 278 multi-channel notifications) with per-notification stack flags for safe partial migration and rollback.</li>
+            <li><strong>Built comms-comparator as the parity backbone</strong> — runs every read against both stacks and diffs responses. 7-day prod audit validated 2,905,540 reads at 99.987% match; every failing class (363 stale templateId, 7 unpromoted templates, slash-in-event-name, 1 gateway 504) root-caused. Without this, 100% migration to the new stack before tax peak would not have been possible.</li>
+            <li><strong>Voice (Nov 2025), SMS (Dec 2025) and RCS launches</strong> shipped on the new stack — first three channels live on modernised RFM. SMS launch: feature-flagged rollback per capability, notification-by-notification migration selection, observability on every new component. RFM Prod Promotion fix (Apr 2026) shipped after a late-night incident — Encore award for "Integrity Without Compromise."</li>
+            <li><strong>Set architectural direction in platform leaders channel.</strong> Pushed back on a proposed backend-for-frontend layer, citing notif-common's history of scope-creep; team adopted gateway routing as the simpler primitive. Established "API contract before implementation" as the default review pattern; "lead with the existing notif-admin contract before exposing new constructs" is now how API reviews go.</li>
+            <li><strong>Cross-org escalation: OMS cross-swim-lane routing.</strong> OMS team approved e2e routing but resisted prod enablement (cited 7 days of work) and stopped our new e2e routing, blocking the VEP and Field Service integrations. Escalated in leaders channel for manager-level OMS contacts, scheduled the cross-team meeting, secured cost estimate and prod timeline.</li>
         </ul>
 
-        <div class="subsection-title">Platform Roadmap & Technical Direction</div>
+        <div class="subsection-title">RCS channel — owned a brand-new bearer end-to-end</div>
         <ul class="bullet-list">
-            <li><strong>Notification authoring time reduction:</strong> Co-authored and drove the technical roadmap to reduce notification authoring time from 1 week to 3 hours — targeting every layer of the process. Shipped improvements across error handling, automated consent capture, seamless promotion-to-production with rollback support, and removal of manual config steps. Currently at 3 days; final milestone is eliminating manual Twilio webhook configuration via a programmable routing layer, removing cross-geo testing dependency on US teams.</li>
+            <li><strong>End-to-end ownership of OINP's RCS launch</strong> — vendor integration with Twilio, schema and API design on <code>comms-authoring-service</code> (channel: RCS with FreeMarker variable substitution, vendor config, consent semantics, SMS-fallback opt-in), authoring + delivery + the two-way inbound webhook path, cross-swim-lane OMS routing to consumer teams (Triton/VEP, Sales Feeder Service), consent app-id allocation, and the canonical onboarding docs the rest of the org now uses.</li>
+            <li><strong>Header-based OMS multicast routing across swim-lanes</strong> for inbound RCS replies — source <code>persistent://oinp/regcomm/public.user.reply</code> fanning out to <code>persistent://vep/collaboration/public.oinp.smsRcsEvent7216</code> (Triton/VEP) and <code>persistent://sbseg/payments/public.salesfeederservice</code> (SBSEG), filtered on the <code>to</code> header so each consumer team only sees the messages addressed to their sender. Escalated the prod-rollout blocker to OMS manager-level when peer-channels stalled.</li>
+            <li><strong>Reused the SMS adapter for RCS</strong> rather than building a separate rcsadapter — same Twilio Messaging Service, same consent semantics, same keyword-action mappings, with <code>shortOrLongCode</code> accepting both <code>+1NNNNNNN</code> and <code>rcs:&lt;sender&gt;</code>. Half the operational surface, all the capability.</li>
+            <li><strong>Authored the canonical RCS onboarding guide</strong> (PR <code>OINP-21070</code>) — 8 sections covering prerequisites, setup, testing, Twilio templating, two-way inbound, consent, debugging, going-live. Then shipped an <code>rcs-docs</code> Claude Code skill (PR <code>OINP-21322</code>) that makes the docs queryable from any engineer's local Claude.</li>
+            <li><strong>Critical Money Alerts (Apr 2026 Salute award)</strong> — partner team's first production consumer of the SMS+RCS integration.</li>
         </ul>
 
-        <div class="subsection-title">Reliability & Incident Leadership</div>
+        <div class="subsection-title">Tax-season reliability — two consecutive peaks at 100% availability</div>
         <ul class="bullet-list">
-            <li><strong>Tax season incident command:</strong> Primary technical lead for production incident response during peak tax season — coordinating real-time across 6+ partner teams on a platform processing 30M+ notifications on peak days.</li>
-            <li><strong>Critical incident resolution:</strong> Owned resolution of zero-notification outages from payload mismatches, duplicate notification bugs, pod termination root-caused via JVM heap/G1GC profiling, and event streaming tracing gaps with no existing tooling.</li>
-            <li><strong>Platform observability:</strong> Built end-to-end observability across the notification stack — availability dashboards, per-service TPS monitoring, P99 latency alerting, and error-rate tracking across 6 microservices.</li>
+            <li><strong>Drove the TY25 readiness program</strong> — game-day region failover drills in pre-prod, HPA scaling reviews across the full service fleet, OMS backup path stood up, legacy scheduler eliminated, ~100% of traffic migrated to the new stack before peak. Sheetal Sureka's Salute citation called these out by name as the lead-up to "the smoothest OINP has seen in the last two years."</li>
+            <li><strong>Extended on-call coverage through peak</strong> — weekend rotations and night shifts beyond standard pager schedule. Single point of diagnosis for partner teams (QBO / QBSE / TurboTax / Credit Karma) escalating in <code>#intuit-iris-oinp</code> when they couldn't tell whether a missing notification was upstream, OINP, or vendor.</li>
+            <li><strong>TY24 (prior year) recognised by Bravo award from Shanti Kuropati</strong> for "OINP resilient, stable and serve with high availability… enabled Intuit customers to file their taxes smoothly by delivering critical communications on time."</li>
         </ul>
 
-        <div class="subsection-title">Mentorship & Technical Bar-Raising</div>
+        <div class="subsection-title">Initiatives proposed and led, unsolicited</div>
         <ul class="bullet-list">
-            <li><strong>Design leadership:</strong> Authored the RFC for migrating the user consent capture service from Kafka to Apache Pulsar — key driver was Pulsar's native header-based topic routing, which allowed multiple teams to receive targeted notification subsets without consuming millions of events from a single topic. SDE-1 implemented against the design; shipped to production.</li>
-            <li><strong>Engineer coaching:</strong> Mentored 3 engineers at Intuit (intern → full-time offer, SDE-1 ownership of platform features) and several engineers at Microsoft. Participated in Microsoft's College Connect program, mentoring final-year students on career direction — with ongoing mentee relationships post-program.</li>
+            <li><strong>OINP Accelerate / home-page redesign.</strong> Generated previews of <strong>3,550 production notifications</strong> through the new Preview API, hosted as evidence in a shared drive, built the visual-first mockup on personal GitHub Pages, and made the case in leaders channel with two implementation options and a timebox. Picked up as part of the GED 2026 search rollout.</li>
+            <li><strong>Notification Tray reliability — proposed migrating 40 GB Cassandra+Solr to a managed DB.</strong> After narrowing the long-running Solr core init failures to per-host process state via Splunk forensics, made the case in <code>#customer-comms-pd</code> that "we can spend a month and migrate this 40 GB tray data… tray messages are short lived (15-day TTL) so it won't be too difficult." Migrate, don't patch. In-App incident leadership (Aug 2025) recognised by Encore.</li>
+            <li><strong>GED 2025 — LangGraph AI-assisted authoring agent.</strong> Designed the multi-agent architecture (coordinator + template / trigger / channel-config sub-agents), shipped working demo within 48 hours of GED start. Won the Lightning Award. Survived to production as <code>ccx-oinp-guide-agent</code>, used inside the new RFM.</li>
         </ul>
 
-        <div class="subsection-title">Product Launches</div>
+        <div class="subsection-title">Earlier work at Intuit</div>
         <ul class="bullet-list">
-            <li><strong>Generic OTP:</strong> Shipped consistent one-time password delivery across all Intuit products.</li>
-            <li><strong>RCS channel:</strong> Built the first RCS notification launch on the platform (2026).</li>
+            <li><strong>RFM Search v1 (Sep 2024) — shipped solo.</strong> First cross-workspace search experience for the legacy RFM stack. DynamoDB → Kinesis → IPS Search ingestion (event-driven, seconds-fresh); curated sort-field whitelist set against product's "sort by every field" ask; gateway timeout extension for the GenAI integration. Still serving production. (V2 for the new RFM stack is in flight, mentoring two engineers through a 3-phase rollout.)</li>
+            <li><strong>Credit Karma SMS integration — initiated at hackathon, shipped in 5 months.</strong> Drove cross-cloud consolidation (GCP↔AWS), dual-company security reviews, consent-passthrough layer honoring CK's preferences, Twilio short-code carrier approval end-to-end.</li>
+            <li><strong>Mailchimp Notification Tray integration — 300 avg / 700 peak TPS, shipped in 4 months.</strong> Built identity-converter against Intuit's SSO Identity team API; managed throttle at spike traffic.</li>
+            <li><strong>Kafka → Pulsar RFC for consent capture.</strong> Authored the migration design driven by Pulsar's native header-based topic routing (enabling targeted notification subsets without per-team millions-of-events consumption). SDE-1 implemented to design.</li>
         </ul>
 
-        <div class="tech-line"><span class="tech-label">Tech:</span> Java, Spring Boot, DynamoDB, PostgreSQL, Kafka, Pulsar, Redis, ElasticSearch, AWS, Kubernetes, Splunk</div>
+        <div class="tech-line"><span class="tech-label">Tech:</span> Java 21, Spring Boot 3, DynamoDB, PostgreSQL (Aurora via IPS Managed Relational), Cassandra, Apache Pulsar, Kafka, Redis, ElasticSearch (IPS Search), AWS, Kubernetes, Splunk, LangGraph, Figma MCP</div>
 
         <div class="job-header">
             <span class="company">Microsoft India Development Center</span>
             <span class="job-meta">Sep 2022 – Feb 2024 | Bengaluru, India</span>
         </div>
         <div class="job-title">Senior Software Engineer (L63) — Graph Connectors</div>
-        <div class="job-description">Tech lead for Microsoft Graph Connectors — the platform crawling enterprise data sources (file shares, Azure DevOps, SQL, SharePoint, MediaWiki, ServiceNow) and indexing them into Microsoft Search and Microsoft 365 Copilot.</div>
+        <div class="job-description">Tech lead for Microsoft Graph Connectors — the platform crawling enterprise data sources (file shares, Azure DevOps, SQL, SharePoint, MediaWiki, ServiceNow) and indexing into Microsoft Search and Microsoft 365 Copilot.</div>
 
-        <div class="subsection-title">Technical Leadership & System Design</div>
         <ul class="bullet-list">
-            <li><strong>Platform reliability ownership:</strong> Owned Crawl Success Rate (CSR) as a platform-wide reliability metric — drove all connectors to 99%+ CSR, built automated tracking scripts and dashboards, and led root-cause investigations across 4 connectors.</li>
-            <li><strong>File Share Exclusion Rule Revamp:</strong> Designed the full solution including migration jobs, rollback jobs, backward compatibility handling, and item-count gain dashboard. Shipped with zero regressions.</li>
-            <li><strong>ServiceNow ACL model revamp:</strong> Co-designed API architecture, crawl flow, negative caching, and session caching. Validated by multiple Fortune 500 enterprise customers pre-GA.</li>
-            <li><strong>Admin Self-Serve hackathon:</strong> Led engineering for a project enabling admins to self-diagnose connector failures without engineering support. Received special mention from judges and senior leadership recognition.</li>
-        </ul>
-
-        <div class="subsection-title">Enterprise Customer Impact</div>
-        <ul class="bullet-list">
-            <li><strong>60x latency improvement:</strong> Reduced data source move-next latency from 30s to 0.5s for key enterprise customers via Windows Performance Recorder profiling and memory analysis.</li>
-            <li><strong>Cross-team bug ownership:</strong> Took ownership of a long-standing customer-facing filter bug passed across 4 teams without resolution — root-caused through an internal content indexing service and shipped the fix.</li>
+            <li><strong>60× latency improvement</strong> — reduced data-source move-next from 30s to 0.5s for key Fortune 500 customers (Equinor, Napier City Council, FTB) via Windows Performance Recorder profiling and memory analysis. Customers went from impossible crawl timelines to viable deployments.</li>
+            <li><strong>Platform-wide Crawl Success Rate ownership</strong> — drove all connectors to 99%+ CSR; built automated tracking scripts and dashboards; led root-cause investigations across 4 connectors.</li>
+            <li><strong>File Share Exclusion Rule revamp</strong> — designed full solution including migration jobs, rollback jobs, backward compatibility, and item-count gain dashboard. Zero regressions on ship.</li>
+            <li><strong>ServiceNow ACL model revamp</strong> — co-designed API architecture, crawl flow, negative caching, session caching. Validated by multiple Fortune 500 enterprises pre-GA.</li>
+            <li><strong>Admin Self-Serve hackathon</strong> — led engineering for admins to self-diagnose connector failures without engineering support. Special mention from judges and senior leadership recognition.</li>
+            <li><strong>Cross-team bug ownership</strong> — took a long-standing customer-facing filter bug passed across 4 teams without resolution, root-caused through an internal content indexing service, shipped the fix.</li>
         </ul>
 
         <div class="tech-line"><span class="tech-label">Tech:</span> C#, .NET, Akka Framework, Azure, Redis, SQL</div>
@@ -360,9 +379,10 @@
         <div class="job-description">Founding engineer for Microsoft Graph Connectors, contributing from zero to General Availability across 5 shipped connectors.</div>
 
         <ul class="bullet-list">
-            <li><strong>Foundational architecture:</strong> Made low-level design decisions that shaped the crawler architecture with lasting product impact across the platform.</li>
-            <li><strong>Crawl pipeline performance:</strong> Engineered pipeline to 25+ items/second throughput via algorithm redesign and bottleneck analysis — a core performance benchmark for the product.</li>
-            <li><strong>Primary enterprise customer contact:</strong> Served as the sole technical contact for all connector feature requests and production issues across major enterprise accounts.</li>
+            <li><strong>Foundational architecture decisions</strong> shaping the crawler architecture with lasting product impact across the platform.</li>
+            <li><strong>Crawl pipeline performance</strong> engineered to 25+ items/second throughput via algorithm redesign and bottleneck analysis — a core product performance benchmark.</li>
+            <li><strong>Primary enterprise customer contact</strong> for all connector feature requests and production issues across major enterprise accounts.</li>
+            <li><strong>Mentored engineers</strong> on the team and through Microsoft's College Connect program (final-year students on career direction; ongoing relationships post-program).</li>
         </ul>
 
         <div class="tech-line"><span class="tech-label">Tech:</span> C#, .NET, Akka Framework, Azure, Redis, SQL</div>
@@ -374,9 +394,9 @@
         <div class="job-title">Senior Software Engineer</div>
 
         <ul class="bullet-list">
-            <li><strong>15x latency improvement:</strong> Reduced GET Booking API latency from 3s to 0.2s for Yatra's core financial verification system serving millions of bookings.</li>
-            <li><strong>3x cost reduction:</strong> Reduced third-party API call costs via a Redis caching layer.</li>
-            <li><strong>Supplier integration framework:</strong> Built a framework reducing new supplier onboarding time from months to weeks.</li>
+            <li><strong>15× latency improvement</strong> — reduced GET Booking API latency from 3s to 0.2s for the core financial verification system serving millions of bookings.</li>
+            <li><strong>3× cost reduction</strong> on third-party API calls via a Redis caching layer.</li>
+            <li><strong>Supplier integration framework</strong> reducing new supplier onboarding from months to weeks.</li>
         </ul>
 
         <div class="tech-line"><span class="tech-label">Tech:</span> Java, Spring, MySQL, Redis, MongoDB, Kafka, Zookeeper, Dropwizard</div>
@@ -388,7 +408,7 @@
         <div class="job-title">Software Engineer — Engineering Security</div>
 
         <ul class="bullet-list">
-            <li><strong>Built and maintained Adobe's internal code-signing platform</strong> used across all Adobe products on Windows, macOS, and Java — a publisher-subscriber architecture processing code signing at scale.</li>
+            <li><strong>Built and maintained Adobe's internal code-signing platform</strong> used across all Adobe products on Windows, macOS, and Java — publisher-subscriber architecture processing code signing at scale.</li>
         </ul>
 
         <div class="tech-line"><span class="tech-label">Tech:</span> Java, Spring, Redis, Oracle DB, Java Messaging Service</div>
@@ -401,35 +421,31 @@
             </div>
             <div class="skill-category">
                 <strong>Backend</strong>
-                <div class="skill-items">Microservices, Spring Boot, Akka Framework, gRPC, Dropwizard</div>
+                <div class="skill-items">Spring Boot 3, Microservices, Akka, gRPC, Dropwizard</div>
             </div>
             <div class="skill-category">
-                <strong>Databases</strong>
-                <div class="skill-items">DynamoDB, Cassandra, PostgreSQL, MySQL, MongoDB, Redis</div>
+                <strong>Data &amp; Storage</strong>
+                <div class="skill-items">PostgreSQL (Aurora), DynamoDB, Cassandra, MySQL, MongoDB, Redis</div>
             </div>
             <div class="skill-category">
                 <strong>Messaging</strong>
-                <div class="skill-items">Kafka, Pulsar, Zookeeper</div>
+                <div class="skill-items">Apache Pulsar, Kafka, Zookeeper</div>
             </div>
             <div class="skill-category">
                 <strong>Search</strong>
-                <div class="skill-items">ElasticSearch</div>
+                <div class="skill-items">ElasticSearch / OpenSearch, IPS Search</div>
             </div>
             <div class="skill-category">
-                <strong>Cloud & Infra</strong>
-                <div class="skill-items">AWS, Azure, Kubernetes, Docker</div>
+                <strong>Cloud &amp; Infra</strong>
+                <div class="skill-items">AWS, Azure, Kubernetes, Docker, Argo</div>
             </div>
             <div class="skill-category">
                 <strong>Observability</strong>
-                <div class="skill-items">Splunk, dashboards, alerts, log analysis</div>
+                <div class="skill-items">Splunk dashboards, alerts, log forensics, distributed tracing</div>
             </div>
             <div class="skill-category">
                 <strong>AI / GenAI</strong>
-                <div class="skill-items">LLM integration, MCP, GenAI tooling</div>
-            </div>
-            <div class="skill-category">
-                <strong>Core</strong>
-                <div class="skill-items">System Design, Distributed Systems, Data Structures & Algorithms, OOD</div>
+                <div class="skill-items">LangGraph, multi-agent systems, Figma MCP, LLM tool-calling</div>
             </div>
         </div>
 

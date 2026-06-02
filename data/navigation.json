@@ -30,46 +30,52 @@
           "status": "ready"
         },
         {
-          "id": "intuit-tray",
-          "title": "Notification Tray",
-          "path": "/work/intuit/notification-tray.html",
-          "status": "draft"
+          "id": "intuit-rfm-revamp",
+          "title": "RFM Revamp — authoring stack migration",
+          "path": "/work/intuit/rfm-revamp.html",
+          "status": "ready"
         },
         {
-          "id": "intuit-ck-sms",
-          "title": "Credit Karma SMS",
-          "path": "/work/intuit/credit-karma-sms.html",
-          "status": "draft"
+          "id": "intuit-rcs",
+          "title": "RCS channel — end-to-end launch",
+          "path": "/work/intuit/rcs-launch.html",
+          "status": "ready"
         },
         {
-          "id": "intuit-mailchimp",
-          "title": "Mailchimp Tray",
-          "path": "/work/intuit/mailchimp-tray.html",
-          "status": "draft"
-        },
-        {
-          "id": "intuit-authoring",
-          "title": "Authoring roadmap",
-          "path": "/work/intuit/authoring-roadmap.html",
-          "status": "draft"
-        },
-        {
-          "id": "intuit-pulsar",
-          "title": "Kafka → Pulsar",
-          "path": "/work/intuit/pulsar-migration.html",
-          "status": "draft"
+          "id": "intuit-accelerate",
+          "title": "OINP Accelerate — unsolicited UX redesign",
+          "path": "/work/intuit/oinp-accelerate.html",
+          "status": "ready"
         },
         {
           "id": "intuit-reliability",
-          "title": "Tax season reliability",
+          "title": "Tax season reliability (TY24 + TY25)",
           "path": "/work/intuit/tax-season-reliability.html",
-          "status": "draft"
+          "status": "ready"
+        },
+        {
+          "id": "intuit-ck-sms",
+          "title": "SMS launch & Critical Money Alerts",
+          "path": "/work/intuit/credit-karma-sms.html",
+          "status": "ready"
         },
         {
           "id": "intuit-genai",
-          "title": "GenAI authoring",
+          "title": "GenAI authoring (LangGraph)",
           "path": "/work/intuit/genai-authoring.html",
-          "status": "draft"
+          "status": "ready"
+        },
+        {
+          "id": "intuit-authoring",
+          "title": "RFM Search — two ships, two data sources",
+          "path": "/work/intuit/authoring-roadmap.html",
+          "status": "ready"
+        },
+        {
+          "id": "intuit-tray",
+          "title": "Notification Tray reliability",
+          "path": "/work/intuit/notification-tray.html",
+          "status": "ready"
         }
       ]
     },

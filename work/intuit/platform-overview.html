@@ -2,14 +2,14 @@
 <html lang="en">
 <head>
   <script src="../../js/base-path.js"></script>
-  
+
   <script>
     document.write('<link rel=\"stylesheet\" href=\"' + window.BASE_PATH + 'css/styles.css\" />');
   </script>
 
 <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Intuit — Platform scope &amp; role — Anubhav Shrivastava</title>
+  <title>Intuit — One Intuit Notification Platform — Anubhav Shrivastava</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Fraunces:wght@500;600&display=swap" rel="stylesheet" />
@@ -20,48 +20,110 @@
     <article class="article topic-page">
       <header class="page-header">
         <p class="page-status">Status: <strong>ready</strong></p>
-        <h1>One Intuit Notification Platform</h1>
-        <p class="subtitle">Senior Software Engineer · Mar 2024 – Present · Org-wide technical authority</p>
+        <h1>One Intuit Notification Platform (OINP)</h1>
+        <p class="subtitle">Mar 2024 – Present · OINP / Customer Communications</p>
         <div class="tag-list">
           <span class="tag">20–32M emails/day</span><span class="tag">2–4M SMS/day</span>
           <span class="tag">2,200+ tray TPS (peak)</span>
+          <span class="tag">100% availability TY24 + TY25</span>
         </div>
       </header>
 
       <section class="content-section" id="problem">
-        <h2>Problem statement</h2>
+        <h2>What OINP is</h2>
         <p>
-          Dozens of product teams need transactional and marketing notifications without each running
-          redundant vendor stacks. After acquisitions, Credit Karma and Mailchimp added more fragmentation.
-          The platform must scale through tax season, stay reliable, and reduce time-to-ship for new notifications.
+          OINP is the company-wide platform every Intuit product team (QuickBooks, TurboTax, Credit Karma, Mailchimp, Field Service, IEP, ProSeries, Lacerte, Acadia) uses to deliver transactional and marketing notifications across <strong>Email, SMS, RCS, Voice, Push, Tray, In-App, and ICE</strong>. The platform spans authoring (RFM), delivery (channel adapters), event ingestion (OMS/Pulsar), and the management surfaces (search, dashboards, promotion).
+        </p>
+        <p>
+          I own the engineering for the modernised authoring stack, the platform's tax-peak reliability program, and the cross-org integration surface. Concretely: five backend services (<code>comms-authoring-service</code>, <code>authoring-delivery-sync</code>, <code>comms-comparator</code>, <code>comms-promotion-service</code>, the legacy <code>notificationadmin</code> being retired), two channel adapters (<code>smsadapter</code>, <code>oinp-tray</code>), the OINP onboarding documentation that partner teams consume, and the game-day / HPA / scaling program that gates each tax peak.
         </p>
       </section>
 
       <section class="content-section" id="context">
-        <h2>My role</h2>
+        <h2>Trajectory</h2>
         <ul>
-          <li>Technical lead and single escalation point across 10+ product teams.</li>
-          <li>Named lead for <strong>Notification Authoring</strong> and <strong>Notification Tray</strong>.</li>
-          <li>Drive cross-org integrations, roadmap, incidents, and RFC-level design others implement.</li>
+          <li><strong>2024.</strong> Shipped RFM search on the legacy stack (Sep 2024) — DynamoDB → Kinesis → IPS Search ingestion, sort-field policy I set against product's "sort by everything" ask, gateway routing for the GenAI integration. Solo build, prod-stable, still serving.</li>
+          <li><strong>2025.</strong> Drove TY24 tax-peak reliability (Bravo from Shanti Kuropati: "OINP resilient, stable and serve with high availability"). Led RFM Voice (Nov 2025, Bravo) and SMS (Dec 2025, Bravo) launches on the new stack. Won the Lightning Award at GED 2025 for the fastest 48-hr POC — a LangGraph-based AI-assisted notification authoring agent, now in prod as <code>ccx-oinp-guide-agent</code>.</li>
+          <li><strong>2026.</strong> Drove TY25 tax-peak reliability — 100% availability, "the smoothest OINP has seen in two years" per Sheetal Sureka's Salute-tier citation. Owned the RCS channel end-to-end — Twilio integration, schema, two-way inbound, cross-swim-lane OMS routing, consent, canonical onboarding docs. Currently running three concurrent initiatives: the GED 2026 search rollout, the OMS routing unblock for VEP / Field Service, and the Preview-API-powered home-page redesign (3,550 prod notifications rendered as evidence).</li>
         </ul>
-        <p>See dedicated topics in the left nav for each major thread.</p>
       </section>
 
       <section class="content-section" id="architecture">
-        <h2>Platform (high level)</h2>
+        <h2>The platform (high level)</h2>
         <div class="diagram-slot">
-          <p class="diagram-slot-label">Diagram slot — replace with your architecture SVG</p>
-          <pre class="diagram">[Product teams] → [Authoring] → [Delivery pipeline] → Email / SMS / Push / Tray
-                              ↘ [Consent / events] → Kafka / Pulsar → [Consumers]</pre>
+          <p class="diagram-slot-label">Diagram slot</p>
+          <pre class="diagram">[Product teams: QBO, TT, CK, Mailchimp, IEP, Field Service, …]
+   ↓
+[RFM / ccx-authoring-ui]                              ← new authoring surface
+   ↓
+[comms-authoring-service]  →  [comms-comparator]      ← parity vs. legacy
+   ↓                              ↓
+[authoring-delivery-sync]      [notificationadmin]    ← legacy stack (being retired)
+   ↓
+[OMS / Pulsar event bus]   ← cross-swim-lane routing (FS, VEP)
+   ↓
+[mailadapter] [smsadapter] [rcsadapter] [voice-adapter] [oinp-tray] [ICE]
+   ↓
+SendGrid · Twilio (multi-subaccount) · Braze · TXE · IDPS · Cassandra+Solr (tray)</pre>
         </div>
       </section>
 
-      <section class="content-section" id="impact">
-        <h2>Impact</h2>
+      <section class="content-section" id="decisions">
+        <h2>Directional decisions across the work</h2>
         <ul>
-          <li>Consolidated CK SMS (~1M/day) and Mailchimp tray (700 peak TPS) onto shared platform.</li>
-          <li>Authoring roadmap: 1 week → 3 hours target (currently ~3 days).</li>
-          <li>Quarterly Values Award (VP-level), Lightning Award (GenAI hackathon), 16 peer recognitions.</li>
+          <li>
+            <strong>Migrate, don't patch, when patch budget exceeds migration budget.</strong> Made this call publicly in <code>#customer-comms-pd</code> for the Notification Tray (40 GB Cassandra+Solr → managed DB), drove it for the legacy authoring stack (RFM Revamp), and pushed for elimination of the legacy scheduling service before TY25. Each removed a chronic failure source.
+          </li>
+          <li>
+            <strong>Parity over hope.</strong> Stood up <code>comms-comparator</code> as the parity backbone for the entire RFM migration. Ran a 7-day prod audit: 2.9M reads, 99.987% parity, every failing class root-caused. Without it, we could not have moved 100% of traffic to the new stack before tax peak.
+          </li>
+          <li>
+            <strong>Phased rollout to avoid throwaway work.</strong> S3 thumbnails → Elasticsearch → domain-event resiliency, each phase usable in its own right. Default approach across the team now for "add capability X to product Y."
+          </li>
+          <li>
+            <strong>API contract before implementation.</strong> Pushed this with every junior engineer touching a new surface. Pushed back in <code>#customer-comms-pd-leaders</code> against a peer's BFF proposal — used notif-common's history of scope-creep as the precedent, and proposed gateway routing as the simpler primitive. The decision held; no BFF.
+          </li>
+          <li>
+            <strong>Escalate to leadership when peer-level chatops stalls.</strong> When the OMS team's customer-facing channel wouldn't approve cross-swim-lane routing to prod (blocking VEP and Field Service integration), escalated in leaders channel for manager contacts, scheduled the cross-team meeting myself, negotiated a prod rollout timeline.
+          </li>
+          <li>
+            <strong>Demonstrate before proposing.</strong> Rather than write a doc for the home-page redesign, generated previews of 3,550 production notifications using the new Preview API and hosted the visual mockup. The proposal landed because the data was already there.
+          </li>
+        </ul>
+      </section>
+
+      <section class="content-section" id="impact">
+        <h2>Recognition</h2>
+        <p>Spotlights are Intuit's peer recognition program; tiers (Applause &lt; Acclaim &lt; Encore &lt; Salute &lt; Bravo) reflect impact level. Citations below are verbatim.</p>
+        <h3>Bravo &amp; Salute tier</h3>
+        <ul>
+          <li><strong>Apr 2026 · Sheetal Sureka (Group Engineering Manager)</strong> · ₹10,000 Salute · <em>TY25 Tax Season Success</em> — "exceptional ownership… the smoothest OINP has seen in the last two years, with 100% availability and zero customer impact during the most critical period of the year. You drove the game days, led the HPA scaling reviews, set up OMS backup, eliminated the legacy scheduling service, and migrated nearly 100% of traffic to the new stack." → <a href="rfm-revamp.html" data-basepath="true">RFM Revamp</a> &amp; <a href="tax-season-reliability.html" data-basepath="true">Tax season</a></li>
+          <li><strong>Apr 2026 · Anand Abhyankar</strong> · ₹10,000 Salute · <em>Critical Money Alerts: SMS Experiment</em> → <a href="credit-karma-sms.html" data-basepath="true">SMS launch</a></li>
+          <li><strong>Dec 2025 · Sheetal Sureka</strong> · ₹20,000 Bravo · <em>RFM SMS Launch &amp; Migration</em> — "outstanding job with development and launch of SMS capabilities on modernised RFM. Your leadership and excellence in shepherding this work has been commendable." → <a href="credit-karma-sms.html" data-basepath="true">SMS launch</a></li>
+          <li><strong>Nov 2025 · Sheetal Sureka</strong> · ₹20,000 Bravo · <em>RFM Voice Launch</em> — "first milestone for a revamped RFM experience… new data schema, services to decouple RFM from delivery engine, and a completely new UX." → <a href="rfm-revamp.html" data-basepath="true">RFM Revamp</a></li>
+          <li><strong>May 2025 · Shanti Kuropati</strong> · ₹20,000 Bravo · <em>TY24 Tax Peak resilience</em> — "OINP resilient, stable and serve with high availability… enabled Intuit customers to file their taxes smoothly." → <a href="tax-season-reliability.html" data-basepath="true">Tax season</a></li>
+        </ul>
+        <h3>Encore &amp; below</h3>
+        <ul>
+          <li><strong>Apr 2026 · Rajesh Gaur</strong> · ₹4,000 · <em>RFM Prod Promotion fix</em> — "Integrity Without Compromise. Stayed late into the night."</li>
+          <li><strong>Mar 2026 · Omri Avioz-Sarig</strong> · ₹2,000 · <em>OINP SMS Integration Support</em></li>
+          <li><strong>Dec 2025 · Subhasis Gorai</strong> · ₹4,000 · <em>GED Week impact — bridging critical product gaps</em></li>
+          <li><strong>Nov 2025 · Sheetal Sureka</strong> · ₹4,000 · <em>Lightning Award: Fastest GED POC</em> — LangGraph notification-authoring agent in 48 hrs → <a href="genai-authoring.html" data-basepath="true">GenAI authoring</a></li>
+          <li><strong>Nov 2025 · Katya Krauchanka</strong> · ₹1,000 · <em>OINP template debug across timezones</em></li>
+          <li><strong>Aug 2025 · Sheetal Sureka</strong> · ₹4,000 · <em>Game Day for OINP</em></li>
+          <li><strong>Aug 2025 · Sheetal Sureka</strong> · ₹4,000 · <em>In-App incident leadership</em></li>
+          <li><strong>Jul 2025 · Daniel Thrall</strong> · ₹4,000 · <em>Cross-team OINP partnership</em></li>
+          <li><strong>Jul 2025 · Prajwal Udupa</strong> · ₹4,000 · <em>Java 21 upgrade</em></li>
+          <li><strong>Mar 2025 · Neeraja R</strong> · ₹4,000 · <em>Critical release support while on leave</em></li>
+        </ul>
+
+        <h3>Quantitative</h3>
+        <ul>
+          <li><strong>100% availability</strong> through TY24 and TY25 tax peaks. Zero customer-visible incidents during Intuit's highest-stakes annual window.</li>
+          <li><strong>2,905,540 production reads parity-validated</strong> in a 7-day audit; 99.987% match rate; every failing class root-caused.</li>
+          <li><strong>3,550 production notifications</strong> rendered through the new Preview API as the evidence base for the home-page redesign initiative.</li>
+          <li><strong>278 multi-channel notifications</strong> identified, planned, and migrated across the RFM Revamp Phase 3.</li>
+          <li><strong>Authoring time target: 1 week → ~3 hours</strong> via the new RFM + GenAI authoring agent (in prod).</li>
         </ul>
       </section>
     </article>
@@ -73,6 +135,13 @@
     navDataScript.src = window.BASE_PATH + 'js/nav-data.js';
     const sidebarScript = document.getElementById('sidebar-script');
     sidebarScript.src = window.BASE_PATH + 'js/sidebar.js';
+
+    document.querySelectorAll('[data-basepath="true"]').forEach(link => {
+      const href = link.getAttribute('href');
+      if (!href.startsWith('http')) {
+        link.setAttribute('href', window.BASE_PATH + 'work/intuit/' + href);
+      }
+    });
   </script>
 
 </body>
