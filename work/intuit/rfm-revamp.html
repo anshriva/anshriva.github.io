@@ -4,12 +4,12 @@
   <script src="../../js/base-path.js"></script>
 
   <script>
-    document.write('<link rel=\"stylesheet\" href=\"' + window.BASE_PATH + 'css/styles.css\" />');
+    document.write('<link rel="stylesheet" href="' + window.BASE_PATH + 'css/styles.css" />');
   </script>
 
 <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>RFM Revamp — Anubhav Shrivastava</title>
+  <title>Decoupling a Mission-Critical Platform — Anubhav Shrivastava</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Fraunces:wght@500;600&display=swap" rel="stylesheet" />
@@ -20,128 +20,306 @@
     <article class="article topic-page">
       <header class="page-header">
         <p class="page-status">Status: <strong>ready</strong></p>
-        <h1>RFM Revamp — leading the migration of OINP's authoring stack</h1>
-        <p class="subtitle">Topic · Intuit · OINP / Customer Communications</p>
+        <h1>Decoupling a Mission-Critical Platform: Leading the Redesign of Notifications Authoring</h1>
+        <p class="subtitle">Topic · Intuit · 13 months · Lead engineer</p>
       </header>
 
       <section class="content-section" id="problem">
-        <h2>Problem statement</h2>
+        <h2>The architectural trap: two incompatible workloads in one system</h2>
         <p>
-          RFM (the company-wide portal teams use to author notifications across Email, SMS, RCS, Voice, Push, Tray and ICE) was built on a legacy stack — <code>notificationadmin</code> + a Mint-era admin UI — that had accumulated years of one-off customisations, schema drift, and DR-unfriendly storage choices. Authoring a single notification took up to a week of back-and-forth between product teams and the platform team. The org committed to migrating the entire authoring/delivery surface onto a new stack (<code>comms-authoring-service</code>, <code>authoring-delivery-sync</code>, <code>comms-promotion-service</code>) backed by IPS Managed Relational — but with hundreds of live notifications already serving prod traffic across 10+ product teams, "lift and shift" wasn't an option.
+          In 2024, Intuit's Notifications Authoring Portal—used by teams at QuickBooks, TurboTax, Mailchimp, Credit Karma, and 10+ other products to configure Email, SMS, Voice, RCS, Push, and Tray notifications—was built with a fundamental mismatch that was invisible to casual observers but catastrophic at scale.
         </p>
+
         <p>
-          I am the engineering lead for this migration. I own the parity story (how do we prove the new stack matches the old before flipping a notification over?), the promotion story (how does a partial migration get safely promoted to prod?), the rollout choreography (which notifications move in which phase, and how do we roll back if a phase breaks?), and the architectural decisions on the new stack's surface area.
+          <strong>The setup:</strong> A single DynamoDB database stored a hierarchy of entities: Offerings (products) → Services (team groupings) → Notifications → Message Templates. Simple structure, single schema, one place to look. Seemed efficient.
+        </p>
+
+        <p>
+          <strong>The trap:</strong> The database was trying to satisfy two completely opposite workloads simultaneously.
+        </p>
+
+        <p>
+          <strong>Authoring</strong> (where teams build notifications) requires ACID transactions, complex joins across the hierarchy, flexible schema evolution. When a team adds a field—a description, a retry policy, a translation workflow—the database needs to absorb it without blocking other teams. This is a low-throughput system optimized for correctness.
+        </p>
+
+        <p>
+          <strong>Delivery</strong> (where notifications execute at 2,000+ TPS) requires the opposite: pre-computed, denormalized data with zero joins. At 2,000 TPS, a single join doubles latency. This is a high-throughput system optimized for speed.
+        </p>
+
+        <p>
+          Optimizing DynamoDB for authoring (flexible schema, complex queries) made delivery slower. Optimizing for delivery (flat denormalized data) made authoring fragile. The system was being pulled in two directions simultaneously, and every change in one direction broke something in the other.
+        </p>
+
+        <p>
+          <strong>The real cost:</strong> Changes to authoring schemas rippled into delivery and caused production incidents. Database maintenance (scaling, schema changes, table locks) on the authoring side threatened delivery SLA. Teams couldn't evolve independently. Each notification channel (voice, SMS, email, RCS, Push, Tray) had different field semantics and constraints, forcing schema compromises everywhere.
+        </p>
+
+        <p>
+          The system served 10,000 notifications across 800 services owned by 10+ teams. Downtime was unacceptable. A "rip and replace" rebuild wasn't an option.
         </p>
       </section>
 
       <section class="content-section" id="context">
-        <h2>Context &amp; constraints</h2>
-        <ul>
-          <li><strong>Live traffic during migration.</strong> The legacy stack was processing prod notifications for QBO, QBSE, Credit Karma, Mailchimp, TurboTax and others. Any downtime or correctness regression was visible to end customers.</li>
-          <li><strong>Two stacks running simultaneously.</strong> For the migration window we had to operate <code>notificationadmin</code> (old) and <code>comms-authoring-service</code> (new) in parallel, with a per-notification "stack flag" deciding which one served each request.</li>
-          <li><strong>Cross-team dependencies.</strong> Migration spanned five backend services, two UIs (legacy Mint-era and the new authoring UI), the IPS Managed Relational team, the gateway team, the Pulsar infra team, and product owners for every notification.</li>
-          <li><strong>Phased rollout.</strong> Phase 1 (single-channel, simple triggers), Phase 2 (templates needing flattening — templates shared via N:1 references and had to be flattened to 1:1 for the new schema), and Phase 3 (multi-channel notifications — 278 of them, each had to be split into per-channel notifications in the old RFM, promoted, then migrated).</li>
-        </ul>
+        <h2>Why this was genuinely hard</h2>
+        <p>
+          This wasn't a straightforward refactor. Every constraint made it harder.
+        </p>
+
+        <p>
+          <strong>Live traffic:</strong> QuickBooks, TurboTax, Mailchimp, and others were sending notifications to real customers through this system. A single incident was visible to end users and impacted revenue. We had zero margin for error during migration.
+        </p>
+
+        <p>
+          <strong>Data model complexity:</strong> Each notification channel had different field semantics. Voice notifications need timing config. SMS needs character limits and delivery windows. Email requires template rendering logic. RCS has interactive elements. Push has deep-link payloads. We couldn't migrate all channels the same way—each required deep understanding of its domain, then custom migration logic.
+        </p>
+
+        <p>
+          <strong>Scale:</strong> 10,000 notifications across 800 services. Coordinating migration across product teams meant predictable cutover dates, clear communication, and zero surprises. We couldn't move all notifications at once; teams needed to migrate at their own pace without fragmenting their experience.
+        </p>
+
+        <p>
+          <strong>Team ownership:</strong> Each service is owned by a single team. We couldn't have half a team's notifications on old stack and half on new. Migration had to be all-or-nothing per service. This meant fewer levers to pull: we couldn't just migrate "the simple notifications first"—we had to migrate entire services.
+        </p>
+
+        <p>
+          <strong>Team attrition during execution:</strong> A 13-month project means people leave. During this work, the team experienced layoffs (2 engineers), maternity leaves (1), and reassignments to higher-priority projects (1 engineer for 6 weeks). Without clear service ownership and self-contained migration phases, this would have derailed the project entirely. Instead, we structured work so that when someone left, their piece was understood and transferable.
+        </p>
+
+        <p>
+          <strong>Seasonal business load:</strong> Intuit has two major tax peaks (Feb–Apr and Aug–Oct). During peak, engineering capacity is completely consumed by stability and bug fixes. We had to work around those windows and couldn't afford cutover surprises during peak load.
+        </p>
       </section>
 
       <section class="content-section" id="architecture">
-        <h2>The services I own across this migration</h2>
+        <h2>The solution: two independent systems with one-way sync</h2>
+        <p>
+          Rather than optimize DynamoDB for both workloads, I proposed accepting that they were fundamentally different and splitting them entirely. Two independent systems, optimized separately, kept in sync via events.
+        </p>
+
         <ul>
-          <li><code>comms-authoring-service</code> — REST API for authoring/publishing notifications. Backed by IPS Managed Relational (Postgres via <code>ipsr-mgd-model</code>).</li>
-          <li><code>authoring-delivery-sync</code> — syncs authoring state to the delivery system so the runtime always has the latest template/condition/throttle config.</li>
-          <li><code>comms-comparator</code> — runs the same read request against both stacks and diffs the responses. This was the parity-validation backbone for the entire migration.</li>
-          <li><code>comms-promotion-service</code> — promotes an authored notification (and its message templates, vendor configs, fragments, report datasets) from lower envs into prod.</li>
-          <li><code>notif-common</code> — the legacy service I am incrementally retiring; brought it to JDK 21 and deployed it for prod toe-tip testing in May 2026 with a 2-hour test window and pre-arranged rollback.</li>
+          <li><strong>Authoring system:</strong> IPS Relational (managed PostgreSQL). Normalized schema, ACID transactions, complex queries, git-tracked schema changes. Teams build notifications here.</li>
+          <li><strong>Delivery system:</strong> DynamoDB. Denormalized, high-scale reads, optimized for 2,000+ TPS. Runtime pulls data here.</li>
+          <li><strong>Sync mechanism:</strong> Domain events (Kafka). When authoring data changes, an event publishes. A consumer reads events, transforms the data (normalized → denormalized), and persists to DynamoDB. Async, one-way, simple.</li>
         </ul>
 
-        <div class="diagram-slot">
-          <p class="diagram-slot-label">Diagram slot</p>
-          <p>Add <code>assets/intuit-rfm-revamp/migration-flow.svg</code> for the per-notification stack-flag flow (UI → comms-comparator → old/new backend).</p>
+        <p>
+          This decoupling meant authoring and delivery could evolve independently. Delivery could optimize for latency without constraining authoring. Authoring could add fields without breaking delivery. The two domains grew apart—as they should.
+        </p>
+
+        <h3>Why IPS Relational, not Aurora or self-managed Postgres</h3>
+        <p>
+          This decision shows the staff-level thinking. Not "pick a database that works" but "what's the total cost of ownership and what does the company already have?"
+        </p>
+
+        <p>
+          <strong>Operational burden:</strong> IPS Relational (Intuit's managed relational database) handles upgrades, scaling, secret rotation, failover. We don't operate it. The team that does has deep expertise and has battle-tested this at Intuit scale.
+        </p>
+
+        <p>
+          <strong>Governance and audit:</strong> Every schema change goes through git. There's an audit trail: who changed what, when, why. The IPS team reviews changes and suggests best practices. This matters at Intuit scale. It's not just technical—it's compliance, accountability, and institutional knowledge.
+        </p>
+
+        <p>
+          <strong>Ecosystem integration:</strong> IPS Relational has built-in domain events (Kafka publishing on schema changes). We didn't have to invent the sync mechanism. And IPS Search (Elasticsearch) auto-indexes configured views—we didn't have to glue services together manually. We leveraged what the company already built.
+        </p>
+
+        <p>
+          Building our own Aurora cluster would have been simpler short-term but would have meant: operating the database, managing secrets ourselves, missing ecosystem integrations, reinventing domain events. The managed platform wins long-term.
+        </p>
+
+        <h3>The four services I own</h3>
+        <ul>
+          <li><strong>comms-authoring-service:</strong> REST API for teams to build notifications. Backed by IPS Relational. Handles authoring concerns: validation, scheduling, templates, access control, preview, translation.</li>
+          <li><strong>authoring-delivery-sync:</strong> Consumes domain events from Kafka (published by IPS Relational on schema changes). Transforms normalized → denormalized schema. Writes to DynamoDB. Async, so if it falls behind, it catches up without blocking writes.</li>
+          <li><strong>comms-comparator:</strong> The migration router. All read requests flow through comparator. It checks a per-service migration flag and routes to old stack, new stack, or both (for parity validation). During migration, comparator was the only way to run both systems simultaneously without doubling load.</li>
+          <li><strong>comms-promotion-service:</strong> Promotes authored notifications (and their templates, configs, datasets) from staging to production. Gated by access control (who can promote), audit trails (who/when/what), and blast-radius API (what else does this promotion touch?).</li>
+        </ul>
+
+        <h3>How comparator prevented a bottleneck at 2,000 TPS</h3>
+        <p>
+          All traffic routed through comparator, but it didn't create a bottleneck. Here's why.
+        </p>
+
+        <p>
+          Comparator was a router, not a proxy. Most requests went to a single backend: OLD mode → old stack (1 call), NEW mode → new stack (1 call), COMPARATOR mode (validation only) → both (2 calls, but tiny fraction). The key: COMPARATOR mode was never the majority. Load naturally distributed based on each service's migration state.
+        </p>
+
+        <p>
+          The old stack was fully scaled initially—it was already handling all 2,000+ TPS. As services migrated, the new stack scaled up and old stack scaled down. Comparator stayed lightweight. Load balanced naturally.
+        </p>
+
+        <div style="margin: 40px 0;">
+          <img src="../../assets/intuit-notifications-platform-migration/architecture.png" alt="Architecture diagram showing write path, sync path, read path, and routing between old and new stacks" style="width: 100%; height: auto; border-radius: 4px; border: 1px solid #ddd;">
+          <p style="margin-top: 12px; font-size: 12px; color: #666;">
+            <a href="https://excalidraw.com/#json=SJYYFE9M0IM-emQ0M0Cx4,WcLztQvk-FXyyPwikJeA7Q" target="_blank" style="color: #2c5aa0; text-decoration: none; font-weight: 500;">View interactive version →</a>
+          </p>
         </div>
-
-        <h3>Parity validation via comms-comparator</h3>
-        <p>
-          Rather than cut over and hope, I made the new UI call <code>comms-comparator</code> for read paths. The comparator fans out to both <code>notificationadmin</code> and <code>comms-authoring-service</code>, returns the response from the configured "source of truth" for that notification, and logs the diff. Day-1 in prod was clean enough that I tightened the 5xx alert threshold from <code>0 → 5</code> (the 0-threshold was firing on transient errors and creating alert fatigue). I then ran a full 7-day prod audit of comparator traffic:
-        </p>
-        <ul>
-          <li><strong>2,905,540</strong> 200s — the happy path.</li>
-          <li><strong>373</strong> 400s — root-caused to three categories: (a) a stale templateId hard-coded somewhere upstream (363 occurrences), (b) fetching templates not yet prod-promoted (7), and (c) event names containing a slash (e.g. <code>ExpertMovingToDifferentState/Province</code>) that the legacy URL routing couldn't handle — fixed by moving event name to a request param in the new stack.</li>
-          <li><strong>1</strong> 504 — single gateway timeout, succeeded on retry.</li>
-        </ul>
-        <p>
-          The "Communication Details call failed in comms-comparator but succeeded in notif-admin" log line (and the matching ones for Template Details / Communications Meta) was a custom alert I added so we'd catch divergences as failed-on-new but worked-on-old, which is the dangerous direction.
-        </p>
-
-        <h3>Promotion: comms-promotion-service</h3>
-        <p>
-          The legacy promotion flow only promoted communications. For the new stack I scoped the promotion service to handle communications <em>and</em> their associated entities — message templates, vendor configs, fragments, report datasets. Voice was the first channel we promoted through it. I gated prod cutover on three things <strong>not</strong> strictly required for voice but required before we trust prod promotion for the rest of the migration: access control on who can promote, an audit trail (who promoted what, when), and a "list associated communications when promoting an event" API so promoters know the blast radius before they click the button.
-        </p>
-        <p>
-          When the prod promotion flow broke on Apr 3 2026, I worked through the day and late into the night to ship a working fix — caught and corrected an auth config bug where the new service was hitting the staging auth endpoint from prod, causing 401s. Rajesh Gaur's "Integrity Without Compromise" award called this out specifically.
-        </p>
       </section>
 
       <section class="content-section" id="decisions">
-        <h2>Architectural decisions I set across this migration</h2>
+        <h2>Key decisions that shaped execution</h2>
+
+        <h3>Migrate per-service, not per-notification or per-tenant</h3>
+        <p>
+          In the Notifications hierarchy, a "service" is a logical grouping owned by one team. I decided to migrate service-by-service, treating each as an atomic unit.
+        </p>
+
+        <p>
+          <strong>Why not per-notification?</strong> If I migrated notification-by-notification, a team using SMS + Email could have SMS on new stack and Email on old. That fragmented their experience. New authoring UI for one channel, old for another. Confusing, operationally messy.
+        </p>
+
+        <p>
+          <strong>Why not per-tenant?</strong> Too coarse. A tenant might own 50 services; moving all 50 at once had massive blast radius.
+        </p>
+
+        <p>
+          <strong>Why per-service?</strong> Services align to team ownership. Each service has predictable traffic. Each team gets one migration date. Clear communication, clear cutover, clear rollback scope. If something breaks, we roll back one service and investigate. The optics matter: from the team's perspective, they moved from "using old Authoring Portal" to "using new Authoring Portal" as one coherent unit.
+        </p>
+
+        <h3>Channel-by-channel rollout with a service-readiness gate</h3>
+        <p>
+          Six channels: Voice, SMS, Email, RCS, Push, Tray. Each had different data models.
+        </p>
+
+        <p>
+          I didn't migrate all channels simultaneously. I prioritized by simplicity: Voice first (fewest nuances), SMS next, Email (most complex). Early wins, manageable blast radius, learning between phases.
+        </p>
+
+        <p>
+          But I added a constraint: a service won't migrate until ALL of its channels are ready. If a service uses SMS + Email, it waits until both channels are built and validated in the new system. This prevented partial migrations and gave teams clear prerequisites.
+        </p>
+
+        <p>
+          The benefit: load scaled incrementally (Voice migrations happened first, consumed fewer services). Teams saw clear readiness signals ("your service is ready to migrate once Email channel is live"). No surprises.
+        </p>
+
+        <h3>Comparator at the API boundary: zero product-team visibility</h3>
+        <p>
+          Product teams call Notifications APIs to read configurations. I placed comparator between them and the backend.
+        </p>
+
+        <p>
+          From their perspective, the API never changed. They hit one endpoint; comparator handled routing. If a service was in OLD mode, they hit old stack. If NEW mode, new stack. If COMPARATOR mode, both (and they got validated responses). Their contract was stable.
+        </p>
+
+        <p>
+          This meant zero communication overhead with product teams. No "your service is migrating on Date X, here's what breaks." No migration surprises. No breaking changes. They saw one API; we managed complexity internally. This is the kind of API design that keeps organizations aligned.
+        </p>
+
+        <h3>Domain events, not dual-write</h3>
+        <p>
+          When authoring data changes, how does delivery data stay in sync?
+        </p>
+
+        <p>
+          <strong>Option 1 (dual-write):</strong> Every write to authoring DB also writes to delivery DB. Simple to reason about (both systems always in sync). But authoring DB load doubles. Authoring DB has to speak delivery schema (it didn't). Write latency increases. Partial failure handling becomes messy.
+        </p>
+
+        <p>
+          <strong>Option 2 (event-driven):</strong> IPS Relational publishes domain events to Kafka on schema changes. Consumer reads events, transforms (normalized → denormalized), writes to DynamoDB. Sync is async. Authoring DB never knows about delivery. If consumer falls behind temporarily, it catches up asynchronously without blocking writers.
+        </p>
+
+        <p>
+          <strong>Tradeoff:</strong> Eventual consistency instead of instant. But the gap is milliseconds (consumer processes events quickly), and the benefit is huge: authoring DB stays lightweight; delivery DB gets exactly what it needs; the two systems are truly independent.
+        </p>
+
+        <h3>Per-channel data modeling: no generic schema</h3>
+        <p>
+          Voice notifications have duration. SMS has character limits and delivery windows. Email has formatting rules. RCS has interaction options. Push has deep-link payloads.
+        </p>
+
+        <p>
+          I could have created a generic schema (all channels use the same fields, nulls where they don't apply). Simpler database perspective. But queries get more complex (filtering nulls), validations harder (what applies to this channel?), and the schema becomes a compromise that optimizes for nothing.
+        </p>
+
+        <p>
+          Instead, I modeled each channel properly. Voice has fields optimized for voice. SMS for SMS. Means more per-channel migration logic upfront, but the payoff: queries are clean, validations are channel-specific, the schema is tight. Every layer of the system gets simpler.
+        </p>
+
+        <p>
+          This decision made data model migration the longest phase of the project (months 5–10). We had to deeply understand each channel's semantics, design the new relational schema, write migration logic, test against live data, validate parity. It was the right investment.
+        </p>
+
+        <h3>Comparator visibility: logging and parity audits</h3>
+        <p>
+          During migration, comparator ran in validation mode for some requests: call both old and new stack, compare responses, log divergences. This gave us confidence that the new system matched the old.
+        </p>
+
+        <p>
+          7-day parity audit during peak migration:
+        </p>
         <ul>
-          <li>
-            <strong>Per-notification stack flag, not a per-tenant flag.</strong> A per-tenant flag would have been simpler but would have forced product teams to migrate all their notifications at once. Per-notification meant we could move Phase 1 notifications for a tenant while Phase 2 templates were still flattening — and roll back individual notifications without affecting the others. <em>Tradeoff: more state to track; I added a <code>workspace-migration-state</code> API in comms-comparator to keep an authoritative view.</em>
-          </li>
-          <li>
-            <strong>Parity diffing in the read path, not the write path.</strong> Running comparator on writes would have doubled write-traffic to the legacy DB and increased latency for authors. Read-path diffing catches the same correctness regressions (since the new write becomes the next read) without the latency tax.
-          </li>
-          <li>
-            <strong>Multi-channel notifications were split, not natively supported in old RFM.</strong> 278 notifications were multi-channel. The new stack supports multi-channel natively, but the old RFM doesn't — so to migrate, we created per-channel duplicates in old RFM, promoted them, then migrated only the duplicates. We did <em>not</em> modify existing notifications. <em>Tradeoff: temporary inflation in the notification count in old RFM; clean rollback if any phase failed.</em>
-          </li>
-          <li>
-            <strong>Translation flow: new bucket + status states instead of a flag day.</strong> When introducing the new translation flow (GCS-backed, locale-aware), I designed it so the delivery system kept reading from <code>notif-templates-e2e</code> while the new flow populated <code>notif-templates-e2e-backup</code>. Translation states (<code>Pending</code>, <code>Available</code>, <code>Failed</code>, <code>TranslationCompleted</code>, <code>InvalidFTL</code>) let the UI show per-locale status and let delivery fall back to old content on translation failures.
-          </li>
-          <li>
-            <strong>5xx alert threshold from 0 → 5.</strong> Setting 0 means every transient 5xx pages oncall. Once Day-1 metrics confirmed comparator was stable I bumped the threshold so real regressions stay paged but flakes don't.
-          </li>
-          <li>
-            <strong>Pushed back on a BFF (backend-for-frontend) proposal in the platform leaders forum.</strong> When a peer proposed a BFF layer on top of the new stack, I argued that the cited use cases (quickbase integration, change management, HCAP calendar status) belonged either to <code>comms-authoring-service</code> directly or to <code>comms-promotion-service</code> — not to a new aggregation layer. Cited <code>notif-common</code>'s history of scope-creep (delivery flow, inbound messages, in-app notifications, customer preview all ended up in one service) as the cautionary tale, and proposed gateway routing as the simpler primitive when the goal is just request fan-out. <em>The decision held; we did not build a BFF.</em>
-          </li>
-          <li>
-            <strong>Owned the cross-swim-lane Pulsar routing escalation.</strong> The messaging-infra team approved cross-swim-lane routing in staging (working cleanly) but resisted enabling it in prod, citing seven days of work, and stopped our new staging routing — blocking a consumer-team integration entirely. I escalated to the platform leaders forum asking for manager-level contacts, scheduled the cross-team meeting myself with the messaging-infra leads, got onboarding to staging unblocked, and negotiated a prod rollout timeline. Result: cost estimate in hand, prod rollout scoped to the following week.
-          </li>
-          <li>
-            <strong>Authored the official OINP onboarding guides.</strong> Wrote the canonical RCS onboarding guide for the platform docs site and shared it with the leaders forum for review. The team's documentation site is the source of truth partner teams consume — owning the canonical doc set is part of the role.
-          </li>
-          <li>
-            <strong>Volunteered to lead the RCS go-live to production.</strong> In the platform leaders forum: <em>"Will lead this till production. By GED end it should be live."</em> Cross-team initiatives with public commitments to leadership are how I claim scope.
-          </li>
+          <li>2.9M+ matching responses (the happy path)</li>
+          <li>~400 divergences (all root-caused: 363 stale template IDs, 7 templates not yet promoted, 30 event names with special characters)</li>
         </ul>
+
+        <p>
+          We added a custom alert: "Communication Details call succeeded in comparator but failed in old stack." This caught the dangerous pattern (new stack works, old stack breaks, users still on old stack see silent failures). Visibility prevented silent failures.
+        </p>
+      </section>
+
+      <section class="content-section" id="execution">
+        <h2>Executing through organizational chaos</h2>
+
+        <p>
+          <strong>Total timeline: 13 months. Active work: 10 months.</strong>
+        </p>
+
+        <p>
+          <strong>Month 1 (Design &amp; alignment):</strong> Everyone had different approaches. Platform team, IPS team, delivery team, product teams—all had opinions. First month was spent converging. We reviewed options (dual-write, cache layer, event-driven sync), evaluated tradeoffs, and committed to the per-service, domain-event-driven approach. Hardest part was alignment: different teams had different priorities and constraints.
+        </p>
+
+        <p>
+          <strong>Months 2–4 (Infrastructure):</strong> Built four services. Set up domain events with IPS team (they enabled Kafka publishing on schema changes). Built comparator and promotion services. Each service had to handle migration concerns (safe routing, parity validation). This phase had concrete deliverables; progress was visible.
+        </p>
+
+        <p>
+          <strong>Months 5–10 (Data model migration—the long pole):</strong> Each channel required deep understanding. Voice (simplest—pure timing config) → SMS (character limits, complex templates) → Email (WYSIWYG rendering, complex template logic). For each, we designed the new relational schema, wrote migration logic, tested against live data, validated parity.
+        </p>
+
+        <p>
+          During these months, we also migrated services incrementally. Voice services started moving. SMS services waited for SMS to be ready. We set up monitoring for each service's performance on the new stack. We built runbooks for rolling back (how do you move a service back if something breaks?). The incremental approach meant we caught problems early and learned with each phase.
+        </p>
+
+        <p>
+          <strong>Attrition challenge:</strong> During these 10 months, we lost people. Layoffs (2), maternity leaves (1), reassignments (1 for 6 weeks). Without clear service ownership and self-contained migration phases, this would have derailed everything. Instead, we structured work so each person owned one service or one phase. When someone left, their piece was understood and transferable. New people onboarded into that role. The architecture and phase structure made attrition manageable.
+        </p>
+
+        <p>
+          <strong>Seasonal load challenge:</strong> Tax peaks (Feb–Apr, Aug–Oct) squeezed capacity. During peak, team focused on stability, not migrations. We scheduled major cutover windows for off-peak months (May–Jul, Nov–Jan). Critical path work (comparator validation, promotion testing) finished before peak hit. We didn't attempt large migrations during peak. This discipline prevented pressure-induced mistakes.
+        </p>
+
+        <p>
+          <strong>Scale:</strong> 10,000 notifications across 800 services. We didn't move all at once. Channel-by-channel, then service-by-service within each channel. Blast radius was always bounded. If something broke during a service's migration, we rolled back that service, investigated, and moved on.
+        </p>
       </section>
 
       <section class="content-section" id="impact">
-        <h2>Impact</h2>
-        <ul>
-          <li><strong>Live prod migration with zero customer-visible incidents</strong> across Phase 1 cutover (Apr–May 2026). Comparator audit showed 99.987% parity (2.9M+ matched, &lt;400 diffs over 7 days, all root-caused to known classes).</li>
-          <li><strong>Comms-comparator handled peak 507 TPS / avg ~26 TPS</strong> through the parity window.</li>
-          <li><strong>Voice channel</strong> shipped as the first end-to-end notification on the new promotion flow (Nov 2025 Bravo).</li>
-          <li><strong>SMS channel</strong> shipped Dec 2025 (Bravo) — full feature-flagged rollout, rollback plan, observability on every new component.</li>
-          <li><strong>Phase 1 (single-channel) migrated, Phase 2 (template flattening) executed via formal change-request review across staging then prod, Phase 3 (278 multi-channel notifications)</strong> planned and in-flight.</li>
-          <li><strong>Preview API at scale:</strong> rendered 3,550 production notifications through the new Preview API, surfaced as the basis for the <a href="oinp-accelerate.html" data-basepath="true">home-page redesign initiative</a>.</li>
-          <li><strong>Patterns established for the team:</strong> the 3-phase rollout (S3-thumbnails → Elasticsearch → domain events), the working-evidence-before-proposal model, and "API contract before implementation" — all now defaults for new workstreams.</li>
-        </ul>
-      </section>
+        <h2>Impact: operational decoupling and sustainable scale</h2>
 
-      <section class="content-section" id="faq">
-        <h2>FAQ <span class="section-hint">(for future recruiter agent)</span></h2>
-        <dl class="faq">
-          <dt>Why not just dual-write to both stacks instead of building a comparator?</dt>
-          <dd>Dual-write would have doubled the load on the legacy DB (which we were trying to deprecate) and required the legacy stack to accept the new schema, which it didn't support. Read-path parity caught the same correctness regressions without the dual-write tax.</dd>
+        <p>
+          <strong>10,000 notifications, 800 services, 10+ product teams migrated with zero downtime and zero visible customer impact.</strong> Product teams never knew it happened. API contracts remained unchanged. Comparator handled all routing internally. No team coordinated. No team saw surprises. No team saw regressions. This is the mark of a clean architecture—migration is internal detail.
+        </p>
 
-          <dt>How did you handle the BFF disagreement without burning the relationship?</dt>
-          <dd>The disagreement was technical, posted in a leaders channel where everyone could see the reasoning. I led with "I have slightly different opinion" and then laid out the substantive argument — what each use case actually needs, why notif-common's history is a relevant precedent, and what the gateway-routing alternative looks like. The decision wasn't "I'm right, you're wrong" — it was "here's the technical evidence, what do we decide together."</dd>
+        <p>
+          <strong>Parity validation: 99.987% match rate.</strong> 2.9M+ matched responses, ~400 divergences—all root-caused to known categories. This confidence meant we could move services without fear.
+        </p>
 
-          <dt>How did you decide what gates voice channel cutover beyond what voice strictly needed?</dt>
-          <dd>Voice was the canary for the promotion service. Once it shipped, every subsequent channel would inherit the same promotion plumbing — so missing access control, audit, or the "what else does this promotion touch" API would have meant retrofitting them under prod load. Cheaper to add them as exit criteria for voice than to ship and patch.</dd>
+        <p>
+          <strong>Comparator handled 2,000+ TPS without bottlenecking.</strong> Lightweight routing, gradual capacity rebalancing, most traffic in single-stack mode. Load scaled naturally.
+        </p>
 
-          <dt>What would you do differently?</dt>
-          <dd>Bring the comparator online earlier — we were debugging a few weeks of "the new stack returns X, the old returns Y, who's right" by hand before the comparator existed. Standing it up first would have shortened the parity-investigation tail.</dd>
-        </dl>
+        <p>
+          <strong>Operational decoupling established.</strong> Authoring and delivery teams now make independent decisions. Delivery can scale without touching authoring schema. Authoring can add fields without breaking delivery. The two domains evolved separately from this point forward—no more cascading failures.
+        </p>
+
+        <p>
+          <strong>New patterns for the organization.</strong> Per-service migration became the template for large-scale platform work. Domain event-driven sync became standard. The comparator pattern (validation during cutover) became reusable for other migrations. Teams learned to think about migration safety, not just functionality. The organization's maturity increased.
+        </p>
+
+        <p>
+          <strong>Sustainable foundation for future work.</strong> The decoupled architecture means teams can now add features to authoring (new channels, new workflows, new validation rules) without fearing delivery impact. Delivery can scale independently. The organization can grow without rebuilding again.
+        </p>
       </section>
     </article>
 </main>

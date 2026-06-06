@@ -39,26 +39,42 @@ If you add a new page, follow one of these two patterns exactly — don't hand-a
 
 ## Content conventions (load-bearing for the Intuit section)
 
-The Intuit pages are the active pitch artifact. Several conventions emerged from substantial editing and should not be re-introduced:
+The Intuit pages are the active pitch artifact—the evidence for a Staff Engineer role. Several conventions emerged from iterative work and should be maintained.
 
-**External-audience sanitization.** The portfolio is for recruiters outside Intuit. NEVER add:
+**What this section is for:** Showcasing the *quality of decision-making and systems thinking*, not just scope or speed. A Staff Engineer is valued for navigating constraints, making trade-off decisions, and establishing patterns that improve organizational capability. The narrative should reflect that.
+
+**Narrative framing: constraints, decisions, impact.**
+- **Constraints**: What made the problem hard? (live traffic, data model complexity, team attrition, seasonal load, organizational boundaries)
+- **Decisions**: What trade-offs did you make and why? (per-service vs per-notification, domain events vs dual-write, managed platform vs self-managed, etc.) Explain the reasoning, not just the choice.
+- **Impact**: What changed for the org? (new patterns, reduced future risk, faster iteration, operational decoupling, sustainability for future growth)
+
+Don't lead with numbers ("10,000 notifications") if they make the complexity sound smaller. Let the narrative demonstrate sophistication.
+
+**No "begging for job" language.** This is not a platform to appeal to recruiters. Remove:
+- FAQ sections or "for future recruiter agent" meta-commentary.
+- Sections that *tell* the Staff case ("Why I'm ready for Staff") — let the work argue for itself.
+- Pleading tone or apologetic framing.
+
+Write as if explaining the work to peers. The Staff evidence comes through naturally.
+
+**External-audience sanitization.** The portfolio is for technical recruiters outside Intuit. NEVER add:
 - Links to `github.intuit.com`, `splunk.intuit.com`, `jira.cloud.intuit.com`, `devportal.intuit.com`, `*.api.intuit.com`, internal `*.app.intuit.com` URLs.
 - JIRA/PR/CHG IDs (e.g. `OINP-21070`, `CCX-727`, `CHG9359960`).
-- Slack channel names (`#customer-comms-pd`, `#oinp-prs`, `#intuit-iris-oinp`, etc.) — refer to them descriptively ("the platform leaders forum", "the cross-team support channel").
-- Literal Pulsar topic paths (`persistent://oinp/...`) — describe the routing, not the path strings.
+- Slack channel names (`#customer-comms-pd`, `#oinp-prs`, etc.) — refer descriptively ("the platform leaders forum", "the cross-team support channel").
+- Literal message topic paths (`persistent://...`) — describe the routing concept, not the path strings.
 - Internal username `ashrivastav6` in any path or example.
-- Internal team / product codenames where they aren't public Intuit products. **Keep**: QuickBooks, TurboTax, Credit Karma, Mailchimp, ProSeries, Lacerte. **Genericize**: Triton, VEP, SBSEG, Field Service, Acadia, IEP, Expert Hiring → "consumer teams", "upstream-product team", "internal product surfaces".
-- "OMS" → use "Pulsar" (OMS is Intuit's internal name for their Pulsar wrapper).
+- Internal team/product codenames where they aren't public Intuit products. **Keep**: QuickBooks, TurboTax, Credit Karma, Mailchimp, ProSeries, Lacerte. **Genericize**: Triton, VEP, SBSEG, Field Service, Acadia, IEP → "consumer teams", "upstream-product team", "internal product surfaces".
+- Acronyms without context (spell out on first use, use plain language where possible).
 
-The two exceptions where internal names appear verbatim are inside **quoted award citations** on the Recognition page (`work/intuit/recognition.html`) — those are Sheetal Sureka's actual words and shouldn't be edited.
+The two exceptions where internal names appear verbatim are inside **quoted award citations** on the Recognition page (`work/intuit/recognition.html`) — those are direct quotes and shouldn't be edited.
 
-**Title bar honesty.** The user is currently a Senior Software Engineer and pitching for Staff. Resume title and headers must match what's on Workday ("Senior Software Engineer · Platform & Reliability"). The Staff pitch happens via the evidence, never via the title.
+**Title bar honesty.** Your title is "Senior Software Engineer · Platform & Reliability" (matching Workday). The Staff pitch happens through evidence (decision ownership, patterns established, organizational impact), never through inflated titles.
 
-**Don't "tell" the Staff case — show it.** Earlier revisions included sections like "Why Staff, not Senior, fits the work" — these read as pleading and were removed. Let the work argue for itself: scope statements, decision ownership, recognition citations, quantitative impact.
+**Recognition is its own page** (`work/intuit/recognition.html`), accessible from the left nav. Spotlight email cards are rendered inline with sanitized HTML (Award IDs, Redeem URLs, mailtos, dates stripped). Platform overview links to Recognition; don't re-introduce the citation list on platform-overview itself.
 
-**Recognition is its own page now** (`work/intuit/recognition.html`), accessible from the left nav. Spotlight email cards are rendered inline with sanitized HTML (Award IDs / Redeem URLs / Say Thanks mailtos / Use By dates stripped from the original Workhuman email HTML). Platform overview links to Recognition; do not re-introduce the citation list on platform-overview itself.
+**Awards count and tiers.** Match what's on the Recognition page. Spotlight tier ordering: Applause < Acclaim < Encore < Salute < Bravo. Sheetal Sureka is a Group Engineering Manager (GEM); Shanti Kuropati is a Director — keep titles accurate.
 
-**Awards count and tiers.** When updating the recognition list, match what's currently on the Recognition page. The Spotlight tier ordering is: Applause < Acclaim < Encore < Salute < Bravo. Sheetal Sureka is a Group Engineering Manager (GEM); Shanti Kuropati is a Director — keep these titles accurate.
+**On rewrites and iterations:** When asked to redesign a page, start completely fresh. Don't preserve old structure, old phrasing, or old framing. The goal is to find the strongest narrative, not to edit incrementally. If a full rewrite feels like the right move, do it.
 
 ## Resume specifics (`resume.html`)
 
