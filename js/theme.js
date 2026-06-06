@@ -45,12 +45,26 @@ const ThemeManager = {
   },
 
   setupToggle() {
-    const button = document.querySelector('.theme-toggle');
-    if (button) {
-      button.addEventListener('click', () => this.toggleTheme());
-    }
+    // The toggle button is rendered asynchronously by sidebar.js (after the
+    // navigation JSON loads), so it may not exist yet at init time. Use event
+    // delegation on the document so clicks are handled whenever the button
+    // appears.
+    document.addEventListener('click', (e) => {
+      if (e.target.closest('.theme-toggle')) {
+        this.toggleTheme();
+      }
+    });
+  },
+
+  // Called by sidebar.js once the toggle button has been rendered, so the
+  // icon reflects the active theme.
+  refreshToggleButton() {
+    this.updateToggleButton(this.getSavedTheme() || this.lightTheme);
   }
 };
+
+// Expose globally so sidebar.js can refresh the toggle button after render.
+window.ThemeManager = ThemeManager;
 
 // Initialize theme when DOM is ready
 if (document.readyState === 'loading') {

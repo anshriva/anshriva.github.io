@@ -52,6 +52,9 @@
     sidebarEl.innerHTML = parts.join("");
     bindToggles();
     setupMobileNav();
+    if (window.ThemeManager) {
+      window.ThemeManager.refreshToggleButton();
+    }
   }
 
   function setupMobileNav() {
