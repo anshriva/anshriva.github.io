@@ -1221,17 +1221,16 @@ body.layout-docs .page-status {
 }
 
 @media (max-width: 900px) {
-  body.layout-docs .topic-main,
   body.layout-index .docs-main-content {
     margin-left: 0;
   }
 
-  #site-sidebar {
+  body.layout-index #site-sidebar {
     transform: translateX(-100%);
     transition: transform 0.25s;
   }
 
-  body.sidebar-open #site-sidebar {
+  body.layout-index.sidebar-open #site-sidebar {
     transform: translateX(0);
   }
 }

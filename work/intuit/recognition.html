@@ -16,25 +16,25 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Fraunces:wght@500;600&display=swap" rel="stylesheet" />
 
   <style>
-    /* Section dividers between tier groups, on top of the dark portfolio theme */
+    /* Section dividers between tier groups */
     .tier-section { margin-top: 32px; margin-bottom: 8px; }
     .tier-section h2 {
       font-family: "Fraunces", Georgia, serif;
-      color: #e8edf5;
+      color: var(--text);
       font-size: 1.4rem;
-      border-bottom: 1px solid #2a3548;
+      border-bottom: 1px solid var(--border);
       padding-bottom: 8px;
       margin-bottom: 24px;
     }
     .tier-section .tier-blurb {
-      color: #8b9bb4;
+      color: var(--text-muted);
       font-size: 0.9rem;
       margin-top: -16px;
       margin-bottom: 20px;
     }
-    /* Each award card sits inside a light-gray wrapper to echo the email background */
+    /* Each award card sits inside a wrapper to echo the email background */
     .award-frame {
-      background: #E2E2E2;
+      background: var(--bg-elevated);
       padding: 20px 0;
       margin-bottom: 28px;
       border-radius: 8px;
@@ -42,7 +42,7 @@
     }
     .award-frame .flexibleContainer { margin: 0 auto !important; }
     .recognition-intro {
-      color: #c9d3e2;
+      color: var(--text-muted);
       max-width: 60ch;
       margin-bottom: 28px;
       line-height: 1.65;
@@ -50,10 +50,10 @@
     .recognition-back {
       display: inline-block;
       margin-bottom: 16px;
-      color: #3dd6c6;
+      color: var(--accent);
       text-decoration: none;
     }
-    .recognition-back:hover { color: #f0b429; }
+    .recognition-back:hover { color: var(--warm); }
   </style>
 </head>
 <body class="layout-docs" data-page-id="intuit-recognition">
