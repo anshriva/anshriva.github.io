@@ -11,7 +11,7 @@
 
 <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>RFM Search — Anubhav Shrivastava</title>
+  <title>Notifications Platform Search — Anubhav Shrivastava</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Fraunces:wght@500;600&display=swap" rel="stylesheet" />
@@ -21,133 +21,146 @@
 <main class="topic-main">
     <article class="article topic-page">
       <header class="page-header">
-        <p class="page-status">Status: <strong>ready</strong></p>
-        <h1>RFM Search — two ships, two data sources</h1>
-        <p class="subtitle">Topic · Intuit · OINP / Customer Communications</p>
+        <p class="page-status">Status: <strong>in production · 2+ years</strong></p>
+        <h1>Notifications Platform Search — full-text discovery over a point-query database</h1>
+        <p class="subtitle">Topic · Intuit · Notifications Platform</p>
       </header>
+
+      <div class="stats-row">
+        <div class="stat">
+          <span class="stat-value">0</span>
+          <span class="stat-label">production incidents in 2+ years</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value">~10K</span>
+          <span class="stat-label">notifications indexed &amp; searchable</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value">2 → 1</span>
+          <span class="stat-label">source tables joined into one index</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value">seconds</span>
+          <span class="stat-label">write-to-searchable freshness</span>
+        </div>
+      </div>
 
       <section class="content-section" id="problem">
         <h2>Problem statement</h2>
         <p>
-          The notification authoring portal (RFM) holds thousands of notifications across hundreds of workspaces and tens of product teams. To find "the notification that fires on QBO invoice payment" an author had to know its catalog, scroll its event list, or ask the platform team in Slack. There was no global search across notifications, message templates, fragments, and the metadata that ties them together.
+          Our notifications platform sends the messages Intuit's products rely on — email, SMS, push, and in-product notifications. Each one is <em>configured</em> by someone inside Intuit: a product engineer who sets up the trigger, the template, the copy, the routing. Over the years that adds up to roughly <strong>10,000 notifications</strong>, authored by people across many teams, many of whom have since moved on.
         </p>
         <p>
-          I have shipped search for RFM <strong>twice</strong>, on two completely different stacks with different data sources:
+          The configuration data lives in <strong>DynamoDB</strong>, split across two tables — a <strong>notifications</strong> table and a <strong>message templates</strong> table. DynamoDB is excellent at what it's built for: fast point queries when you already know the key. It is not built for the question we actually kept getting asked, which was the opposite of a point query:
         </p>
         <ul>
-          <li><strong>Ship 1 — Sep 2024.</strong> Search on the legacy stack. DynamoDB source → Kinesis stream → IPS Search index. Shipped, operational, still serving production traffic on legacy RFM.</li>
-          <li><strong>Ship 2 — 2026 (in flight, backend nearly complete by GED-end).</strong> A new build for the new RFM stack. IPS Managed Relational (Aurora Postgres) source — a different data substrate that needs a different ingestion model and a different schema. This is not a refactor of Ship 1; it's a new system.</li>
+          <li><strong>"Who configured this?"</strong> Someone drops a screenshot, or just a subject line, in a support thread and asks who owns this notification. It may have been set up years ago by someone no longer on the team — nobody remembers.</li>
+          <li><strong>"Who's the author?" — during an incident.</strong> A production issue is unfolding and we need to reach the person who configured a specific notification, fast, while it's live.</li>
         </ul>
+        <p>
+          Answering either meant a human scanning lists by hand or the platform team being paged to act as a lookup service. There was no way to take a fragment of text — a subject line, a phrase from the body, an author's name — and find the notification behind it. We needed <strong>plain-text search across the catalog</strong>, and DynamoDB can't give you that.
+        </p>
       </section>
 
       <section class="content-section" id="context">
         <h2>Context &amp; constraints</h2>
         <ul>
-          <li><strong>Two separate ships, not two phases.</strong> Ship 1 was a complete, operational system on the legacy <code>notificationadmin</code> stack. Ship 2 is being built fresh on the new <code>comms-authoring-service</code> stack with a different source-of-truth database. The product surface looks similar to authors; under the hood almost nothing carries over.</li>
-          <li><strong>The data source changed.</strong> Ship 1's source was DynamoDB — change-data via Kinesis. Ship 2's source is IPS Managed Relational (Postgres). Different CDC story, different schema, different join semantics.</li>
-          <li><strong>Data freshness still matters.</strong> Authors edit a notification and immediately want to find it. Batch reindexing would have been simpler in either ship but unusable.</li>
-          <li><strong>Sort and ranking expectations were unbounded at first.</strong> Product asked for "sort by every field" — I pushed back with a curated whitelist driven by what authors actually needed and what an index can support without performance collapse.</li>
-          <li><strong>Phased rollout strategy for Ship 2.</strong> Rather than build everything before shipping, I structured Ship 2 in three deliberately phased deliveries so each phase is usable on its own and the next phase builds on it.</li>
+          <li><strong>Wrong tool for the question.</strong> DynamoDB is a point-query store. Full-text search across an index — match on partial subject lines, bodies, authors — is exactly the access pattern it isn't designed for.</li>
+          <li><strong>The data is spread across two tables.</strong> A useful search result needs fields from both the notifications table and the message templates table. Whatever we built had to join them into one coherent searchable record.</li>
+          <li><strong>Modest scale, real discovery pain.</strong> ~10,000 records is small data — but discovery difficulty isn't about row count, it's about not having the right access path. Ten thousand things you can't search are ten thousand things you can't find.</li>
+          <li><strong>Freshness matters.</strong> An author edits a notification and expects to find it immediately afterward. A search index that lags writes is one people stop trusting.</li>
+          <li><strong>Don't take on infrastructure we don't need to own.</strong> A search engine carries real operational weight — upgrades, patching, networking, disaster recovery, schema governance. For a discovery feature, owning all of that ourselves would have been cost with no benefit to the team.</li>
         </ul>
       </section>
 
       <section class="content-section" id="architecture">
-        <h2>Ship 1 — legacy RFM search (Sep 2024)</h2>
+        <h2>How it works</h2>
         <p>
-          Built on the legacy <code>notificationadmin</code> stack, backed by IPS Search (Intuit's OpenSearch offering) for the index and DynamoDB + Kinesis as the change-data pipeline. <strong>Shipped, fully operational, still serving prod.</strong>
-        </p>
-        <ul>
-          <li>Any change in our DynamoDB tables emitted to a Kinesis stream.</li>
-          <li>A backend consumer combined data from multiple tables into a single JSON document and pushed it to the IPS Search ingestion API.</li>
-          <li>The UI called a search endpoint that translated user query + filters into IPS Search queries, returning ranked results.</li>
-          <li>I designed it event-based (not batch) because manual data freshness guarantees don't survive prod — relying on the stream gave us "always within seconds of write" without operator effort.</li>
-        </ul>
-        <p>
-          For ranking I capped the sortable field set rather than supporting every requested field: <code>name</code>, <code>offeringName</code>, <code>serviceName</code>, <code>modifiedByMail</code>, <code>modifiedAt</code>, <code>createdByEmail</code>, <code>createdAt</code>, <code>storageExpiry</code>, <code>storageDeletion</code> — plus relevance. Pushed back on sorting by email body / notification description because each sortable field has a measurable performance cost on every query.
-        </p>
-        <p>
-          I also added a new gateway route for <code>/genai</code> with a higher timeout (5s wasn't enough for the gen-AI integration), tested it in QAL, verified the RFM UI worked end-to-end, then promoted the gateway config to e2e and prod.
+          The shape of the solution was clear early. The source data already lived in DynamoDB, and capturing changes out of DynamoDB is a well-trodden path: <strong>change-data-capture (CDC)</strong>. Any write to either table flows out as a change record; a consumer turns that stream into search documents. The only genuinely open question was <em>which search system</em> to put behind it.
         </p>
 
-        <h3>Ship 2 — new RFM search (2026, in flight)</h3>
-        <p>
-          For the new RFM stack the source-of-truth is IPS Managed Relational (Aurora Postgres), not DynamoDB. The architectural primitives change accordingly — different CDC pattern, different schema-mapping, different joining model — so this is a fresh build, not a port. I structured it in three deliberately phased ships so each is independently useful:
-        </p>
+        <div class="diagram">notifications table   ┐
+                      ├─▶  DynamoDB Streams  ─▶  Kinesis  ─▶  CDC consumer  ─▶  managed search index  ─▶  query API  ─▶  authoring UI
+message templates     ┘         (every write)                (join 2 tables,
+                                                              massage, thumbnail)</div>
+
+        <h3>The CDC pipeline</h3>
         <ul>
-          <li>
-            <strong>Phase 1 — Thumbnails in S3, no Elasticsearch.</strong> The smallest amount of indexing infrastructure needed to make the new RFM searchable. If something went wrong, we caught it via Splunk alerts and retried manually. Faster to ship, no event-bus dependency. Backend nearly complete; on track for prod by GED end (Jun 2026).
-          </li>
-          <li>
-            <strong>Phase 2 — Elasticsearch.</strong> Once Phase 1 is in use we layer Elasticsearch underneath for real ranking + facets, swapping in without breaking the API contract Phase 1 established.
-          </li>
-          <li>
-            <strong>Phase 3 — Domain-event resiliency.</strong> Replace manual retry with domain-event-driven ingestion so the index stays converged with the source of truth even under partial failure. This is the long-term operational story.
-          </li>
+          <li>Every write to the notifications or message-templates table emits a change record onto a <strong>Kinesis</strong> stream.</li>
+          <li>A <strong>CDC consumer</strong> reads the stream, joins the related records from both tables into a single denormalised document, and pushes it to the search index. Denormalising on write means the read path never pays a join cost.</li>
+          <li>The authoring UI calls a <strong>query API</strong> that translates the user's text and filter selections into index queries and returns ranked results.</li>
+          <li>I built it event-driven rather than batch on purpose: "remember to reindex" freshness guarantees don't survive production. Riding the change stream keeps the index within seconds of every write, with no operator effort.</li>
         </ul>
+
+        <h3>Schema design: keywords vs. full text</h3>
         <p>
-          I mentored a junior engineer (Suveeksha Reddy) on owning Phase 1 backend, then a second engineer (Himaja) on the Phase 2 search API design — pushing both to think in terms of API contracts first, and to refer to the existing <code>notificationadmin</code> search contract (i.e. Ship 1, which I'd built) instead of exposing every Elasticsearch construct (e.g. the <code>filter</code> array, the AND-only operator pattern that's enough for OINP without the composite NOT/OR complexity).
-        </p>
-        <p>
-          Ship 2 is also the backbone for the home-page preview redesign — see <a href="oinp-accelerate.html" data-basepath="true">Home-page redesign</a> for how the search index and the Preview API combine into a visual-first home page.
+          The index schema deliberately splits fields by how they're queried. Fields you filter or facet on exactly — <strong>status</strong>, <strong>workspace name</strong> — are mapped as <em>keywords</em>, so they match precisely and aggregate cleanly. Fields you actually search into — subject lines, body copy, author — are mapped for <strong>full-text</strong> analysis. Getting this split right up front is most of what makes the results feel correct: exact things stay exact, fuzzy things stay fuzzy. Once the schema was in place, the existing ~10,000 records were <strong>backfilled</strong> so search was useful from day one rather than only for notifications edited after launch.
         </p>
 
-        <div class="diagram-slot">
-          <p class="diagram-slot-label">Diagram slot</p>
-          <p>Add <code>assets/intuit-authoring/search-v1-v2.svg</code> with Ship 1 (DynamoDB → Kinesis → IPS Search) and Ship 2 (IPS Managed Relational → 3-phase rollout) topologies side by side, emphasising they are two systems, not two phases of one.</p>
-        </div>
+        <h3>Preview thumbnails</h3>
+        <p>
+          On top of search we added a <strong>preview / thumbnail</strong> for each notification. The CDC consumer does a little extra massaging of the record before indexing so a result can render as a visual preview, not just a row of text. That same preview data later became the backbone of the visual home-page redesign — see <a href="oinp-accelerate.html" data-basepath="true">Home-page redesign</a>.
+        </p>
       </section>
 
       <section class="content-section" id="decisions">
-        <h2>Key decisions &amp; tradeoffs</h2>
+        <h2>Key decision: which search system</h2>
+        <p>
+          The CDC half of the design was settled. The leverage point was the search engine, so I wrote it up as a proper evaluation rather than reaching for the first option. Candidates I assessed:
+        </p>
+        <div class="tag-list">
+          <span class="tag">Intuit managed search (OpenSearch-backed)</span>
+          <span class="tag">Amazon OpenSearch (self-managed)</span>
+          <span class="tag">Apache Solr</span>
+          <span class="tag">Amazon Kendra</span>
+          <span class="tag">Microsoft Search</span>
+        </div>
+        <p>
+          After a detailed comparison I chose <strong>Intuit's managed search platform</strong> — internally an OpenSearch-backed service. The deciding factor was where the operational burden lands. The managed platform absorbs the non-functional work that has nothing to do with our feature: version upgrades, networking/VPN, SSL and auth, regional disaster recovery. Schema changes are governed through GitHub, so index mappings are reviewed and version-controlled like any other code. All my team has to care about is writing documents and querying them well.
+        </p>
+        <div class="callout">
+          <p>
+            Self-hosting OpenSearch or Solr would have handed us more control and a permanent operations tax — cluster upkeep, patching, capacity, DR — for a discovery feature that needed none of it. Kendra and Microsoft Search were the wrong fit for indexing our own structured records out of a CDC stream. Taking the paved road was the decision that bought the next two years of quiet.
+          </p>
+        </div>
+
+        <h3>Other tradeoffs</h3>
         <ul>
-          <li>
-            <strong>Build fresh for the new stack, don't port.</strong> Once I knew the source-of-truth was Aurora Postgres rather than DynamoDB, the right move was a clean build rather than wrapping the old ingestion pipeline. Ship 1's stream-based DynamoDB ingestion doesn't translate; the relational source has different CDC primitives, different schema constraints, different join opportunities. Trying to make one codebase serve both stacks would have left us with the worst of each. <em>Tradeoff: two systems to maintain during the migration window; Ship 1 retires when legacy RFM retires.</em>
-          </li>
-          <li>
-            <strong>Event-driven ingestion in both ships, batch in neither.</strong> Search staleness is the kind of bug authors notice immediately ("I just saved it and it's not in search yet"). Different implementations (DynamoDB Streams + Kinesis for Ship 1; domain events for Ship 2 Phase 3) — same principle: writes propagate to the index in seconds, no operator effort. <em>Tradeoff: more failure modes than batch; mitigated by Splunk dashboards and saved searches.</em>
-          </li>
-          <li>
-            <strong>Curated sort fields, not "sort by everything."</strong> Product asked for sort on the full schema. I refused for fields that don't actually help authors (email body, notification description) and would have made every query slower for everyone. <em>Tradeoff: a few authors didn't get exactly what they asked for; the system stayed fast for everyone.</em>
-          </li>
-          <li>
-            <strong>Ship 2 Phase 1 = no Elasticsearch.</strong> The cleaner long-term answer is Elasticsearch from day one. But Phase 1 with S3 thumbnails is something one engineer (Suveeksha) can ship in a sprint and prove the API surface against real users. Phase 2 swaps in ES without changing the API. <em>Tradeoff: throw-away resiliency in Phase 1 (manual Splunk retries); the whole point is that it gets replaced before scale matters.</em>
-          </li>
-          <li>
-            <strong>AND-only operators in the Phase 2 filter API, not full boolean.</strong> When Himaja was designing the Phase 2 search API, she wanted to expose Elasticsearch's full operator set (AND / OR / NOT, composite). I pushed back: OINP's actual query patterns are AND-only, and exposing composite operators leaks ES specifics into our API. We can add later if needed. <em>Tradeoff: less expressive; matches what authors actually do, and matches the Ship 1 contract.</em>
-          </li>
-          <li>
-            <strong>Gateway timeout extension for /genai (Ship 1, 5s → higher).</strong> The gen-AI integration needed more than the platform default. Rather than fighting upstream limits or removing the gen-AI path, I added a dedicated route with the higher timeout, tested in QAL, then promoted. <em>Tradeoff: a path-specific carve-out — but cheaper than re-architecting the integration.</em>
-          </li>
+          <li><strong>Event-driven ingestion, not batch.</strong> More moving parts than a nightly reindex, but staleness is the bug authors notice instantly ("I just saved it — why isn't it here?"). Riding CDC keeps the index converged in seconds. <em>Tradeoff: more failure surfaces; paid down by keeping the pipeline simple and the schema disciplined.</em></li>
+          <li><strong>Denormalise across the two tables on write.</strong> Each search document is assembled from both source tables before indexing, so queries stay fast and simple. <em>Tradeoff: the consumer owns the join logic; in exchange the read path has no joins at all.</em></li>
+          <li><strong>Keyword vs. full-text, decided per field.</strong> Rather than indexing everything the same way, each field is mapped to how it's actually queried. <em>Tradeoff: a bit more schema thought up front; far better relevance and clean facets forever after.</em></li>
         </ul>
       </section>
 
       <section class="content-section" id="impact">
         <h2>Impact</h2>
+        <p>
+          The headline isn't a feature — it's the absence of drama. This system has been in production for <strong>over two years without a single bug or incident.</strong> It just works. For a pipeline that touches every write to the catalog and serves live author and incident-time queries, "boring for two years" is the strongest result it could have.
+        </p>
         <ul>
-          <li><strong>Ship 1 — shipped Sep 2024</strong> as the search experience in legacy RFM. Still serving production. Initial usage ~40–50 searches/day, fluctuating, growing as authors discovered it and bookmarked the dashboard.</li>
-          <li><strong>Ship 2 — backend nearly complete by GED-end (Jun 2026)</strong> as the search experience for the new RFM stack. Designed to look "same as intermediate RFM but much better" once integrated with the visual home-page redesign.</li>
-          <li><strong>Mentorship outcome:</strong> Suveeksha owns Phase 1 backend; Himaja owns the Phase 2 search API design. The "look at the existing notificationadmin contract before exposing new constructs" rule is now how API reviews go on the team — established during the Himaja review.</li>
-          <li><strong>Pattern reuse:</strong> the 3-phase rollout pattern (build minimal → add backbone → add resiliency) is now the default approach the team uses for "we want to add X to Y" asks.</li>
+          <li><strong>The "who configured this?" question is now self-serve.</strong> A subject line, a phrase, an author name — paste it in and find the notification and its owner in seconds. The platform team is no longer a human lookup service, including mid-incident when that lookup is most urgent.</li>
+          <li><strong>Zero operational toll.</strong> Because the search infrastructure is the managed, paved-road platform and the pipeline is deliberately small, there has been nothing to patch, page on, or babysit. The reliability and the architectural restraint are the same decision.</li>
+          <li><strong>The design generalised to the next stack.</strong> When the notifications portal later migrated to a next-generation platform — and the source of truth moved from DynamoDB to Postgres — the very same flow was rebuilt on top of <strong>domain events</strong> instead of DynamoDB/Kinesis CDC. Different change-capture mechanism, identical shape: capture changes → assemble a search document → index it in the managed search platform → query it. The proven design carried straight over to a completely different data substrate.</li>
         </ul>
       </section>
 
       <section class="content-section" id="faq">
-        <h2>FAQ <span class="section-hint">(for future recruiter agent)</span></h2>
+        <h2>Notes &amp; clarifications</h2>
         <dl class="faq">
-          <dt>Why didn't you reuse Ship 1's code for Ship 2?</dt>
-          <dd>The source data is in a different system (DynamoDB vs. Aurora Postgres), with different CDC primitives, different schema constraints, and different join opportunities. The right abstraction layer to share between them would be the search API contract — which we <em>do</em> share, because I pushed Phase 2 to match the Ship 1 contract intentionally. But the ingestion + indexing code is necessarily new.</dd>
+          <dt>Why not just query DynamoDB directly?</dt>
+          <dd>DynamoDB is built for point queries against a known key, not for partial-text matching across an index. "Find every notification whose subject contains this phrase" is a full-text access pattern DynamoDB can only answer with an expensive scan. A search engine is the right tool for that question; DynamoDB stays the source of truth.</dd>
 
-          <dt>How do you handle joins across multiple tables in the index?</dt>
-          <dd>Ship 1 — the consumer code combined data from multiple DynamoDB tables into a single denormalised JSON before ingesting. Ship 2 — same pattern at the storage layer (denormalised search docs because that's what makes search fast), but the source has real joins available now, so building the denormalised doc is cleaner. In both cases the tradeoff is "doc gets stale if you forget a write path" — mitigated by event-driven ingestion that fires on any source mutation.</dd>
+          <dt>Why a managed search service instead of running your own OpenSearch or Solr?</dt>
+          <dd>Self-hosting buys flexibility we didn't need and a permanent operations cost we'd rather not carry — upgrades, networking, SSL/auth, disaster recovery, capacity. The managed platform absorbs all of that and version-controls schema changes through GitHub. For a discovery feature, the paved road was strictly better, and two incident-free years bear that out.</dd>
 
-          <dt>Why IPS Search instead of running your own OpenSearch cluster?</dt>
-          <dd>IPS Search gives us the paved-road benefits: integrated auth, password complexity, SSL, regional DR, promotion via standard env progression, and 1-hour SLA on schema changes. Running our own cluster would give us more flexibility with no team-wide benefit. We took the paved road for both ships.</dd>
+          <dt>How do you keep the index consistent when the data spans two tables?</dt>
+          <dd>The CDC consumer joins the notifications and message-templates records into one denormalised search document before indexing, so a read never has to join anything. The risk with denormalisation is staleness if a write path is missed — which is exactly why ingestion is event-driven and fires on any change to either table.</dd>
 
-          <dt>What happens when the search index falls behind the source of truth?</dt>
-          <dd>Ship 1 — Splunk alert fires, we manually re-ingest the lagging documents. Ship 2 Phase 1 inherits that pattern temporarily. Ship 2 Phase 3 (the resiliency phase) replaces this with domain-event-driven retries so convergence is automatic. The transition is deliberate — early phases are "is this useful enough to invest more"; Phase 3 is the answer.</dd>
+          <dt>Why has it gone two years without a bug?</dt>
+          <dd>A few reinforcing choices: a deliberately small, single-purpose pipeline; event-driven freshness so there's no batch job to drift; a disciplined keyword-vs-full-text schema so relevance was right from the start; and standing on a managed platform rather than operating search infrastructure ourselves. Restraint in scope is what made it boring — and boring is the goal.</dd>
 
-          <dt>What's the migration plan when legacy RFM retires?</dt>
-          <dd>Ship 1 retires with the legacy stack. Search traffic moves to Ship 2 as workspaces migrate. No data migration of the search index itself is needed — the source-of-truth migration (notification data Aurora → Aurora) is the work; the search index just rebuilds against whichever source is authoritative.</dd>
+          <dt>What changed when the portal migrated to Postgres?</dt>
+          <dd>The source of truth moved from DynamoDB to Postgres during the next-generation portal migration, so the change-capture mechanism changed from DynamoDB/Kinesis CDC to domain events. Everything downstream stayed the same: assemble a search document, index it in the managed search platform, query it. The pipeline's shape was substrate-independent, which is why the migration reused it rather than rebuilding search from scratch.</dd>
         </dl>
       </section>
     </article>
