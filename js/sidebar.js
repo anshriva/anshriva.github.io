@@ -51,6 +51,50 @@
 
     sidebarEl.innerHTML = parts.join("");
     bindToggles();
+    setupMobileNav();
+  }
+
+  function setupMobileNav() {
+    // Inject a floating hamburger + overlay once; works on every page
+    // since the sidebar is rendered at runtime (no per-page HTML edits).
+    let toggle = document.getElementById("mobile-nav-toggle");
+    if (!toggle) {
+      toggle = document.createElement("button");
+      toggle.id = "mobile-nav-toggle";
+      toggle.className = "mobile-nav-toggle";
+      toggle.type = "button";
+      toggle.setAttribute("aria-label", "Toggle navigation");
+      toggle.setAttribute("aria-controls", "site-sidebar");
+      toggle.innerHTML = '<span class="mobile-nav-toggle-icon" aria-hidden="true"></span>';
+      document.body.appendChild(toggle);
+
+      const overlay = document.createElement("div");
+      overlay.id = "sidebar-overlay";
+      overlay.className = "sidebar-overlay";
+      document.body.appendChild(overlay);
+
+      const setOpen = (open) => {
+        document.body.classList.toggle("sidebar-open", open);
+        toggle.setAttribute("aria-expanded", open ? "true" : "false");
+      };
+
+      toggle.addEventListener("click", () => {
+        setOpen(!document.body.classList.contains("sidebar-open"));
+      });
+      overlay.addEventListener("click", () => setOpen(false));
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") setOpen(false);
+      });
+      toggle.setAttribute("aria-expanded", "false");
+    }
+
+    // Close the drawer after tapping a nav link (in-page or navigation).
+    sidebarEl.querySelectorAll("a").forEach((a) => {
+      a.addEventListener("click", () => {
+        document.body.classList.remove("sidebar-open");
+        toggle.setAttribute("aria-expanded", "false");
+      });
+    });
   }
 
   function itemIsActive(itemPath) {

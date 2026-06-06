@@ -713,9 +713,74 @@ main {
   color: var(--accent);
 }
 
+/* ─── Mobile nav hamburger (injected by sidebar.js) ─── */
+.mobile-nav-toggle {
+  display: none;
+  position: fixed;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 300;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+
+.mobile-nav-toggle-icon,
+.mobile-nav-toggle-icon::before,
+.mobile-nav-toggle-icon::after {
+  content: "";
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: var(--text);
+  border-radius: 2px;
+  transition: transform 0.25s ease, opacity 0.2s ease;
+}
+
+.mobile-nav-toggle-icon::before {
+  transform: translateY(-6px);
+}
+
+.mobile-nav-toggle-icon::after {
+  transform: translateY(4px);
+}
+
+body.sidebar-open .mobile-nav-toggle-icon {
+  background: transparent;
+}
+
+body.sidebar-open .mobile-nav-toggle-icon::before {
+  transform: translateY(0) rotate(45deg);
+}
+
+body.sidebar-open .mobile-nav-toggle-icon::after {
+  transform: translateY(-2px) rotate(-45deg);
+}
+
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 150;
+  background: rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
 @media (max-width: 900px) {
   .sidebar-toggle {
     display: block;
+  }
+
+  .mobile-nav-toggle {
+    display: flex;
   }
 
   #site-sidebar {
@@ -727,8 +792,19 @@ main {
     box-shadow: 4px 0 24px rgba(0, 0, 0, 0.4);
   }
 
+  body.sidebar-open .sidebar-overlay {
+    display: block;
+    opacity: 1;
+  }
+
   .docs-main {
     margin-left: 0;
+  }
+
+  /* Give page content room so the floating button doesn't overlap headings */
+  .layout-docs .topic-page,
+  .layout-docs .overview-page {
+    padding-top: 4rem;
   }
 }
 
