@@ -51,7 +51,6 @@
 
     sidebarEl.innerHTML = parts.join("");
     bindToggles();
-    addMobileToggle();
   }
 
   function itemIsActive(itemPath) {
@@ -97,24 +96,6 @@
         );
         sessionStorage.setItem(STORAGE_KEY, JSON.stringify(open));
       });
-    });
-  }
-
-  function addMobileToggle() {
-    const topbar = document.querySelector(".docs-topbar");
-    if (!topbar) return;
-
-    const toggleBtn = topbar.querySelector(".sidebar-toggle");
-    if (!toggleBtn) return;
-
-    toggleBtn.addEventListener("click", () => {
-      document.body.classList.toggle("sidebar-open");
-    });
-
-    document.addEventListener("click", (e) => {
-      if (!e.target.closest(".sidebar-toggle") && !e.target.closest("#site-sidebar")) {
-        document.body.classList.remove("sidebar-open");
-      }
     });
   }
 
