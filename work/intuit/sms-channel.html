@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../js/base-path.js"></script>
+  <script src="../../js/theme.js"></script>
+
+  <script>
+    document.write('<link rel=\"stylesheet\" href=\"' + window.BASE_PATH + 'css/styles.css\" />');
+  </script>
+  <script src="../../js/theme.js"></script>
+
+<meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SMS — adoption, two-way, and the on-call seat — Anubhav Shrivastava</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Fraunces:wght@500;600&display=swap" rel="stylesheet" />
+</head>
+<body class="layout-docs" data-page-id="intuit-sms-channel">
+  <aside id="site-sidebar" aria-label="Topics"></aside>
+<main class="topic-main">
+    <article class="article topic-page">
+      <header class="page-header">
+        <p class="page-status">Status: <strong>ready</strong></p>
+        <h1>SMS — adoption, two-way, and the on-call seat</h1>
+        <p class="subtitle">Topic · Intuit · Customer Communications platform</p>
+      </header>
+
+      <section class="content-section" id="problem">
+        <h2>Problem statement</h2>
+        <p>
+          SMS came to me after the outbound path was already stable. Sign-in OTP — the highest-volume traffic on the channel — had been hardened through prior incident work and was running at the success rate the company depends on for login. The question on this channel was no longer "does it stay up." It was the two questions that come after that: are the right teams using it, and can it carry the shapes of traffic the platform didn't carry before.
+        </p>
+        <p>
+          The ownership chapter on this page is what came out of that. Onboarding six to seven high-volume consumer teams onto the channel; adding two-way replies so a team could hold a conversation over SMS instead of a one-shot send; getting OTP localization out without an outage; and being the engineer the on-call rotation pages when sign-in success rate drops and someone has to make the vendor switch.
+        </p>
+      </section>
+
+      <section class="content-section" id="context">
+        <h2>Context &amp; constraints</h2>
+        <ul>
+          <li><strong>Outbound was already a baseline, not a project.</strong> The stabilization work on OTP success rate, retry posture, and vendor failover happened before my watch. My job wasn't to re-prove the outbound path — it was to broaden what rode on it without disturbing it.</li>
+          <li><strong>Onboarding a client isn't a code change, it's a procurement plus integration sequence.</strong> Every new team needs a sender — a short code, long code, or toll-free number — procured from the vendor, registered with carriers (long codes and toll-free have their own approval timelines), and wired into the platform's sender registry. Then consent has to be honored end to end: STOP capture on the inbound side, and a pre-send check that the recipient hasn't opted out on this sender.</li>
+          <li><strong>SMS is irreversible.</strong> Unlike email and push, an SMS lands on the user's phone and stays there. The bar for a launch isn't "it worked in stage" — it's "the rollback plan is real," because there isn't one once a message is sent.</li>
+          <li><strong>Two-way needed routing the old inbound didn't have.</strong> The pre-existing inbound service captured consent keywords and firehosed every other reply onto a single shared topic. Conversation features for SMS — like the ones the RCS work motivated — needed per-consumer separation at the broker, not in application code.</li>
+          <li><strong>Vendor-side features are still platform risk.</strong> OTP localization came from the vendor; what I owned was getting it released to production without a regression on a channel where regressions are public and immediate.</li>
+        </ul>
+      </section>
+
+      <section class="content-section" id="architecture">
+        <h2>What I did</h2>
+
+        <h3>Adoption — six to seven high-volume consumer teams</h3>
+        <p>
+          The clients onboarded during this period included Credit Karma alerts and several internal product teams sending transactional and account-state traffic. Each one started the same way: a sender procurement request with the vendor (short code where the cost was justified, long code or toll-free where the traffic profile fit), the carrier registration paperwork that goes with the sender type, and the platform-side wiring — sender registered against the consuming team's workspace, throughput class set on the vendor account, consent application id attached so STOP and START replies on that sender flow through the same opt-out machinery every other sender uses.
+        </p>
+        <p>
+          The integration work past the sender is where the team's experience actually got shaped. Picking the right consent mode for the traffic, wiring the template content into the team's event payload, deciding whether the team needed sender pooling for throughput or a dedicated number for reputation reasons, walking through what the platform's dashboards show them so they can self-serve a delivery question. Several of the onboardings were straightforward once the sender was live; one or two needed reshape mid-flight because the team's traffic profile didn't match what they'd estimated and the sender type had to change.
+        </p>
+
+        <h3>Two-way SMS — replies as a first-class event</h3>
+        <p>
+          The platform's inbound surface before this only knew how to do one job: catch consent keywords. Every other reply got dumped onto a shared event-bus topic, which any team could subscribe to and filter on. That was fine when replies were incidental — it broke down the moment a consumer team wanted to act on a specific user's reply, because they'd have been reading every other team's traffic to find their own.
+        </p>
+        <p>
+          The same inbound capability that the RCS work introduced is what SMS replies ride on. The platform publishes every inbound SMS reply onto a shared topic on the broker; the broker fans that topic out to per-consumer topics, filtered by a header keyed on the sender id the reply came in on. A new consumer team gets onboarded by creating their topic and requesting a routing rule — no platform-side code change, no chance of consuming another team's traffic. The architecture and the broker-fanout figure live on the <a href="rcs-launch.html" data-basepath="true">RCS — two-way messaging</a> page; SMS is the second bearer onto that capability.
+        </p>
+        <p>
+          What's SMS-specific here is the consent contract. STOP and its variants still terminate at the inbound service — consent isn't a per-consumer concern, it's a platform obligation. Inbound parses for consent keywords first, writes the opt-out against the sender, and only then publishes the reply onto the shared topic for routing. A consumer team subscribing to its per-consumer topic never sees a STOP it would have to act on; the platform has already done that part.
+        </p>
+
+        <h3>OTP localization — released without an outage</h3>
+        <p>
+          Localized OTP templates are a feature the SMS vendor offers — the platform's job here wasn't to build the feature, it was to roll it out on a channel where regressions are immediately visible. What I owned: gating the change behind a flag, picking the locales that could go first based on traffic and template coverage, watching the success-rate dashboards for the affected locales during ramp, and keeping the rollback path warm in case any locale needed pulling back. It went live without a measurable dip in the OTP success rate. That's the bar — invisible release — and the work that goes into clearing it on this channel is most of the work.
+        </p>
+
+        <h3>The on-call seat for vendor incidents</h3>
+        <p>
+          When SMS sign-in success rate degrades, the pager goes to me. The runbook isn't subtle: confirm the drop is real and not a metric artifact, identify whether it's our side, the vendor's side, or a specific sender or geography, and if it's the vendor — decide whether to switch traffic to the secondary. The switch itself is operational, gated behind a flag and reversible, but it has user impact in both directions: switching too early bleeds capacity unnecessarily, switching too late prolongs the OTP failure mode that's costing the company logins. So the call is mostly judgment under time pressure.
+        </p>
+        <p>
+          The escalation side runs in parallel: the vendor's incident channel gets the symptoms, our impact, and what we're asking them to confirm. The two halves — operational mitigation and vendor escalation — usually run at the same time, because waiting for the vendor's RCA before mitigating would cost more than the switch costs to perform.
+        </p>
+      </section>
+
+      <section class="content-section" id="decisions">
+        <h2>Key decisions &amp; tradeoffs</h2>
+        <ul>
+          <li>
+            <strong>Reuse the inbound capability rather than build SMS-only routing.</strong> SMS replies and RCS replies have the same routing problem — many consumer teams, per-team isolation, consent terminated at the platform. Building an SMS-only inbound router would have meant two pieces of infrastructure doing the same thing in different shapes. <em>Tradeoff: the inbound layer has to handle bearer-specific vendor payload quirks rather than living cleanly above the bearer; that complexity is local to one service and worth it for keeping a single onboarding path for new consumers.</em>
+          </li>
+          <li>
+            <strong>Consent terminates at the platform, not at the consumer.</strong> Letting each consumer team handle STOP would have been simpler for the platform and worse for the company — one missed STOP on one team is a regulatory exposure for everyone. Inbound parses consent keywords before the reply is published onto the routing topic. <em>Tradeoff: the inbound service carries compliance logic; the consumer's stream is simpler and safer.</em>
+          </li>
+          <li>
+            <strong>Sender procurement is part of onboarding, not a separate ticket.</strong> Carrier registration has its own timeline — a long code in some geographies can take weeks — and a consumer team that doesn't know that plans a launch date that can't hold. Folding sender procurement into the onboarding sequence, with the timeline surfaced up front, saved several teams a misaligned launch. <em>Tradeoff: the onboarding cycle is longer on paper; the team's perceived launch date holds.</em>
+          </li>
+          <li>
+            <strong>Mitigate first, escalate in parallel during vendor incidents.</strong> Waiting on the vendor's confirmation before performing the switch is the wrong order. The switch is reversible; the lost OTP completions during a vendor degradation are not. <em>Tradeoff: the occasional unnecessary switch when the vendor recovers on its own; net positive on the metric the channel exists to serve.</em>
+          </li>
+        </ul>
+      </section>
+
+      <section class="content-section" id="impact">
+        <h2>Impact</h2>
+        <p>
+          Six to seven high-volume consumer teams onboarded onto the channel in this period — including Credit Karma alerts and several internal product surfaces — with consent and sender registration handled in-line so each team's launch didn't need a platform engineer in the room past onboarding.
+        </p>
+        <p>
+          Two-way SMS in production, riding the same inbound routing capability the RCS work introduced, so a consumer team adding a conversation use case on either bearer follows the same onboarding shape and gets the same per-consumer isolation guarantee.
+        </p>
+        <p>
+          OTP localization released without a dip in success rate on the highest-volume traffic on the channel. The vendor-switch posture for sign-in incidents sits with a single primary IC who has run the call enough times that the decision window has shrunk.
+        </p>
+        <p>
+          Recognition for the SMS launch and migration work and for Credit Karma partnership is collected on the <a href="recognition.html" data-basepath="true">Recognition</a> page.
+        </p>
+      </section>
+    </article>
+</main>
+    <script id="nav-data-script"></script>
+  <script src="../../js/theme.js"></script>
+  <script id="sidebar-script"></script>
+  <script src="../../js/theme.js"></script>
+  <script>
+    const navDataScript = document.getElementById('nav-data-script');
+    navDataScript.src = window.BASE_PATH + 'js/nav-data.js';
+    const sidebarScript = document.getElementById('sidebar-script');
+    sidebarScript.src = window.BASE_PATH + 'js/sidebar.js';
+  </script>
+  <script src="../../js/theme.js"></script>
+
+</body>
+</html>

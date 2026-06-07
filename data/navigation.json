@@ -42,21 +42,9 @@
           "status": "ready"
         },
         {
-          "id": "intuit-accelerate",
-          "title": "Home-page redesign — evidence-first proposal",
-          "path": "/work/intuit/oinp-accelerate.html",
-          "status": "ready"
-        },
-        {
-          "id": "intuit-reliability",
-          "title": "Tax season reliability (TY24 + TY25)",
-          "path": "/work/intuit/tax-season-reliability.html",
-          "status": "ready"
-        },
-        {
-          "id": "intuit-ck-sms",
-          "title": "SMS launch & Critical Money Alerts",
-          "path": "/work/intuit/credit-karma-sms.html",
+          "id": "intuit-sms-channel",
+          "title": "SMS — adoption, two-way, and the on-call seat",
+          "path": "/work/intuit/sms-channel.html",
           "status": "ready"
         },
         {
