@@ -66,6 +66,7 @@ Write as if explaining the work to peers. The Staff evidence comes through natur
 - Literal message topic paths (`persistent://...`) — describe the routing concept, not the path strings.
 - Internal username `ashrivastav6` in any path or example.
 - Internal team/product codenames where they aren't public Intuit products. **Keep**: QuickBooks, TurboTax, Credit Karma, Mailchimp, ProSeries, Lacerte. **Genericize**: Triton, VEP, SBSEG, Field Service, Acadia, IEP → "consumer teams", "upstream-product team", "internal product surfaces".
+- **The acronym "RFM" in prose, headings, titles, or nav titles.** It's an internal Intuit name for the Notifications Authoring Portal — no external reader knows it. Use **"Notification Authoring Portal"** (or **"the authoring portal"** / **"the authoring stack"** after first mention). Internal-only filenames and `data-page-id` values (`rfm-revamp.html`, `intuit-rfm-revamp`) can keep the acronym — they're not user-facing. The only prose exception is verbatim Spotlight citations on `recognition.html`.
 - Acronyms without context (spell out on first use, use plain language where possible).
 - Links to external diagram boards (e.g. Excalidraw "View interactive version →") **only if the board itself is already sanitized**. Raw boards often still show internal node labels (`OINP-Tray`, internal system names). Either rename the labels in the source board first, or recreate the diagram as a sanitized local SVG/PNG under `assets/<page-id>/` and skip the interactive link.
 

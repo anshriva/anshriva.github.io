@@ -10,7 +10,7 @@
 
 <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Intuit — One Intuit Notification Platform — Anubhav Shrivastava</title>
+  <title>Intuit — Notification Platform — Anubhav Shrivastava</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Fraunces:wght@500;600&display=swap" rel="stylesheet" />
@@ -21,96 +21,87 @@
     <article class="article topic-page">
       <header class="page-header">
         <p class="page-status">Status: <strong>ready</strong></p>
-        <h1>One Intuit Notification Platform (OINP)</h1>
-        <p class="subtitle">Mar 2024 – Present · OINP / Customer Communications</p>
-        <div class="tag-list">
-          <span class="tag">20–32M emails/day</span><span class="tag">2–4M SMS/day</span>
-          <span class="tag">2,200+ tray TPS (peak)</span>
-        </div>
+        <h1>Intuit — the Notification Platform</h1>
+        <p class="subtitle">Mar 2024 – Present · Customer Communications</p>
       </header>
 
       <section class="content-section" id="problem">
-        <h2>What OINP is</h2>
+        <h2>What the platform is, and what this page is for</h2>
         <p>
-          OINP is the company-wide platform every Intuit product team (QuickBooks, TurboTax, Credit Karma, Mailchimp, ProSeries, Lacerte, plus several internal product surfaces) uses to deliver transactional and marketing notifications across <strong>Email, SMS, RCS, Voice, Push, Tray, In-App, and ICE</strong>. The platform spans authoring (RFM), delivery (channel adapters), event ingestion (Pulsar), and the management surfaces (search, dashboards, promotion).
+          Intuit's Notification Platform is the company-wide system every product team — QuickBooks, TurboTax, Credit Karma, Mailchimp, ProSeries, Lacerte, plus several internal product surfaces — uses to deliver transactional and marketing notifications across email, SMS, RCS, voice, push, and the in-product tray. It carries traffic in the tens of millions of messages per day at peak and is on the user-visible path: a regression on this platform is a regression the customer sees.
         </p>
         <p>
-          I own four domains on OINP end-to-end:
+          The work below is five distinct chapters, each with its own topic page in the left nav. They sit at different shapes of ownership — lead engineer on one, solo build on another, platform owner on a third, capability owner, post-handover steward — and that variation is the point. The Staff signal isn't a single label that applies to all of them; it's the through-line of taking different ownership models seriously and shipping each one on the terms the work actually had.
         </p>
-        <ul>
-          <li><strong>Authoring experience</strong> — the modernised RFM portal (schema, APIs, search, preview, promotion to prod), the parity-validation layer against the legacy stack, and the onboarding documentation partner teams consume.</li>
-          <li><strong>RCS delivery</strong> — vendor integration, schema and API design, two-way inbound, cross-swim-lane Pulsar routing to consumer teams, consent, SMS fallback.</li>
-          <li><strong>SMS delivery</strong> — the SMS launch on the modernised stack, Critical Money Alerts SMS integration, multi-subaccount Twilio support, consent flows.</li>
-          <li><strong>Notification Tray</strong> — the in-product inbox across Intuit surfaces. Reliability forensics, the proposal to migrate off Cassandra+Solr, in-app incident leadership.</li>
-        </ul>
         <p>
-          Beyond the four domains, I act as a <strong>cross-org integration surface</strong> — partner teams across 10+ products who can't tell whether a missing notification is upstream, OINP, or vendor land with me first to disambiguate. Operationally I prepare the services I own for tax peak — load testing, pre-scaling, runbooks — and stay on through the night shifts the season requires; both TY24 and TY25 closed with my services holding zero 5xx through the window.
+          Underneath the five chapters is a different layer: how I operate across all of them. That's the second half of the page.
         </p>
-      </section>
-
-      <section class="content-section" id="context">
-        <h2>Trajectory</h2>
-        <ul>
-          <li><strong>2024.</strong> Shipped RFM search on the legacy stack (Sep 2024) — DynamoDB → Kinesis → IPS Search ingestion, sort-field policy I set against product's "sort by everything" ask, gateway routing for the GenAI integration. Solo build, prod-stable, still serving.</li>
-          <li><strong>2025.</strong> Contributed to TY24 tax-peak reliability — prep work and through-the-night on-call coverage; recognised alongside the rest of the team with a Bravo from Shanti Kuropati. Led RFM Voice (Nov 2025, Bravo) and SMS (Dec 2025, Bravo) launches on the new stack. Won the Lightning Award at GED 2025 for the fastest 48-hr POC — a LangGraph-based AI-assisted notification authoring agent, now in prod as <code>ccx-oinp-guide-agent</code>.</li>
-          <li><strong>2026.</strong> Carried my services through TY25 peak with zero 5xx — load tests, pre-scaling, runbooks, and the night shifts that come with the season; recognised alongside the rest of the team with a Salute from Sheetal Sureka. Owned the RCS channel end-to-end — Twilio integration, schema, two-way inbound, cross-swim-lane Pulsar routing, consent, canonical onboarding docs. Currently running three concurrent initiatives: the GED 2026 search rollout, the cross-swim-lane Pulsar routing unblock for two consumer teams, and the Preview-API-powered home-page redesign (3,550 prod notifications rendered as evidence).</li>
-        </ul>
       </section>
 
       <section class="content-section" id="architecture">
-        <h2>The platform (high level)</h2>
-        <div class="diagram-slot">
-          <p class="diagram-slot-label">Diagram slot</p>
-          <pre class="diagram">[Product teams: QuickBooks, TurboTax, Credit Karma, Mailchimp, …]
-   ↓
-[RFM / authoring UI]                                  ← new authoring surface
-   ↓
-[comms-authoring-service]  →  [comms-comparator]      ← parity vs. legacy
-   ↓                              ↓
-[authoring-delivery-sync]      [legacy authoring]     ← being retired
-   ↓
-[Pulsar event bus]         ← cross-swim-lane routing to consumer teams
-   ↓
-[mail adapter] [SMS adapter] [voice adapter] [tray] [in-app push]
-   ↓
-SendGrid · Twilio (multi-subaccount) · Braze · push providers · Cassandra+Solr (tray)</pre>
-        </div>
+        <h2>Five workstreams</h2>
+
+        <h3>1. Notification Authoring Portal — redesigning the authoring stack <span style="color: var(--text-muted); font-weight: 400;">(lead engineer, ~13 months)</span></h3>
+        <p>
+          The Notifications Authoring Portal — the surface every product team uses to configure email, SMS, voice, RCS, push, and tray notifications — was built on a single database trying to serve two opposite workloads at once: authoring (ACID, joins, schema evolution) and delivery (2,000+ TPS, denormalized, zero joins). Every schema change in one direction broke the other. I led the redesign that decoupled the two: a new authoring data model and service path that doesn't share a database with delivery, a parity layer that compared every read on the new path against the legacy path before traffic moved, and a phased migration that ended with 100% of authoring traffic on the new stack before the tax peak the platform had to carry. The full architecture, the parity-vs-hope decision, and the migration shape are on the topic page.
+        </p>
+
+        <h3>2. Notifications Platform Search — full-text discovery over the catalog <span style="color: var(--text-muted); font-weight: 400;">(solo build, in production, zero incidents)</span></h3>
+        <p>
+          The platform's configuration catalog — roughly 10,000 notifications authored by people across many teams, many of whom have moved on — lived in a database built for point queries and could not answer the two questions the team kept getting paged on: <em>"who configured this?"</em> and <em>"who's the author of this notification?"</em> during an incident. I built the full-text search path solo: change-data-capture from the catalog tables into a streaming pipeline, an indexed store optimised for the query shape, and the API that fronts it. In prod since I shipped it, zero incidents on that path, still the only way the team answers those questions today.
+        </p>
+
+        <h3>3. Notification Tray — platform ownership of the in-product inbox <span style="color: var(--text-muted); font-weight: 400;">(lead and single point of contact since 2024)</span></h3>
+        <p>
+          The Notification Tray is the in-product inbox in QuickBooks, TurboTax, Mailchimp, and a few internal product surfaces — the bell-and-badge surface multiple teams want to drop messages into. I'm the lead and single point of contact: consumer teams come to me to integrate, I own the reliability story, and I'm the one pushing on where the storage layer should go next. The storage today is a multi-region wide-column cluster with a separate search index — a stack that works but doesn't get future investment from the vendor in the shape we need. The proposal to migrate off it onto a managed store is documented, scoped, and currently waiting on funding; that's stated honestly on the topic page rather than as executed work.
+        </p>
+
+        <h3>4. RCS — building a two-way messaging capability on the platform <span style="color: var(--text-muted); font-weight: 400;">(capability owner)</span></h3>
+        <p>
+          Two product teams arrived wanting two-way conversation flows over a low-touch surface, the kind of interaction that fits a native messaging client better than an authenticated webapp. The work that came out of that wasn't really "build the RCS channel" — it was adding a two-way capability to the platform with RCS as the first bearer it carries. The pre-existing inbound service captured consent and firehosed every reply onto a single shared topic; I redesigned it so the broker handles per-consumer routing by header, which means a new consumer team onboards by creating a topic and requesting a routing rule rather than asking platform engineering for a code change. SMS replies now ride the same capability as the second bearer.
+        </p>
+
+        <h3>5. SMS — adoption, two-way, and the on-call seat <span style="color: var(--text-muted); font-weight: 400;">(post-handover steward)</span></h3>
+        <p>
+          SMS came to me after the outbound path was already stable — high-volume sign-in OTP traffic running at the success rate the company depends on for login. My chapter is what came after that: onboarding six to seven high-volume consumer teams onto the channel (sender procurement, carrier registration, consent wiring), adding two-way SMS as the second bearer onto the inbound capability the RCS work introduced, releasing OTP localization without a regression on the highest-volume traffic on the channel, and being the primary incident commander when sign-in success rate degrades and someone has to make the vendor switch.
+        </p>
       </section>
 
       <section class="content-section" id="decisions">
-        <h2>Directional decisions across the work</h2>
+        <h2>How I operate across the five</h2>
+        <p>
+          Underneath the five workstreams there's a steady operating posture that the topic pages each touch but none of them really name. It's the second half of what the role looks like in practice.
+        </p>
         <ul>
           <li>
-            <strong>Migrate, don't patch, when patch budget exceeds migration budget.</strong> Made this call publicly to the customer-comms team for the Notification Tray (40 GB Cassandra+Solr → managed DB), drove it for the legacy authoring stack (RFM Revamp), and pushed for elimination of the legacy scheduling service before TY25. Each removed a chronic failure source.
+            <strong>Cross-org integration surface.</strong> Partner teams across 10+ products who can't tell whether a missing notification is upstream, the platform, or the vendor land with me first to disambiguate. The disambiguation is half the work — knowing which logs to pull, which dashboard tells the truth, which team owns the next hop — and it's the part that doesn't show up in any individual workstream because it spans all of them.
           </li>
           <li>
-            <strong>Parity over hope.</strong> Stood up <code>comms-comparator</code> as the parity backbone for the entire RFM migration. Ran a 7-day prod audit: 2.9M reads, 99.987% parity, every failing class root-caused. Without it, we could not have moved 100% of traffic to the new stack before tax peak.
+            <strong>Tax-peak owner for the services I run.</strong> Both tax seasons during this period closed with the services I own holding zero 5xx through the window. That's not a coincidence — it's pre-peak load testing, capacity reviews, runbook prep, and the night-shift coverage the season needs. The seasons that go quietly are the ones that got the most preparation; the ones that don't get the prep are the ones that page the rest of the org.
           </li>
           <li>
-            <strong>Phased rollout to avoid throwaway work.</strong> S3 thumbnails → Elasticsearch → domain-event resiliency, each phase usable in its own right. Default approach across the team now for "add capability X to product Y."
+            <strong>Vendor-switch incident commander.</strong> When SMS sign-in success rate degrades, the pager goes to me. The call — mitigate by switching to the secondary, or hold and wait for the vendor — runs in parallel with vendor escalation; I've described the trade-off on the SMS page. The decision window has shrunk because the same person has run the call enough times to know where it usually breaks.
           </li>
           <li>
-            <strong>API contract before implementation.</strong> Pushed this with every junior engineer touching a new surface. Pushed back in the platform leaders forum against a peer's BFF proposal — used notif-common's history of scope-creep as the precedent, and proposed gateway routing as the simpler primitive. The decision held; no BFF.
+            <strong>Migrate, don't patch, when the patch budget exceeds the migration budget.</strong> Made this call publicly on the Tray storage proposal, drove it on the authoring stack, and pushed for retiring the legacy scheduling service before tax peak. Each removed a chronic failure source rather than adding another layer of guardrails on top of one.
           </li>
           <li>
-            <strong>Escalate to leadership when peer-level chatops stalls.</strong> When the messaging-infra team wouldn't approve cross-swim-lane routing to prod (blocking two consumer-team integrations), escalated in the platform leaders forum for manager contacts, scheduled the cross-team meeting myself, negotiated a prod rollout timeline.
+            <strong>Parity over hope on migrations.</strong> The decoupling of the authoring stack worked because every read on the new path was compared against the legacy path before traffic moved. That comparator pattern is now the team's default for "we're going to change a system that already has traffic."
           </li>
           <li>
-            <strong>Demonstrate before proposing.</strong> Rather than write a doc for the home-page redesign, generated previews of 3,550 production notifications using the new Preview API and hosted the visual mockup. The proposal landed because the data was already there.
+            <strong>Escalate when peer-level chatops stalls.</strong> When the messaging-infrastructure team wouldn't approve cross-asset routing to prod — blocking two consumer-team integrations — I escalated in the platform leaders forum, got manager contacts, scheduled the cross-team conversation myself, and negotiated the prod rollout timeline. Politeness past a certain point is just letting a partner team stay blocked.
+          </li>
+          <li>
+            <strong>Demonstrate before proposing.</strong> Rather than write a doc to argue for a home-page redesign, I generated previews of every production notification through the new preview API and hosted the visual mockup. The proposal landed because the evidence was already there to look at, not because the doc was persuasive.
           </li>
         </ul>
       </section>
 
       <section class="content-section" id="impact">
-        <h2>Quantitative impact</h2>
-        <ul>
-          <li><strong>Zero 5xx on the services I own</strong> through both TY24 and TY25 tax peaks — the result of pre-peak load testing, pre-scaling, and runbook prep on those services specifically.</li>
-          <li><strong>2,905,540 production reads parity-validated</strong> in a 7-day audit; 99.987% match rate; every failing class root-caused.</li>
-          <li><strong>3,550 production notifications</strong> rendered through the new Preview API as the evidence base for the home-page redesign initiative.</li>
-          <li><strong>278 multi-channel notifications</strong> identified, planned, and migrated across the RFM Revamp Phase 3.</li>
-          <li><strong>Authoring time target: 1 week → ~3 hours</strong> via the new RFM + GenAI authoring agent (in prod).</li>
-        </ul>
-        <p style="margin-top: 16px;">For peer recognition (Spotlight awards, citations, screenshots), see the <strong>Recognition</strong> page in the left nav.</p>
+        <h2>Recognition</h2>
+        <p>
+          Peer recognition — Spotlight award citations from senior leadership and cross-org partners, including the two highest-tier (Bravo and Salute) awards — is collected on the <a href="recognition.html" data-basepath="true">Recognition</a> page in the left nav. The citations cover the tax-peak owner work, the channel launches, the cross-org integration partnership, and on-the-ground incident leadership.
+        </p>
       </section>
     </article>
 </main>
