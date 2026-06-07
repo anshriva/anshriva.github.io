@@ -48,12 +48,6 @@
           "status": "ready"
         },
         {
-          "id": "intuit-genai",
-          "title": "GenAI authoring (LangGraph)",
-          "path": "/work/intuit/genai-authoring.html",
-          "status": "ready"
-        },
-        {
           "id": "intuit-authoring",
           "title": "Notifications Platform Search — full-text discovery, zero incidents",
           "path": "/work/intuit/authoring-roadmap.html",
