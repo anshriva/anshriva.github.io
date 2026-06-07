@@ -11,7 +11,7 @@
 
 <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>RCS channel — Anubhav Shrivastava</title>
+  <title>RCS — two-way messaging on the platform — Anubhav Shrivastava</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Fraunces:wght@500;600&display=swap" rel="stylesheet" />
@@ -22,137 +22,85 @@
     <article class="article topic-page">
       <header class="page-header">
         <p class="page-status">Status: <strong>ready</strong></p>
-        <h1>RCS channel — end-to-end ownership of a brand-new bearer</h1>
-        <p class="subtitle">Topic · Intuit · OINP / Customer Communications</p>
+        <h1>RCS — two-way messaging on the platform</h1>
+        <p class="subtitle">Topic · Intuit · Customer Communications platform</p>
       </header>
 
       <section class="content-section" id="problem">
         <h2>Problem statement</h2>
         <p>
-          RCS (Rich Communication Services) is the carrier-native successor to SMS — rich cards, suggested replies, media, two-way conversations, all on the user's default messaging app with no install required. For Intuit, RCS unlocks experiences SMS can't: service-appointment confirmations with quick-reply buttons, Critical Money Alerts with embedded actions, customer-support conversations with structured media. It's also a channel none of OINP had built before.
+          RCS — Rich Communication Services — is the carrier-native successor to SMS: rich cards, suggested replies, media, and real two-way conversation, delivered to the recipient's default messaging app with nothing to install. The platform was already touching it passively — the SMS vendor would silently retry on RCS when SMS failed, and watching login completion during SMS incidents told us the union of the two bearers held up when SMS alone faltered. There are two distinct cases sitting on top of that observation. For transactional traffic like OTP and account alerts, what matters is the union — RCS pushes the floor up. For marketing and customer interaction, what matters is RCS on its own — the interactivity it carries that SMS cannot. RCS penetration is around 70%, so SMS stays as the floor either way.
         </p>
         <p>
-          I owned the RCS channel end-to-end on OINP: vendor integration (Twilio), schema and API design on the new authoring stack, the two-way (inbound) message path, the cross-swim-lane Pulsar routing to consumer teams, consent and SMS-fallback semantics, the canonical onboarding docs the rest of the org uses, and the working-group leadership that aligned multiple consumer teams (across service operations, customer messaging, and Credit Karma) on a single delivery path.
+          Two product teams arrived at the same time wanting the interactive case — both two-way conversations on a low-touch surface (one user-facing, one employee-facing), the kind of flow where forcing people into an authenticated webapp would be the wrong shape. RCS in the native messaging client was. The work that came out of that wasn't really "build the RCS channel" — it was adding a two-way capability to the notification platform, with RCS as the first bearer it carried. It's now live in production and rolling out gradually to consumer teams.
         </p>
       </section>
 
       <section class="content-section" id="context">
         <h2>Context &amp; constraints</h2>
         <ul>
-          <li><strong>No prior RCS at Intuit on OINP.</strong> Zero in-house schema, no adapter precedent, no debugability playbook — everything from "how does an author configure an RCS template in RFM" to "how do we know if an inbound reply was received" had to be defined.</li>
-          <li><strong>Twilio's new RCS API was in preview.</strong> The richer <code>comms.twilio.com/preview/Messages</code> API (priority-based bearer selection, structured rich-content modules, native SMS fallback in one call) was emerging while we were building. I had to choose between shipping on the stable Content Templates path now vs. waiting for the new API.</li>
-          <li><strong>Two-way RCS is structurally different.</strong> Inbound RCS replies arrive via Twilio's SMS-shaped webhook (<code>SmsMessageSid</code>, <code>MessagingServiceSid</code>) but carry the RCS payload inside a <code>ChannelMetadata</code> JSON blob with provider-specific fields (Google's RBM sender id, googleapis blob URLs with 4-hour expiry alongside Twilio CDN URLs). Parsing this correctly is non-obvious from the docs.</li>
-          <li><strong>Multiple consumer teams, different organisational swim-lanes.</strong> Two separate consumer teams both wanted RCS replies routed to their topics — but they sit in different Pulsar swim-lanes from OINP. Cross-swim-lane routing is a seven-day-of-work ask from the messaging-infra team and they initially resisted enabling it in prod.</li>
-          <li><strong>SMS fallback expected, not optional.</strong> Not every recipient phone is RCS-eligible (carrier, device, region). If RCS-ineligible users get nothing, the feature is unusable. Fallback has to happen at delivery time, transparently to the author.</li>
+          <li><strong>~70% RCS penetration meant SMS fallback was mandatory.</strong> Not every phone is RCS-eligible — carrier, device, region all matter. If ineligible users silently get nothing, the channel is unusable. Fallback had to happen at delivery time and stay invisible to the author.</li>
+          <li><strong>The existing inbound service didn't do conversations.</strong> It captured consent (STOP and friends) and firehosed every reply onto a single event-bus topic — no routing, no per-consumer separation. The client teams wanted real conversation features, which meant building the routing layer underneath rather than asking each consumer to filter a shared firehose.</li>
+          <li><strong>Two consumer teams sat in different organisational asset boundaries from the platform.</strong> Cross-asset routing on the broker isn't something one team can just turn on — it needs the messaging-infra team to enable the path.</li>
+          <li><strong>Inbound is structurally unlike outbound.</strong> Replies arrive on the same SMS-shaped webhook, but the actual reply text sits inside a vendor-specific metadata blob, and the contract has partial-outcome semantics (a single reply can carry text plus media plus warnings plus errors).</li>
         </ul>
       </section>
 
       <section class="content-section" id="architecture">
-        <h2>What I built end-to-end</h2>
+        <h2>What I built</h2>
 
-        <h3>1. Authoring schema on the new RFM stack</h3>
+        <h3>The two-way capability: a new inbound model</h3>
         <p>
-          Designed the RCS Communication payload on <code>comms-authoring-service</code>. Key shape:
-        </p>
-        <ul>
-          <li><code>channel: "RCS"</code> with a <code>messageTemplate</code> carrying <code>contentSid</code> (Twilio Content Template id), <code>contentVariables</code> with FreeMarker substitutions resolved from event payload (<code>${jsonEventData.name}</code>), and <code>rcsId</code> binding to the configured Twilio sender.</li>
-          <li><code>deliveryConfiguration</code> with <code>toAddress: "rcs:${jsonEventData.phone}"</code> (the <code>rcs:</code> prefix is how Twilio identifies the bearer), a <code>vendorConfig</code> per workspace, and the two RCS-specific switches: <code>applicableConsentCheck</code> (<code>EXPLICIT_CONSENT_CHECK</code> vs <code>IMPLICIT_CONSENT_CHECK</code> depending on use case) and <code>allowSmsBackup: true</code> as the SMS-fallback opt-in.</li>
-        </ul>
-
-        <h3>2. Twilio integration — outbound</h3>
-        <p>
-          Shipped first against Twilio's stable <strong>Content Templates</strong> path — author creates the template in Twilio console, we reference it by <code>contentSid</code> and inject variables at send time. This is what's in production now. I explicitly chose this over waiting for Twilio's new preview API because the new API was gated and I didn't want to block first-customer launch on Twilio's release cadence.
+          The inbound service that existed before this had a narrow job: capture consent keywords (STOP and its variants) and dump every other reply onto a single shared event-bus topic. There was no routing, no per-consumer separation — anyone who wanted user replies subscribed to the firehose and filtered in application code. That was fine when reply traffic was incidental telemetry; it broke down the moment a team wanted to build actual conversations, where each consumer needs only its own users' messages and nothing else.
         </p>
         <p>
-          In parallel I evaluated the new <code>comms.twilio.com/preview/Messages</code> rich-content API for the next phase — single-call multi-bearer priority (RCS first, SMS fallback) with structured modules (rich cards, standalone cards, suggestions with <code>openUrlAction</code>). Flagged early to leaders that we should adopt the new API <em>before</em> the first customer onboards, because otherwise existing templates would need migration later: <em>"backend wise i see max 2 days (or even less) to make change. I think we should make this change before first customer onboards else there will be hassle to migrate the existing ones to new api."</em>
+          So I moved the inbound bus to Apache Pulsar specifically to use the broker's routing primitive. The platform publishes every inbound reply onto a single shared topic; the broker then fans events out to per-consumer topics, filtered by a header keyed on the recipient sender id. A new consumer team gets onboarded by creating their topic and requesting a routing rule through the messaging-infra portal — no platform-side code change, no deploy, no chance of one team consuming another team's traffic. The order and throughput trade-offs of swapping Kafka for Pulsar weren't load-bearing for inbound at our scale, which is what made the swap affordable.
         </p>
-
-        <h3>3. Two-way RCS — inbound webhook</h3>
+        <figure style="margin: 24px 0;">
+          <img src="../../assets/intuit-rcs/inbound-flow.svg" alt="Inbound routing flow: a user's reply (text, button tap, or image attachment) travels from the user's device to the SMS / RCS vendor, which forwards it via webhook to the platform's inbound service. The inbound service parses the vendor payload, captures consent keywords like STOP, re-hosts any attached media to an internal blob storage service (uploading from the inbound path), and publishes a single normalized event to a shared inbound topic on the message broker. The broker applies header-based routing rules — filtering on a 'to = sender-id' header — to fan the same shared topic out to per-consumer topics (Consumer A, Consumer B, Consumer C), so each team receives only its own traffic. Key idea: the platform publishes once; the broker fans out by header. New consumers onboard via a topic and a routing rule, with no platform code change." style="width: 100%; height: auto; border-radius: 4px; border: 1px solid #ddd; background: #fff;">
+          <figcaption style="margin-top: 8px; font-size: 13px; color: #64748b; text-align: center;">Inbound routing flow — one shared topic, broker-side header filter, per-consumer fanout. Re-hosting media on internal storage keeps the vendor credential and CDN inside the platform's domain.</figcaption>
+        </figure>
         <p>
-          Twilio delivers inbound RCS via the same webhook shape as SMS, but the RCS payload lives inside a <code>ChannelMetadata</code> JSON blob:
+          The reply itself arrives on the SMS-shaped webhook with the actual text and metadata buried inside a vendor-specific structure. The contract I exposed to consumers carries partial outcomes — a single inbound event can hold the reply text, the media attached to it, warnings for attachments that were skipped (unsupported MIME, type not onboarded for that sender), and errors for attachments that failed download or upload after retries. Misconfigurations are observable rather than silent: if a sender hasn't been onboarded for media but a user sends an image, the consumer gets a warning event with a specific code instead of just empty media. Quick-reply button taps come back with a stable button identifier the author chose, so consumers branch on that rather than string-matching the visible label.
         </p>
-        <pre class="diagram" style="font-size: 10px;">{
-  "type": "rcs",
-  "data": { "context": { "channelPayload": {
-    "senderPhoneNumber": "&lt;e164-number&gt;",
-    "messageId": "&lt;twilio-message-id&gt;",
-    "sendTime": "&lt;iso-timestamp&gt;",
-    "agentId": "&lt;rcs-agent&gt;@rbm.goog",
-    "text": "Okay",
-    "provider": "google"
-  } } }
-}</pre>
         <p>
-          I drove the parsing logic in the inbound-message service, set up the webhook against the RCS sender in the Twilio console, and validated end-to-end including media uploads (a separate path where inbound carries <code>NumMedia</code>, <code>MediaUrl0</code>, and <code>MediaContentType0</code>). Caught and escalated a Twilio docs gap with the Twilio engineering contact: the inbound media URLs (one served by Google's RBM CDN, one by Twilio's CDN) don't require authentication despite the docs claiming they should, and have different expiry semantics — important for any downstream service that re-serves the media.
+          For inbound images the vendor returns a URL pointing at its own CDN, authenticated against the platform's vendor account. Passing that URL straight through to downstream teams would leak a boundary — the consumer would inherit a credential, a CDN, and an expiry clock that belong to the platform, not to them. So the inbound path downloads each attachment, uploads it to an internal blob storage service, and hands the consumer a document reference against that store. The vendor credential never leaves the platform; the consumer reads media the same way it reads any other internal asset, and the expiry and retention are governed by the internal store's policy rather than the vendor's. The cost is one download-plus-upload per attachment on the inbound path, which the volumes easily absorb.
         </p>
 
-        <h3>4. Cross-swim-lane Pulsar routing — two-way replies to consumer teams</h3>
+        <h3>The RCS service, brought to the SMS baseline</h3>
         <p>
-          Inbound RCS replies have to reach the team that owns the conversation — different consumer teams own different sender ids, and they sit in different organisational swim-lanes from OINP. Designed and drove the multicast routing setup:
+          The bearer itself needed its own service alongside the SMS one — same shape, different vendor contracts. Most of the work there was re-establishing the platform's reliability baseline for the new bearer: retry, fallback behaviour, observability, multi-vendor-account support — so the on-call posture and the dashboards looked the same regardless of which bearer a notification used. That parity is what let RCS go to production at the same operational quality as SMS.
         </p>
-        <ul>
-          <li><strong>Source topic</strong> (OINP swim-lane): one shared inbound-reply topic for all RCS senders OINP owns.</li>
-          <li><strong>Destinations</strong>: one topic per consumer team, each in its own swim-lane.</li>
-          <li><strong>Filter</strong>: header-based on the recipient sender id (the <code>to</code> field of the inbound message) — each consumer team only sees replies addressed to their sender, no application-level filtering needed.</li>
-        </ul>
         <p>
-          When the messaging-infra team approved this routing in staging but resisted enabling it in prod (citing seven days of work, and stopping our new staging routing in the process — blocking the integration entirely), I escalated to the platform leaders forum asking for messaging-infra leadership contacts, scheduled the cross-team meeting with the messaging-infra leads, and unblocked both staging and a prod timeline within a week.
+          On the authoring side I worked with a UX designer and a frontend engineer on how a team configures an RCS notification — picking the template, mapping variables onto the event payload, choosing the consent mode and SMS-backup behaviour — so onboarding a new use case didn't require a platform engineer in the room.
         </p>
 
-        <h3>5. SMS fallback when RCS is ineligible</h3>
+        <h3>Fallback and consent</h3>
         <p>
-          Two pieces had to be in place. <strong>Content fallback</strong>: every Twilio Content Template carries a Text fallback body alongside the rich content; when the recipient isn't RCS-eligible, Twilio sends the Text body via the SMS backup sender. <strong>Infrastructure</strong>: fallback only works if a backup short code / long code / toll-free number is wired on the <em>same Twilio Messaging Service</em> as the RCS Sender. If those aren't wired together, RCS-ineligible users get nothing. I documented both gotchas in the onboarding guide because the failure mode is silent.
+          SMS fallback is silent when misconfigured: the vendor only falls back if a backup short code or toll-free number is wired onto the same vendor messaging service as the RCS sender, otherwise ineligible users get nothing with no error. That made it the first item in the onboarding guide. Consent reuses the SMS machinery — same per-workspace keyword config (STOP, START and variants), with the bearer changing only the sender id — so I drove the cross-team request for a single consent application id that gates both bearers.
         </p>
-
-        <h3>6. Consent capture</h3>
-        <p>
-          RCS in the US uses an <code>applicationId</code> + <code>consentType</code> + <code>purpose</code> tuple from the internal consent platform. I drove the cross-team request for a new consent application id covering SMS + RCS for the Critical Money Alerts use case. Keyword-based consent capture (STOP / UNSUBSCRIBE / CANCEL → opt-out; START → opt-in) is configured per workspace per channel in the SMS adapter config — the same config primitive serves both bearers, with the sender id being either an SMS phone number or an <code>rcs:</code>-prefixed sender.
-        </p>
-
-        <h3>7. The canonical onboarding docs</h3>
-        <p>
-          Wrote the full RCS section of the OINP onboarding guide — an 8-section guide on the platform docs site covering:
-        </p>
-        <ul>
-          <li>Prerequisites (Twilio sender procurement, backup short-code wiring, consent app-id)</li>
-          <li>Setup walkthrough (creating templates, wiring vendor config, hooking up the webhook)</li>
-          <li>Testing the flow (staging end-to-end, common pitfalls)</li>
-          <li>Twilio templating reference (variable mapping, fallback semantics)</li>
-          <li>Incoming messages (two-way RCS payload structure and parsing)</li>
-          <li>Consent capture (keyword actions, opt-in/opt-out flows)</li>
-          <li>Debugging RCS delivery (where to look in vendor and platform logs)</li>
-          <li>Going live (staging → prod cutover checklist)</li>
-        </ul>
-        <p>
-          Then took it one step further: shipped an internal Claude Code skill that lets engineers query the RCS docs from their local terminal without browsing — answers RCS questions from the canonical doc set so the docs aren't just static reference but a queryable knowledge base.
-        </p>
-
-        <div class="diagram-slot">
-          <p class="diagram-slot-label">Diagram slot</p>
-          <p>Add <code>assets/intuit-rcs/rcs-flow.svg</code> showing: Author → RFM → comms-authoring → SMS adapter (RCS path) → Twilio Content Templates → user phone, with the two-way path (user reply → Twilio webhook → inbound-message service → shared reply topic → cross-swim-lane multicast to consumer-team topics).</p>
-        </div>
       </section>
 
       <section class="content-section" id="decisions">
         <h2>Key decisions &amp; tradeoffs</h2>
         <ul>
           <li>
-            <strong>Ship on the stable Content Templates path first; new preview API as Phase 2.</strong> Waiting for Twilio's new <code>comms.twilio.com/preview/Messages</code> API would have delayed first-customer launch on RCS by an undefined window. Shipping on Content Templates now means first customers can onboard immediately. I also flagged the migration cost early to leaders so we'd adopt the new API <em>before</em> first customer onboards (≤2 days of backend change) rather than retrofitting customer templates later. <em>Tradeoff: a small window where templates live in Twilio console rather than authored entirely in RFM; closed before first prod customer.</em>
+            <strong>Move the inbound bus to Apache Pulsar so the broker does the routing.</strong> The status quo was a single firehose event-bus topic that every consumer subscribed to and filtered in application code — workable for occasional telemetry, broken once consumers needed real per-user conversations. The two natural alternatives were both bad: keep the firehose and push the filtering cost into every consumer, or build the routing in the platform and take a code change for every onboarding. Pulsar's platform team supported header-based routing as a first-class primitive, which gave consumers a topic of just their own traffic without either of those costs. Kafka's strengths (raw TPS, strict per-partition ordering at high scale) weren't load-bearing for inbound at our volume, so the swap was affordable. The cost was running a second broker in the data path for inbound; the benefit was that consumers got isolated topics and onboarding stopped touching the platform's code at all.
           </li>
           <li>
-            <strong>Reuse the SMS adapter for RCS rather than build a new rcsadapter.</strong> RCS and SMS share the Twilio Messaging Service, the consent semantics, the keyword-action mappings, and the inbound webhook shape. A separate rcsadapter would have doubled the operational surface for ~0 net benefit. Extended the existing SMS adapter config (the sender-id field already accepts both an SMS phone number and an <code>rcs:</code>-prefixed sender) — same code path, different bearer. <em>Tradeoff: one service handles both channels; mitigated by per-channel config and clear logging.</em>
+            <strong>Ship on the stable content-template path; treat the rich-content preview API as a fast-follow.</strong> The vendor's newer API would have blocked launch by an unknown amount, on a release cadence I didn't control. Shipping on the stable surface let the first consumer go live without that dependency. I sized the eventual migration early — a couple of days of backend work — and flagged that we should switch before the first production customer rather than retrofit afterward, which is what happened.
           </li>
           <li>
-            <strong>Header-based Pulsar routing, not application-level filtering.</strong> Could have routed all inbound replies to every consumer team and let each filter their own. Header-based filtering at the broker means each team only ever sees the messages addressed to their sender — less code in each consumer, no risk of a consumer accidentally processing another team's replies. <em>Tradeoff: more upfront work with the messaging-infra team; pays off as we add more consumer teams.</em>
+            <strong>Add multi-subaccount support to the vendor integration.</strong> Originally the platform talked to a single shared vendor account, which was fine when one team used it. As adoption grew across teams, billing attribution became a real problem — there was no clean way to bill each consumer for their own traffic, and the shared account also concentrated risk (a rate-limit hit anywhere affected everyone). I added support for multiple subaccounts under the parent so each consumer team could be provisioned its own. Worth doing now rather than later because retrofitting account boundaries onto running traffic is harder than designing them in.
           </li>
           <li>
-            <strong>Escalate, don't wait, when the messaging-infra team blocks.</strong> The approval for cross-swim-lane prod routing was stalled in a customer-facing chatops channel. I escalated to platform leaders for messaging-infra leadership contacts and scheduled the cross-team meeting myself rather than waiting. <em>Tradeoff: spends political capital; the alternative was the consumer-team integrations blocked indefinitely, which was worse.</em>
+            <strong>Escalate the cross-asset routing block instead of waiting it out.</strong> The broker-level routing was approved in staging and then stalled going to production, with the infra team's staging routing paused in the meantime — which blocked the integration entirely. The alternative to escalating was every consumer integration sitting in a support queue indefinitely. So I went to the platform leaders forum for the right leadership contacts and set up the cross-team meeting myself. It spends political capital; the upside is that the path stays open for everyone who comes through it after.
           </li>
           <li>
-            <strong>Permissive parsing on inbound RCS payloads.</strong> The vendor's webhook payload has fields that vary by message type (with-media vs text-only), provider (Google RBM today; Apple in future), and Twilio API version. Strict schema validation would have rejected legitimate inbound messages. Defensive parsing — extract what's there, log anomalies, don't fail. (Same principle I applied to SMS phone-number parsing; see the SMS launch page.) <em>Tradeoff: less clean validation; matches what the vendor actually sends.</em>
+            <strong>Parse inbound payloads permissively.</strong> The vendor's webhook varies by message type, provider, and API version. Strict schema validation would have rejected legitimate replies the first time a field shifted. The parser takes what's present, logs the anomalies, and doesn't fail the message — same posture I took on SMS phone-number parsing. Less tidy as validation, but it matches what actually arrives on the wire.
           </li>
           <li>
-            <strong>Authored the canonical docs + an internal Claude Code skill, not just code.</strong> A new channel that only the author understands isn't really shipped. The 8-section onboarding guide turns RCS into a self-serve capability for partner teams. The skill on top makes those docs queryable from any engineer's local Claude Code. <em>Tradeoff: ~1 week of writing on top of the code work; the alternative is being the bottleneck for every partner team's RCS onboarding indefinitely.</em>
+            <strong>Re-host inbound media on internal storage instead of passing through the vendor URL.</strong> The vendor returns its own authenticated CDN URL for each attachment. Forwarding that URL would push the vendor credential, the CDN dependency, and the expiry semantics onto every consumer team — a leaky abstraction where my platform's vendor relationship becomes theirs to operate. Downloading the bytes, uploading to internal blob storage, and handing back a document reference keeps that boundary clean: the consumer just reads from an internal store on its own auth. The cost is a download-plus-upload per attachment, which the inbound volumes easily absorb.
           </li>
         </ul>
       </section>
@@ -160,30 +108,9 @@
       <section class="content-section" id="impact">
         <h2>Impact</h2>
         <ul>
-          <li><strong>RCS shipped as a first-class channel on OINP</strong> — authoring, delivery, two-way inbound, SMS-fallback, consent, cross-swim-lane routing to consumer teams. Multiple consumer teams now consuming inbound RCS replies via the multicast routing.</li>
-          <li><strong>Consumer-team integrations unblocked.</strong> The two-way path (user replies routed to each consumer team's own topic) was the blocker for several partner teams. Without the cross-swim-lane Pulsar routing, none of them could have launched.</li>
-          <li><strong>Critical Money Alerts (Apr 2026 Salute award)</strong> uses this SMS+RCS infrastructure — one of the first production consumers of the work.</li>
-          <li><strong>The RCS onboarding guide is the canonical doc</strong> on the platform docs site — every partner team that onboards RCS uses it. The internal Claude Code skill on top makes it queryable from any engineer's terminal.</li>
-          <li><strong>Volunteered in the platform leaders forum to lead through prod:</strong> <em>"Will lead this till production. By GED end it should be live."</em></li>
-          <li><strong>Pattern reuse:</strong> the SMS-adapter-handles-RCS pattern, the header-based broker-routing pattern, and the docs-as-skill pattern have all become defaults for the next bearer onboarding.</li>
+          <li><strong>Live in production with RCS as the first bearer.</strong> Authoring, delivery, two-way inbound, SMS fallback, consent, multi-subaccount billing, and cross-asset routing all running at the same operational baseline as SMS, rolling out gradually to consumer teams.</li>
+          <li><strong>The routing model is a reusable primitive other teams onboard against.</strong> Subsequent consumer teams have come on by creating a topic and a routing rule, with no platform-side code change — the shape that justified moving the inbound bus in the first place, now load-bearing for everything that comes after.</li>
         </ul>
-      </section>
-
-      <section class="content-section" id="faq">
-        <h2>FAQ <span class="section-hint">(for future recruiter agent)</span></h2>
-        <dl class="faq">
-          <dt>Why not adopt Twilio's new preview API from day one?</dt>
-          <dd>Access was gated and the API was still moving. Shipping Phase 1 on Content Templates meant first customers could onboard without waiting on Twilio. I flagged the migration cost early to leaders (≤2 days backend) so we'd switch <em>before</em> first prod customer rather than retrofitting customer templates later.</dd>
-
-          <dt>How do you debug a missing RCS delivery?</dt>
-          <dd>The internal debugging guide walks through it: check Twilio console for the message status, check the platform send logs for the outbound webhook to Twilio, check the consent state (RCS without explicit consent doesn't send), and if the user is RCS-ineligible verify the SMS fallback is wired on the same Messaging Service as the RCS sender.</dd>
-
-          <dt>What about Apple's RCS rollout — won't that change things?</dt>
-          <dd>The bearer layer is abstracted behind Twilio's provider field — current inbound payloads carry <code>"provider": "google"</code> (Google RBM). When Apple Messages-for-Business comes online, Twilio handles the bearer; the OINP layer needs zero code changes as long as the Channel Metadata shape stays as documented.</dd>
-
-          <dt>What's the next milestone?</dt>
-          <dd>Group conversations (currently exploring Twilio Conversations for native group support — already filed the question with Twilio), and richer RCS card types (carousels with multiple cards, structured suggestions tied to backend actions via <code>postbackData</code>).</dd>
-        </dl>
       </section>
     </article>
 </main>

@@ -31,13 +31,13 @@
         },
         {
           "id": "intuit-rfm-revamp",
-          "title": "RFM Revamp — authoring stack migration",
+          "title": "Decoupling a Mission-Critical Platform: Leading the Redesign of Notifications Authoring",
           "path": "/work/intuit/rfm-revamp.html",
           "status": "ready"
         },
         {
           "id": "intuit-rcs",
-          "title": "RCS channel — end-to-end launch",
+          "title": "RCS — two-way messaging on the platform",
           "path": "/work/intuit/rcs-launch.html",
           "status": "ready"
         },
@@ -73,7 +73,7 @@
         },
         {
           "id": "intuit-tray",
-          "title": "Notification Tray platform",
+          "title": "Notification Tray — owning a shared in-product inbox as a platform",
           "path": "/work/intuit/notification-tray.html",
           "status": "ready"
         },
