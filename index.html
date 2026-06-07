@@ -19,35 +19,34 @@
   <main class="docs-main-content">
     <article class="article overview-page">
       <section class="hero">
-        <p class="hero-eyebrow">Platform &amp; distributed systems · 12+ years</p>
+        <p class="hero-eyebrow">Customer Communications Platform · Intuit</p>
         <h1>Anubhav Shrivastava</h1>
         <p class="hero-lead">
-          I build and own platforms at org scale. Use the <strong>sidebar</strong> to explore each problem
-          or project — architecture, decisions, diagrams, and depth beyond my resume.
+          I work on the notification platform at Intuit — the system every product team there uses to send the email, SMS, and in-product messages that reach customers. I came onto it in 2024, picked up a few different pieces of it over time, and the sidebar is the long version of each one.
         </p>
         <div class="hero-actions">
-          <a class="btn btn-primary" href="/resume.html" data-basepath="true">Resume</a>
-          <a class="btn btn-ghost" href="/work/intuit/platform-overview.html" data-basepath="true">Work at Intuit →</a>
+          <a class="btn btn-primary" href="/work/intuit/platform-overview.html" data-basepath="true">Start with the overview →</a>
+          <a class="btn btn-ghost" href="/resume.html" data-basepath="true">Resume</a>
         </div>
       </section>
 
-      <div class="stats-row">
-        <div class="stat"><span class="stat-value">20–32M</span><span class="stat-label">notifications / day</span></div>
-        <div class="stat"><span class="stat-value">99%+</span><span class="stat-label">crawl success (MS)</span></div>
-        <div class="stat"><span class="stat-value">15×</span><span class="stat-label">latency cut (Yatra)</span></div>
-      </div>
-
       <section class="highlights content-section">
-        <h2 class="section-title">Highlights</h2>
+        <h2 class="section-title">If you're scanning</h2>
         <ul class="highlights-list">
-          <li><strong>100% availability across TY24 + TY25 tax peaks</strong> — Intuit's two highest-stakes annual windows, recognised by Bravo and Salute Spotlight awards from senior leadership (Director + Group Engineering Manager)</li>
-          <li><strong>Led the modernisation of OINP's authoring stack</strong> — five backend services, 99.987% parity validated across 2.9M+ production reads, RFM Voice + SMS shipped Nov &amp; Dec 2025 on the new platform</li>
-          <li><strong>Lightning Award (GED 2025) for fastest 48-hr POC</strong> — LangGraph-based AI-assisted notification authoring agent now live in production as <code>ccx-oinp-guide-agent</code></li>
-          <li><strong>60× latency improvement at Microsoft</strong> — reduced data source latency from 30s to 0.5s through deep profiling</li>
-          <li><strong>16 Spotlight awards across 2+ years at Intuit</strong>, including 3 Bravo-tier and 2 Salute-tier from senior leadership — paragraph-length citations across reliability, migration, and cross-team partnership</li>
+          <li>I led a 13-month redesign of the authoring side of the platform — the part product teams use to configure notifications — and moved all the traffic over to the new stack before tax season hit.</li>
+          <li>I'm the owner of the in-product inbox (the bell icon inside Intuit products). I've been the single point of contact on it since 2024 — teams come to me to integrate, and I run its reliability.</li>
+          <li>I built a two-way messaging capability on the platform so users can reply to a notification and the right team gets the reply. RCS is the first channel it carries; SMS is the second.</li>
+          <li>SMS was handed over to me after the high-volume sign-in traffic was already stable. I've spent that chapter onboarding new teams onto the channel, adding two-way replies, and being the person on the pager when something with a vendor breaks.</li>
+          <li>Two tax seasons in a row, the services I own went through the busiest weeks of the year without a single 5xx. Senior leadership recognised the work with the two highest-tier peer awards — citations on the Recognition page.</li>
         </ul>
       </section>
 
+      <section class="content-section" style="margin-top: 32px;">
+        <h2 class="section-title">Before Intuit</h2>
+        <p style="color: var(--text-muted); max-width: 60ch; line-height: 1.65;">
+          Microsoft for six years, as a founding member of the Graph Connectors team — took several products from zero to GA. Before that, Yatra, where I led the revamp of the Bus business and contributed as a developer on the Booking Management revamp. Earlier, code signing infrastructure at Adobe. The <a href="/resume.html" data-basepath="true">resume</a> has the timeline; topic pages for Microsoft and Adobe are still to come.
+        </p>
+      </section>
 
     </article>
   </main>
