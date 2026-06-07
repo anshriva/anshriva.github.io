@@ -298,14 +298,14 @@
 
         <div class="section-title">SUMMARY</div>
         <div class="summary">
-            Platform engineer leading the modernisation of Intuit's notification platform — 20–32M notifications/day across QuickBooks, TurboTax, Credit Karma, Mailchimp, and 10+ other products. Drove two consecutive tax peaks (TY24, TY25) to 100% availability, recognised by two senior-leadership Bravo awards. Shipped Voice, SMS, and end-to-end RCS as the first channels on the new authoring stack, validated by a parity engine I built that audited 2.9M+ production reads at 99.987% match. Previously at Microsoft, took Graph Connectors from zero to General Availability with 99%+ crawl success across Fortune 500 enterprises.
+            I own Intuit's company-wide notification platform — the system every product team depends on to reach its customers, carrying tens of millions of messages a day on the user-visible path. I led its biggest redesign, re-architecting authoring away from delivery, and I'm the one teams escalate to when a notification goes missing across products. Two tax seasons under my ownership closed at 100% availability with zero customer-visible incidents. Twelve-plus years doing this — building the platforms other teams build on, and re-platforming live ones without anyone noticing: Microsoft's Graph Connectors from zero to GA with 99%+ crawl success across the Fortune 500; the bus-booking re-platforming and a new supplier brought online at Yatra (with train booking on the IRCTC APIs and a booking-management migration alongside); and at Adobe, the platform that code-signed every product build before it shipped.
         </div>
 
         <div class="section-title">SCOPE &amp; RECOGNITION</div>
         <ul class="scope-list">
             <li><strong>Platform scale:</strong> 20–32M emails/day · 2–4M SMS/day · 2,200+ tray TPS at peak — serving QuickBooks, TurboTax, Credit Karma, Mailchimp, ProSeries, Lacerte and 10+ teams.</li>
-            <li><strong>Engineering ownership</strong> across four OINP domains — authoring experience, RCS delivery, SMS delivery, notification tray — plus the tax-peak readiness program and cross-org integration surface (single escalation point for partner teams across 10+ products).</li>
-            <li><strong>Senior-leadership recognition</strong> — Quarterly Values Award (VP-level) and 5 high-tier Spotlight awards in tenure to date: TY25 Tax Peak (Salute, Sheetal Sureka GEM, Apr 2026) · TY24 Tax Peak (Bravo, Shanti Kuropati Director, May 2025) · RFM SMS Launch (Bravo, Sheetal, Dec 2025) · RFM Voice Launch (Bravo, Sheetal, Nov 2025) · Critical Money Alerts SMS (Salute, Anand Abhyankar, Apr 2026). Plus the Lightning Award (Fastest GED POC, Nov 2025) and 10 additional Spotlight awards from senior leadership and cross-org partners.</li>
+            <li><strong>Five distinct ownership chapters</strong> on one platform, each on its own terms — lead engineer (authoring redesign), capability owner (two-way messaging), post-handover steward (SMS), platform owner (notification tray), solo build (platform search) — plus tax-peak readiness and the cross-org integration surface (single escalation point for partner teams across 10+ products).</li>
+            <li><strong>Senior-leadership recognition</strong> — 16 Spotlight awards in tenure, including all five at the two highest tiers (Bravo and Salute): TY25 tax peak (Salute, Sheetal Sureka GEM, Apr 2026) · TY24 tax peak (Bravo, Shanti Kuropati Director, May 2025) · SMS launch on the new stack (Bravo, Sheetal, Dec 2025) · Voice launch on the new stack (Bravo, Sheetal, Nov 2025) · Credit Karma Critical Money Alerts (Salute, Anand Abhyankar, Apr 2026). Includes the Lightning Award (fastest GenAI hackathon POC, Nov 2025).</li>
         </ul>
 
         <div class="section-title">EXPERIENCE</div>
@@ -315,39 +315,44 @@
             <span class="job-meta">March 2024 – Present | Bengaluru, India</span>
         </div>
         <div class="job-title">Senior Software Engineer — Notification Platform</div>
-        <div class="job-description">Engineering lead across four OINP domains — authoring experience, RCS delivery, SMS delivery, and notification tray — plus the tax-peak reliability program and the cross-org integration surface.</div>
+        <div class="job-description">Sole or lead engineer across five ownership chapters on Intuit's company-wide notification platform — authoring redesign, two-way messaging, SMS, notification tray, platform search — and the de facto technical owner partner teams escalate to across 10+ products.</div>
 
-        <div class="subsection-title">Platform modernisation — leading the RFM Revamp</div>
+        <div class="subsection-title">Notification Authoring Portal — lead engineer on the authoring-stack redesign (~13 months)</div>
         <ul class="bullet-list">
-            <li><strong>Engineering lead for the authoring-stack migration</strong> from legacy to a new stack on IPS Managed Relational. Phased rollout (single-channel → template flattening → 278 multi-channel notifications) with per-notification stack flags for safe partial migration.</li>
-            <li><strong>Built comms-comparator as the parity backbone</strong> — diffs every read against both stacks. 7-day prod audit validated 2.9M reads at 99.987% match; every failing class root-caused. Without this, 100% migration before tax peak would not have been possible.</li>
-            <li><strong>Voice (Nov 2025), SMS (Dec 2025) and RCS launches</strong> shipped on the new stack — first three channels live. SMS: feature-flagged per-capability rollback, notification-by-notification migration selection, full observability. RFM Prod Promotion fix (Apr 2026) shipped after a late-night incident — Encore for "Integrity Without Compromise."</li>
-            <li><strong>Architectural direction in platform leaders forum.</strong> Pushed back on a proposed BFF (citing legacy notif-common's scope-creep); team adopted gateway routing as the simpler primitive. Established "API contract before implementation" as the team review default.</li>
-            <li><strong>Cross-org escalation — Pulsar cross-swim-lane routing.</strong> When the Pulsar infra team resisted enabling staging-validated routing in prod (citing 7 days of work) and stopped our staging routing, blocking two consumer-team integrations — escalated to Pulsar-infra leadership, ran the cross-team meeting, secured a prod timeline.</li>
+            <li><strong>Owned the redesign end to end</strong> — proposed the architecture, built the four core services, ran the migration. Split one overloaded database into an event-driven CQRS system: normalized authoring on managed PostgreSQL (Aurora), denormalized delivery on DynamoDB at 2,000+ TPS, synced one-way by Kafka domain events (CDC), ending the cascading schema failures the shared DB caused.</li>
+            <li><strong>Made the migration-safety call</strong> the whole cutover depended on: built a parity-comparator service that dual-read both stacks and diffed every response before traffic moved. 7-day audit — 2.9M+ reads at 99.987% match, every divergence root-caused. Migrated ~100% of traffic before tax peak: 10,000 notifications / 800 services / 10+ teams, zero customer-visible impact, API contract unchanged. The comparator is now the team's default for migrating any live system.</li>
+            <li><strong>Owned the architecture decisions the team now builds on</strong> — managed PostgreSQL over self-managed, domain events over dual-write, gateway routing over a proposed backend-for-frontend — and set "API contract before implementation" as the review default.</li>
         </ul>
 
-        <div class="subsection-title">RCS channel — owned a brand-new bearer end-to-end</div>
+        <div class="subsection-title">Two-way messaging — capability owner (RCS first bearer, SMS second)</div>
         <ul class="bullet-list">
-            <li><strong>End-to-end RCS launch on OINP</strong> — Twilio integration, schema on the new authoring stack (FreeMarker substitution, vendor config, consent, SMS-fallback), authoring + delivery + two-way inbound webhook, cross-swim-lane Pulsar multicast routing to multiple consumer teams with header-based filtering so each team sees only messages addressed to their sender.</li>
-            <li><strong>Reused the SMS adapter for RCS</strong> rather than build a separate adapter — same Twilio Messaging Service, same consent semantics, same keyword mappings, sender-id field accepting both SMS numbers and <code>rcs:</code>-prefixed senders. Half the operational surface, all the capability.</li>
-            <li><strong>Authored the canonical RCS onboarding guide</strong> (8 sections) and shipped an internal Claude Code skill on top that makes the docs queryable from any engineer's local terminal. Critical Money Alerts is the first production consumer of this work (Apr 2026 Salute award).</li>
+            <li><strong>Defined and built a net-new platform capability:</strong> two-way messaging on Apache Pulsar. Broker-side header routing fans one shared inbound topic out to per-consumer topics, so a team self-onboards with a topic + routing rule and no platform code change — replacing a firehose every consumer had to filter in app code.</li>
+            <li><strong>Brought RCS up as the first bearer</strong> at the same operational/SLO baseline as SMS (retry, fallback, observability, multi-subaccount billing); re-hosted inbound media to object storage so the vendor credential never leaves the platform boundary. SMS replies now ride the same capability as the second bearer — the routing model is a reusable primitive other teams onboard against.</li>
+            <li><strong>Made the capability self-serve:</strong> authored the canonical onboarding guide + an internal Claude Code skill that makes it queryable from any engineer's terminal. Credit Karma's Critical Money Alerts is the first production consumer (Salute, Apr 2026).</li>
         </ul>
 
-        <div class="subsection-title">Tax-season reliability — two consecutive peaks at 100% availability</div>
+        <div class="subsection-title">SMS — owner of channel adoption and the vendor-incident seat (post-handover)</div>
         <ul class="bullet-list">
-            <li><strong>TY25 readiness program</strong> — game-day region failover drills, HPA scaling reviews across the service fleet, Pulsar backup path, legacy scheduler eliminated, ~100% of traffic migrated to the new stack before peak. TY24 + TY25 both shipped at 100% availability with zero customer-visible incidents (Bravo + Salute citations).</li>
-            <li><strong>Extended on-call through peak</strong> — weekend rotations and night shifts; single point of diagnosis for partner teams (QuickBooks, QBSE, TurboTax, Credit Karma) escalating when they couldn't tell whether a failure was upstream, OINP, or vendor.</li>
+            <li><strong>Grew the channel after I inherited a stable outbound path</strong> (incl. high-volume sign-in OTP) — onboarded six-to-seven high-volume consumer teams end to end: sender procurement, carrier registration, consent wiring, with procurement timelines folded into onboarding so launch dates held.</li>
+            <li><strong>Shipped two-way SMS as the second bearer</strong> on the Pulsar inbound routing and made the call to terminate consent (STOP/START) at the platform, not the consumer — one missed opt-out can't become every team's regulatory exposure. Released vendor OTP localization behind feature flags, locale-by-locale, with no success-rate dip on the highest-volume traffic.</li>
+            <li><strong>Primary incident commander when sign-in success rate degrades</strong> — the pager comes to me; I own the call to fail over to a secondary vendor (reversible, flag-gated), mitigate-first/escalate-in-parallel. SMS launch + migration recognised (Bravo, Dec 2025).</li>
         </ul>
 
-        <div class="subsection-title">Notification Tray, GenAI, search, earlier consolidations</div>
+        <div class="subsection-title">Notification Tray &amp; Platform Search</div>
         <ul class="bullet-list">
-            <li><strong>Notification Tray reliability.</strong> Narrowed chronic Solr core-init failures to per-host process state via log forensics; proposed migrating 40 GB Cassandra+Solr to a managed DB. In-App incident leadership (Aug 2025) recognised by Encore.</li>
-            <li><strong>GED 2025 LangGraph AI authoring agent</strong> — multi-agent architecture, shipped working demo in 48 hours (Lightning Award). Now in production inside the new RFM. <strong>Home-page redesign initiative (unsolicited):</strong> generated previews of 3,550 production notifications via the new Preview API as evidence, mocked it up, made the case in the platform leaders forum. Picked up into the GED 2026 search rollout.</li>
-            <li><strong>Notifications Platform Search v1 (Sep 2024) — shipped solo:</strong> DynamoDB → Kinesis → managed search index, seconds-fresh ingestion, curated sort-field whitelist. Still serving production. V2 on the new stack in flight, mentoring two engineers.</li>
-            <li><strong>Credit Karma SMS (5-mo ship)</strong> and <strong>Mailchimp Notification Tray (4-mo ship, 700 peak TPS):</strong> cross-cloud consolidation, dual-company security reviews, consent passthrough, Twilio short-code carrier approval, identity-converter against the SSO Identity API.</li>
+            <li><strong>Notification Tray — sole platform owner and single point of contact since 2024.</strong> Every integrating team comes to me; I own its reliability and roadmap. Shared in-product inbox on multi-region Cassandra (DataStax) self-managed on EC2, Solr index, WebSocket delivery. Added Resilience4j retries + distributed tracing, generalised identity addressing to onboard teams across namespaces, held it through TY24/TY25 peak. Identified the standing org risk (self-managed Cassandra), scoped the fix, and keep driving the case for an (unfunded) move to a managed NoSQL store — 15-day TTL makes cutover cheap (dual-write, no backfill). Encore, Aug 2025.</li>
+            <li><strong>Notifications Platform Search — designed and shipped solo, zero incidents.</strong> CDC from DynamoDB → Kinesis → managed search index (ElasticSearch), fronted by a query API; still the only way the team answers "who configured this?" across ~10,000 notifications during incidents. Now leading V2 on the new stack and mentoring two engineers on it.</li>
         </ul>
 
-        <div class="tech-line"><span class="tech-label">Tech:</span> Java 21, Spring Boot 3, DynamoDB, PostgreSQL (Aurora via IPS Managed Relational), Cassandra, Apache Pulsar, Kafka, Redis, ElasticSearch (IPS Search), AWS, Kubernetes, Splunk, LangGraph, Figma MCP</div>
+        <div class="subsection-title">How I operate across all five</div>
+        <ul class="bullet-list">
+            <li><strong>The platform's single escalation point.</strong> Partner teams across 10+ products (QuickBooks, TurboTax, Credit Karma) land with me first when they can't tell whether a failure is upstream, the platform, or the vendor — the disambiguation spans every workstream and belongs to no single one.</li>
+            <li><strong>Tax-peak owner for the services I run.</strong> Kubernetes HPA autoscaling reviews, game-day region-failover drills, backup paths, retired the legacy scheduler — TY24 + TY25 both at 100% availability, zero customer-visible incidents.</li>
+            <li><strong>Set technical direction beyond my own code.</strong> Drove the GenAI authoring agent (LangGraph, multi-agent) — working demo in 48 hours, Lightning Award, picked into the 2026 roadmap; won a home-page redesign by generating previews of 3,550 production notifications through the preview API instead of a doc; escalated and unblocked cross-org Pulsar routing that was stalling two teams' integrations.</li>
+            <li><strong>Earlier cross-cloud consolidations:</strong> Credit Karma SMS (5-mo) and Mailchimp Notification Tray (4-mo, 700 peak TPS) — dual-company security reviews, consent passthrough, carrier short-code approval, identity conversion via the SSO identity API.</li>
+        </ul>
+
+        <div class="tech-line"><span class="tech-label">Tech:</span> Java 21, Spring Boot 3 · AWS (DynamoDB, Aurora PostgreSQL, Kinesis, EC2, S3-style object storage), Kubernetes + HPA autoscaling · Apache Pulsar, Kafka, Redis · Cassandra (DataStax), Solr, ElasticSearch / managed search · Resilience4j, distributed tracing, Splunk · LangGraph, Figma MCP · Patterns: event-driven CQRS, CDC, microservices</div>
 
         <div class="job-header">
             <span class="company">Microsoft</span>
@@ -375,7 +380,8 @@
         </div>
         <div class="job-title">Senior Software Engineer</div>
         <ul class="bullet-list">
-            <li><strong>15× latency improvement</strong> on GET Booking API (3s → 0.2s) for the core financial verification system serving millions of bookings. <strong>3× cost reduction</strong> on third-party API calls via Redis caching. Built supplier integration framework reducing onboarding from months to weeks.</li>
+            <li><strong>Led the bus-booking platform migration</strong> and brought a new supplier online through a supplier-integration framework that cut onboarding from months to weeks. Also built train booking on the IRCTC APIs and migrated the booking-management system.</li>
+            <li><strong>15× latency improvement</strong> on the GET Booking API (3s → 0.2s) for the core financial-verification system serving millions of bookings; <strong>3× cost reduction</strong> on third-party API calls via Redis caching.</li>
         </ul>
 
         <div class="job-header">
@@ -384,7 +390,7 @@
         </div>
         <div class="job-title">Software Engineer — Engineering Security</div>
         <ul class="bullet-list">
-            <li>Built and maintained Adobe's internal code-signing platform — used across all Adobe products on Windows, macOS, and Java; publisher-subscriber architecture processing code signing at scale.</li>
+            <li>Built and maintained Adobe's internal code-signing platform — the system that signed every product build compliantly before release, used across all Adobe products on Windows, macOS, and Java; publisher-subscriber architecture processing code signing at scale.</li>
         </ul>
 
         <div class="section-title">SKILLS</div>
@@ -395,11 +401,11 @@
             </div>
             <div class="skill-category">
                 <strong>Data &amp; Messaging</strong>
-                <div class="skill-items">PostgreSQL (Aurora), DynamoDB, Cassandra, Redis · Pulsar, Kafka · ElasticSearch/OpenSearch</div>
+                <div class="skill-items">PostgreSQL (Aurora), DynamoDB, Cassandra, Redis · Pulsar, Kafka, Kinesis · ElasticSearch/OpenSearch, Solr</div>
             </div>
             <div class="skill-category">
                 <strong>Cloud &amp; Infra</strong>
-                <div class="skill-items">AWS, Azure, Kubernetes, Docker, Argo · Splunk (dashboards, alerts, log forensics)</div>
+                <div class="skill-items">AWS (EC2, S3, Kinesis, DynamoDB, Aurora), Azure · Kubernetes + HPA, Docker, Argo · Resilience4j, distributed tracing, Splunk</div>
             </div>
             <div class="skill-category">
                 <strong>AI / GenAI</strong>
