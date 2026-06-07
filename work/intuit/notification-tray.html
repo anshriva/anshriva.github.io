@@ -3,13 +3,11 @@
 <head>
   <script src="../../js/base-path.js"></script>
   <script src="../../js/theme.js"></script>
-
   <script>
     document.write('<link rel=\"stylesheet\" href=\"' + window.BASE_PATH + 'css/styles.css\" />');
   </script>
-  <script src="../../js/theme.js"></script>
 
-<meta charset="UTF-8" />
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Notification Tray — Anubhav Shrivastava</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -22,122 +20,107 @@
     <article class="article topic-page">
       <header class="page-header">
         <p class="page-status">Status: <strong>ready</strong></p>
-        <h1>Notification Tray — Solr/Cassandra reliability &amp; the migration proposal</h1>
-        <p class="subtitle">Topic · Intuit · OINP / Customer Communications</p>
+        <h1>Notification Tray — owning a shared in-product inbox as a platform</h1>
+        <p class="subtitle">Topic · Intuit · Customer Communications platform</p>
       </header>
 
       <section class="content-section" id="problem">
-        <h2>Problem statement</h2>
+        <h2>What the tray is</h2>
         <p>
-          The OINP Notification Tray powers the in-product inbox across Intuit surfaces (QuickBooks, Mailchimp's tray, TurboTax, and several internal product surfaces) — short-lived messages, mostly 15-day TTL, ~40 GB of live data, served from a Cassandra cluster with a Solr index for query. Tray is on the hot path for every in-product notification.
+          The Notification Tray is the in-product inbox in Intuit products — the bell-and-badge surface in QuickBooks, TurboTax, Mailchimp, and a few internal product surfaces. Lots of teams want to drop a message into a user's tray, and the tray is the one system that holds those messages, indexes them, drops duplicates, expires them, and serves them back. It sits on the user-visible path.
         </p>
         <p>
-          Over the course of 2024–2025 the tray developed intermittent <code>SolrCore is not available due to init failure</code> errors that were not visible to customers (we survived on retries) but were degrading availability margin and creating perpetual oncall noise. I owned the forensics, the workaround, and ultimately the proposal to migrate the tray off Cassandra+Solr to a managed DB.
+          Most messages are short-lived, usually a 15-day TTL, and there's tens of GB of live data at any time. Storage is a multi-region Cassandra cluster (US West and US East, DataStax Enterprise) with a Solr index for query. Users get messages two ways. They can pull their history from the tray, and they can receive new messages in real time over a WebSocket, pushed through an in-session engagement service. Storage is the easy part. The hard part is that "a notification" means something slightly different to every team that integrates, and the tray has to serve all of them without turning into a pile of special cases.
+        </p>
+        <p>
+          I've been the lead and single point of contact for the tray since 2024. Teams come to me to integrate, I own its reliability, and I'm the one pushing on where it should go next.
         </p>
       </section>
 
       <section class="content-section" id="context">
-        <h2>Context &amp; constraints</h2>
+        <h2>Why owning a shared inbox is hard</h2>
         <ul>
-          <li><strong>Tray is on the user-visible path.</strong> A failed tray write doesn't just lose a log entry — the in-product inbox is missing a message. We had to be paranoid about correctness.</li>
-          <li><strong>The data is short-lived.</strong> Most tray messages have 15-day TTL. This makes the tray <em>cheap to migrate</em> compared to long-retention stores — old data ages out faster than the migration takes.</li>
-          <li><strong>Multi-region, multi-AZ.</strong> Cassandra ran across multiple AZs in us-west-2 (east cluster was the worst-affected). Solr's index was a per-tray construct; <code>SolrCore 'oinptray.tray_message'</code> was the specific one failing.</li>
-          <li><strong>40 GB of live data.</strong> Not huge by infra standards — large enough to be non-trivial to migrate, small enough that it's not a multi-quarter project.</li>
+          <li><strong>It's on the user-visible path.</strong> When a tray write fails, a customer is missing a message in their inbox. That raises the bar on correctness and on how much availability headroom we keep.</li>
+          <li><strong>Every team models notifications differently.</strong> One product thinks in per-user alerts, another in broadcast campaigns, another in expert-to-customer threads. The tray has to handle all of that without growing a custom path for each team.</li>
+          <li><strong>Identity isn't uniform.</strong> Intuit's products don't all share one identity namespace. Mailchimp users, for instance, aren't addressed the same way as Intuit-identity users, so the tray has to figure out who a message is for across more than one scheme.</li>
+          <li><strong>The platform is stable, but exposed in one place.</strong> Day to day it's steady. The standing risk is that Cassandra runs self-managed on EC2 instead of on a managed service, and that's the piece I've been trying to change for a long time (more below).</li>
         </ul>
       </section>
 
       <section class="content-section" id="architecture">
-        <h2>Forensics</h2>
-        <p>Over multiple incident windows in late 2024 and through 2025 I narrowed the failure pattern:</p>
+        <h2>The integration model — the real work</h2>
+        <p>
+          Most of what I do for the tray is onboarding new teams onto it, and that's mostly understanding work rather than coding. Every integration tends to go the same way:
+        </p>
+        <ol>
+          <li><strong>Understand what the team actually wants.</strong> What do they mean by a notification? Are these transactional alerts, marketing nudges, expert messages? What's their identity model, their volume, how much latency can they tolerate?</li>
+          <li><strong>Figure out how it maps onto the tray.</strong> How do their concepts land on the tray's storage, TTL, dedup, and query behavior? The judgment call is finding a mapping that works for them without bolting on a special case that every later integration then has to work around.</li>
+          <li><strong>Build it and validate end to end.</strong> Sometimes that's new code, sometimes just configuration. Either way it has to be validated on a live, user-facing surface before it ships.</li>
+        </ol>
+        <h3>What I've shipped on top of it</h3>
         <ul>
-          <li>
-            <strong>Mixed success/failure within the same host.</strong> Logs from a single tray backend pod showed <code>config fetched from db for tray :: iep</code> (success) and <code>error in get tray message, name=iep error=resource not found</code> (failure) at the same time. So it wasn't a clean "pod is dead" failure — it was per-request flakiness.
-          </li>
-          <li>
-            <strong>Time-bounded.</strong> Errors clustered between 5 PM and 7 AM IST in the east cluster. Pattern suggested off-peak compaction or GC interference with Solr core init.
-          </li>
-          <li>
-            <strong>Cassandra retries papered over user impact.</strong> A Resilience4j <code>cassandraRetry</code> wrapper was succeeding on retry — so customers didn't see failures, but every retry was burning latency and the underlying issue was still there. As I called out in late Nov 2025: <em>"this issue has been going on for a month. Even now I see retrials on tray. We are just surviving on retrials. I have not been able to run proper load test due to such errors coming up."</em>
-          </li>
-          <li>
-            <strong>Realm-level fan-out amplified pressure.</strong> Edge cases like one test realm fanning out to 559 users in a single API call were creating mini-load-spikes that interacted badly with the Solr core init issues — caught one such spike for a perf-test realm and escalated to the upstream-product team to confirm it was a test workload, not real customer traffic.
-          </li>
+          <li><strong>Multi-identity support.</strong> Generalized how the tray addresses users so it can serve more than one identity namespace (Mailchimp and Intuit). This is what made it possible to onboard teams outside the original identity model.</li>
+          <li><strong>Resilience4j retry layer.</strong> Added retries around the Cassandra path so a transient backend hiccup doesn't turn into a missing message for the customer.</li>
+          <li><strong>Distributed tracing.</strong> Added trace propagation and proper log correlation so you can follow one tray request across services. Before this, a lot of failure reports were just "it broke somewhere," and now they're actually debuggable.</li>
         </ul>
 
-        <h3>The migration proposal</h3>
-        <p>
-          By late 2025 I argued to the customer-comms team that we should stop patching this and migrate:
-        </p>
-        <blockquote>
-          "Either we fix this, or we can spend a month and migrate this 40 GB tray data to a managed DB. Tray messages are short lived (mostly 15 days of TTL) so it won't be too difficult to migrate."
-        </blockquote>
-        <p>
-          The economic argument: a month of focused migration ends the entire class of Solr init failures, retries, oncall noise, and load-test blockage permanently. The "fix Solr in place" path had eaten months of cycles by then with no end in sight. Short TTL means we don't have to backfill years of history — the tray naturally drains within 15 days, so a write-to-both, read-from-old, then read-from-new cutover is feasible without complex backfill machinery.
-        </p>
-
-        <div class="diagram-slot">
-          <p class="diagram-slot-label">Diagram slot</p>
-          <p>Add <code>assets/intuit-tray/cassandra-solr-failure.svg</code> showing the same-host mixed-success/failure pattern, and <code>assets/intuit-tray/migration-plan.svg</code> for the dual-write cutover.</p>
+        <div style="margin: 40px 0;">
+          <img src="../../assets/intuit-tray/architecture.svg" alt="Notification Tray architecture: the tray does CRUD against a multi-region Cassandra cluster, publishes to an in-session engagement service, and serves users over two paths — pull (fetch messages) from the tray and real-time push over WebSocket from the engagement service." style="width: 100%; height: auto; border-radius: 4px; border: 1px solid #ddd; background: #fff;">
+          <p style="margin-top: 12px; font-size: 12px; color: #94a3b8;">
+            Two delivery paths: a pull path (users fetch message history from the tray) and a real-time push path (WebSocket via the in-session engagement service). Storage is a self-managed, multi-region Cassandra cluster.
+          </p>
         </div>
       </section>
 
       <section class="content-section" id="decisions">
-        <h2>Key decisions &amp; tradeoffs</h2>
+        <h2>Key decisions &amp; trade-offs</h2>
         <ul>
           <li>
-            <strong>Don't trust retries as the "fix."</strong> The retry wrapper was masking the issue from customers — easy to declare the problem solved and move on. I refused to call it solved because the retries themselves were a leading indicator that compaction/init pressure would eventually exceed retry budget and start dropping messages. <em>Tradeoff: continued oncall load while the real fix was scoped; the alternative was a future surprise outage.</em>
+            <strong>Extend the shared model instead of special-casing.</strong> The quick way to onboard a team is to write a custom path for their quirks. I push to extend the shared model instead, the way multi-identity did, because every special case sticks around and the next integration has to deal with it. <em>Trade-off: onboarding takes longer up front, but the platform doesn't rot as more teams pile on.</em>
           </li>
           <li>
-            <strong>Migrate, don't patch.</strong> Cassandra + Solr is a legitimately good combination for some workloads — but the operational cost on a short-TTL workload like tray is wildly disproportionate. A managed DB (IPS Managed Relational or similar) gives us encryption, regional DR, schema promotion, observability for free. <em>Tradeoff: one month of engineering investment; recovered in oncall hours within a quarter.</em>
+            <strong>Treat retries as a safety net, not a fix.</strong> The Resilience4j layer keeps customer impact at zero, but I've been clear that it hides the self-managed-Cassandra fragility rather than fixing it. If you call the retries a solution, you're setting up a nasty surprise the day compaction or load runs past the retry budget. <em>Trade-off: I keep the structural risk on the table even though customers never see the symptom.</em>
           </li>
           <li>
-            <strong>Leverage short TTL for cutover simplicity.</strong> Long-retention migrations need backfill tooling, replay frameworks, dual-read consistency checks. Short TTL means we can dual-write for ~15 days and then the old store is empty. Don't build infrastructure for problems you don't have. <em>Tradeoff: dual-write window has its own correctness risks; mitigated by tray data being non-financial.</em>
-          </li>
-          <li>
-            <strong>Per-host forensics, not just per-cluster.</strong> Early debugging assumed "east cluster is bad." Drilling into single-host logs showed same-host mixed success/failure, which falsified the cluster-level hypothesis and pointed at intra-process state (Solr core init). The investment in narrower telemetry paid off. <em>Tradeoff: more time in Splunk; faster convergence on the real cause.</em>
+            <strong>Add traceability before you need it.</strong> I added distributed tracing without a specific outage forcing it, just so the next incident would be diagnosable at all. On a shared platform an opaque failure hurts every team at once, so it's worth paying for ahead of time. <em>Trade-off: this work competes with features for time, but it pays off the first time an integration misbehaves.</em>
           </li>
         </ul>
+      </section>
+
+      <section class="content-section" id="migration">
+        <h2>The structural risk — and the proposal that isn't funded yet</h2>
+        <p>
+          The tray is stable, but it runs on a multi-region Cassandra cluster (DataStax Enterprise) that we operate ourselves on EC2. Self-managing a datastore for a short-TTL, user-visible workload is a lot of operational cost for what we get: the oncall load, the upgrade and compaction tuning, and all the failure modes of running your own distributed database across two regions, all for data that mostly ages out in 15 days.
+        </p>
+        <p>
+          I've made the case more than once to move the tray off self-managed Cassandra onto a managed NoSQL store. The argument is part cost and part risk.
+        </p>
+        <ul>
+          <li><strong>The short TTL makes the migration cheap.</strong> A long-retention store would need backfill tooling and replay machinery. The tray empties itself in about 15 days, so you can dual-write, cut reads over, and reach a clean state without backfilling any history.</li>
+          <li><strong>A managed store takes a whole class of failure modes off our plate</strong>, along with the oncall hours that go with them, for a bounded one-time migration.</li>
+        </ul>
+        <p>
+          It hasn't been funded yet. It's competed against other priorities and hasn't won a slot. I'm keeping it on this page on purpose, because spotting the structural risk, scoping the fix, and continuing to push for it is part of owning the platform even when the funding call isn't mine to make. Where it stands today: risk understood, fix scoped, waiting on investment.
+        </p>
       </section>
 
       <section class="content-section" id="impact">
         <h2>Impact</h2>
         <ul>
-          <li><strong>Sheetal Sureka, In-App incident leadership (Aug 1 2025):</strong> <em>"thank you for your leadership in handling the In-App incident and working through the day with the team, to restore the production feature. This required you to deep dive in to the legacy aspects of the code and while this was eventually not a tray issue, you worked through the closure of the issue."</em></li>
-          <li><strong>Katya Krauchanka (Nov 13 2025):</strong> <em>"meticulously analyze and resolve an issue with one of the OINP templates we had posted in the cross-team support channel. The problem had been holding us back for several days… debugged the issue and identified its root cause… accommodating the US team's schedule."</em></li>
-          <li><strong>Tray remained functional through TY24 and TY25 peak</strong> — the retry layer held, customer impact stayed at zero, and the migration proposal landed on the planning board for early TY26 cycles.</li>
-          <li><strong>Cross-team partnership:</strong> Daniel Thrall (Jul 27 2025): <em>"always willing to meet early, meet late, explain things to us with patience, plug us in with the right people, and make sure we've got what we need to take care of customers."</em></li>
+          <li><strong>The tray is a stable, shared platform.</strong> It carries the in-product inbox for multiple Intuit products and stayed reliable through TY24 and TY25 peak, with customers never seeing missing messages.</li>
+          <li><strong>New teams can onboard cheaply.</strong> Integrations land on the shared model rather than as one-off paths, so the cost of taking on each new product stays bounded.</li>
+          <li><strong>Recognized across teams</strong> for incident leadership and cross-team partnership on customer communications. The citations are on the <a href="recognition.html" data-basepath="true">Recognition</a> page.</li>
         </ul>
-      </section>
-
-      <section class="content-section" id="faq">
-        <h2>FAQ <span class="section-hint">(for future recruiter agent)</span></h2>
-        <dl class="faq">
-          <dt>Why was the same host returning both success and failure?</dt>
-          <dd>Solr core init is an in-process state machine — if the core failed to initialize on a particular request path (likely racing with a compaction or restart), subsequent requests for the same tray would 404 until the core came back, but other in-flight requests using a different code path could still succeed. This is exactly the kind of "you can't tell from cluster-level metrics" failure that needs per-host log slicing.</dd>
-
-          <dt>Why not just restart the affected pods on Solr errors?</dt>
-          <dd>Considered. The error is per-tray-core, not per-pod — restarting the pod means dropping in-flight successful requests too. The retry wrapper was strictly better than auto-restart. The actual fix is removing Solr from the path.</dd>
-
-          <dt>What managed DB are you migrating to?</dt>
-          <dd>Most likely IPS Managed Relational (Aurora PostgreSQL) — paved-road choice, integrates with the rest of the new stack. The decision is being made now; the proposal is the page-relevant artifact.</dd>
-
-          <dt>What's the rollback plan if the migration goes wrong?</dt>
-          <dd>The dual-write window is the rollback plan — for the first ~15 days, every write goes to both stores and reads can be flipped back to the old store via a single config flip. After the TTL drains, the old store has no data, so the "rollback" becomes a fresh re-cutover rather than a revert.</dd>
-        </dl>
       </section>
     </article>
 </main>
     <script id="nav-data-script"></script>
-  <script src="../../js/theme.js"></script>
   <script id="sidebar-script"></script>
-  <script src="../../js/theme.js"></script>
   <script>
     const navDataScript = document.getElementById('nav-data-script');
     navDataScript.src = window.BASE_PATH + 'js/nav-data.js';
     const sidebarScript = document.getElementById('sidebar-script');
     sidebarScript.src = window.BASE_PATH + 'js/sidebar.js';
   </script>
-  <script src="../../js/theme.js"></script>
-
 </body>
 </html>

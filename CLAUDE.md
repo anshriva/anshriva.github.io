@@ -65,6 +65,7 @@ Write as if explaining the work to peers. The Staff evidence comes through natur
 - Internal username `ashrivastav6` in any path or example.
 - Internal team/product codenames where they aren't public Intuit products. **Keep**: QuickBooks, TurboTax, Credit Karma, Mailchimp, ProSeries, Lacerte. **Genericize**: Triton, VEP, SBSEG, Field Service, Acadia, IEP → "consumer teams", "upstream-product team", "internal product surfaces".
 - Acronyms without context (spell out on first use, use plain language where possible).
+- Links to external diagram boards (e.g. Excalidraw "View interactive version →") **only if the board itself is already sanitized**. Raw boards often still show internal node labels (`OINP-Tray`, internal system names). Either rename the labels in the source board first, or recreate the diagram as a sanitized local SVG/PNG under `assets/<page-id>/` and skip the interactive link.
 
 The two exceptions where internal names appear verbatim are inside **quoted award citations** on the Recognition page (`work/intuit/recognition.html`) — those are direct quotes and shouldn't be edited.
 
@@ -75,6 +76,18 @@ The two exceptions where internal names appear verbatim are inside **quoted awar
 **Awards count and tiers.** Match what's on the Recognition page. Spotlight tier ordering: Applause < Acclaim < Encore < Salute < Bravo. Sheetal Sureka is a Group Engineering Manager (GEM); Shanti Kuropati is a Director — keep titles accurate.
 
 **On rewrites and iterations:** When asked to redesign a page, start completely fresh. Don't preserve old structure, old phrasing, or old framing. The goal is to find the strongest narrative, not to edit incrementally. If a full rewrite feels like the right move, do it.
+
+**Prose voice — write like a tired engineer, not an essay generator.** The user is sensitive to "AI-sounding" copy. Avoid the tells:
+- The antithesis construction ("not X — it's Y", "a federation problem, not a feature toggle"). One per page at most; a human doesn't reach for the same balanced contrast every paragraph.
+- Rule-of-three parallel triads ("the integration point, the reliability owner, and the voice for its direction").
+- Scare-quotes around abstractions ("a notification", "problem solved").
+- Meta-commentary that narrates its own rhetoric ("I'm including this deliberately…").
+- Exhaustive verb/noun lists ("stores, indexes, de-duplicates, expires, and serves").
+Make sentences uneven — vary length, let some claims land flat without a flourish. Plain words over polished ones.
+
+**Don't re-inflate claims to what the work wasn't.** Across edits it's easy to drift back toward grander framing. Match the page to what the user actually did. Specific load-bearing case: `work/intuit/notification-tray.html` is framed around **platform ownership and consumer onboarding**, with the Cassandra→managed-store migration stated honestly as an *unfunded proposal* ("risk understood, fix scoped, waiting on investment"). Do not reframe it as executed work, and do not re-add deep incident-forensics narration — the production support there was shallow (traces/metrics dashboards), not deep root-cause ownership.
+
+**Watch for cross-section duplication.** On topic pages the same idea easily lands in three sections (e.g. an ownership statement in the intro and again in Impact; a shipped capability in both "what I shipped" and "key decisions"). Let each idea have one primary home: *what* in the shipped/architecture section, *why/trade-off* in decisions, genuine *outcomes* in impact. Intentional foreshadow→payoff (a constraint named early, paid off later) is fine; verbatim restatement is not.
 
 ## Resume specifics (`resume.html`)
 
