@@ -37,6 +37,8 @@ If you add a new page, follow one of these two patterns exactly — don't hand-a
 
 **Cross-page links** inside the same directory (e.g. RFM Revamp page linking to Tax Season page) use `<a href="other-page.html" data-basepath="true">`. The trailing JS on each topic page rewrites these via the `BASE_PATH` mechanism — same pattern as the index/resume root pages.
 
+**Diagrams.** Topic-page diagrams are hand-authored SVGs under `assets/<page-id>/<name>.svg`, embedded as `<img>` inside a `<figure>` with a thorough `alt` text describing every node and edge (so the page reads without the image) and a short `<figcaption>` underneath reinforcing the one idea the diagram is making. Visual style matches across pages: white background (`#ffffff`), `#334155` stroke, DM Sans font, rounded corners (`rx="16"` for primary nodes, `rx="8"` for secondary), explicit `viewBox`. **Use generic node labels** — no vendor names, no internal hostnames, no team channels — the same sanitization that applies to prose. References: `work/intuit/notification-tray.html` (architecture.svg) and `work/intuit/rcs-launch.html` (inbound-flow.svg). The explicit white background means the SVG renders the same in both light and dark site themes without needing CSS-var theming.
+
 ## Content conventions (load-bearing for the Intuit section)
 
 The Intuit pages are the active pitch artifact—the evidence for a Staff Engineer role. Several conventions emerged from iterative work and should be maintained.
@@ -67,6 +69,8 @@ Write as if explaining the work to peers. The Staff evidence comes through natur
 - Acronyms without context (spell out on first use, use plain language where possible).
 - Links to external diagram boards (e.g. Excalidraw "View interactive version →") **only if the board itself is already sanitized**. Raw boards often still show internal node labels (`OINP-Tray`, internal system names). Either rename the labels in the source board first, or recreate the diagram as a sanitized local SVG/PNG under `assets/<page-id>/` and skip the interactive link.
 
+**Sanitize nav titles too.** `data/navigation.json` is a separate surface and easy to forget. Internal acronyms (e.g. "RFM Revamp") survive multiple page-body edits because nav stays out of view. When you rewrite a topic page, re-read its sidebar entry and check for internal-only acronyms or product codenames the same way you check the prose. The current convention is to match the nav title to the page's H1 verbatim where it fits the sidebar width.
+
 The two exceptions where internal names appear verbatim are inside **quoted award citations** on the Recognition page (`work/intuit/recognition.html`) — those are direct quotes and shouldn't be edited.
 
 **Title bar honesty.** Your title is "Senior Software Engineer · Platform & Reliability" (matching Workday). The Staff pitch happens through evidence (decision ownership, patterns established, organizational impact), never through inflated titles.
@@ -85,7 +89,10 @@ The two exceptions where internal names appear verbatim are inside **quoted awar
 - Exhaustive verb/noun lists ("stores, indexes, de-duplicates, expires, and serves").
 Make sentences uneven — vary length, let some claims land flat without a flourish. Plain words over polished ones.
 
-**Don't re-inflate claims to what the work wasn't.** Across edits it's easy to drift back toward grander framing. Match the page to what the user actually did. Specific load-bearing case: `work/intuit/notification-tray.html` is framed around **platform ownership and consumer onboarding**, with the Cassandra→managed-store migration stated honestly as an *unfunded proposal* ("risk understood, fix scoped, waiting on investment"). Do not reframe it as executed work, and do not re-add deep incident-forensics narration — the production support there was shallow (traces/metrics dashboards), not deep root-cause ownership.
+**Don't re-inflate claims to what the work wasn't.** Across edits it's easy to drift back toward grander framing. Match the page to what the user actually did. Specific load-bearing cases:
+
+- `work/intuit/notification-tray.html` is framed around **platform ownership and consumer onboarding**, with the Cassandra→managed-store migration stated honestly as an *unfunded proposal* ("risk understood, fix scoped, waiting on investment"). Do not reframe it as executed work, and do not re-add deep incident-forensics narration — the production support there was shallow (traces/metrics dashboards), not deep root-cause ownership.
+- `work/intuit/rcs-launch.html` is framed around the **two-way messaging capability the platform now offers**, with RCS as the *first bearer it carries* — not "shipped a new bearer end to end." The pre-existing inbound service did consent capture + firehose-to-event-bus only; the work was redesigning inbound on Pulsar so the broker handles per-consumer routing, plus standing up the RCS service alongside SMS at the same reliability baseline. The reliability story is **honest by case**: union of SMS+RCS for transactional/OTP traffic, RCS-alone for interactivity (marketing, conversation). SMS stays the floor at ~70% RCS penetration. Do not flatten this to "RCS is more reliable than SMS," and do not reframe the page as bearer-centric.
 
 **Watch for cross-section duplication.** On topic pages the same idea easily lands in three sections (e.g. an ownership statement in the intro and again in Impact; a shipped capability in both "what I shipped" and "key decisions"). Let each idea have one primary home: *what* in the shipped/architecture section, *why/trade-off* in decisions, genuine *outcomes* in impact. Intentional foreshadow→payoff (a constraint named early, paid off later) is fine; verbatim restatement is not.
 
