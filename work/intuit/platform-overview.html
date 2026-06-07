@@ -26,7 +26,6 @@
         <div class="tag-list">
           <span class="tag">20–32M emails/day</span><span class="tag">2–4M SMS/day</span>
           <span class="tag">2,200+ tray TPS (peak)</span>
-          <span class="tag">100% availability TY24 + TY25</span>
         </div>
       </header>
 
@@ -45,7 +44,7 @@
           <li><strong>Notification Tray</strong> — the in-product inbox across Intuit surfaces. Reliability forensics, the proposal to migrate off Cassandra+Solr, in-app incident leadership.</li>
         </ul>
         <p>
-          Beyond the four domains, I own the platform's <strong>tax-peak reliability program</strong> (game-days, HPA scaling reviews, backup paths) and the <strong>cross-org integration surface</strong> — single escalation point for partner teams across 10+ products who can't tell whether a missing notification is upstream, OINP, or vendor.
+          Beyond the four domains, I act as a <strong>cross-org integration surface</strong> — partner teams across 10+ products who can't tell whether a missing notification is upstream, OINP, or vendor land with me first to disambiguate. Operationally I prepare the services I own for tax peak — load testing, pre-scaling, runbooks — and stay on through the night shifts the season requires; both TY24 and TY25 closed with my services holding zero 5xx through the window.
         </p>
       </section>
 
@@ -53,8 +52,8 @@
         <h2>Trajectory</h2>
         <ul>
           <li><strong>2024.</strong> Shipped RFM search on the legacy stack (Sep 2024) — DynamoDB → Kinesis → IPS Search ingestion, sort-field policy I set against product's "sort by everything" ask, gateway routing for the GenAI integration. Solo build, prod-stable, still serving.</li>
-          <li><strong>2025.</strong> Drove TY24 tax-peak reliability (Bravo from Shanti Kuropati: "OINP resilient, stable and serve with high availability"). Led RFM Voice (Nov 2025, Bravo) and SMS (Dec 2025, Bravo) launches on the new stack. Won the Lightning Award at GED 2025 for the fastest 48-hr POC — a LangGraph-based AI-assisted notification authoring agent, now in prod as <code>ccx-oinp-guide-agent</code>.</li>
-          <li><strong>2026.</strong> Drove TY25 tax-peak reliability — 100% availability, "the smoothest OINP has seen in two years" per Sheetal Sureka's Salute-tier citation. Owned the RCS channel end-to-end — Twilio integration, schema, two-way inbound, cross-swim-lane Pulsar routing, consent, canonical onboarding docs. Currently running three concurrent initiatives: the GED 2026 search rollout, the cross-swim-lane Pulsar routing unblock for two consumer teams, and the Preview-API-powered home-page redesign (3,550 prod notifications rendered as evidence).</li>
+          <li><strong>2025.</strong> Contributed to TY24 tax-peak reliability — prep work and through-the-night on-call coverage; recognised alongside the rest of the team with a Bravo from Shanti Kuropati. Led RFM Voice (Nov 2025, Bravo) and SMS (Dec 2025, Bravo) launches on the new stack. Won the Lightning Award at GED 2025 for the fastest 48-hr POC — a LangGraph-based AI-assisted notification authoring agent, now in prod as <code>ccx-oinp-guide-agent</code>.</li>
+          <li><strong>2026.</strong> Carried my services through TY25 peak with zero 5xx — load tests, pre-scaling, runbooks, and the night shifts that come with the season; recognised alongside the rest of the team with a Salute from Sheetal Sureka. Owned the RCS channel end-to-end — Twilio integration, schema, two-way inbound, cross-swim-lane Pulsar routing, consent, canonical onboarding docs. Currently running three concurrent initiatives: the GED 2026 search rollout, the cross-swim-lane Pulsar routing unblock for two consumer teams, and the Preview-API-powered home-page redesign (3,550 prod notifications rendered as evidence).</li>
         </ul>
       </section>
 
@@ -105,7 +104,7 @@ SendGrid · Twilio (multi-subaccount) · Braze · push providers · Cassandra+So
       <section class="content-section" id="impact">
         <h2>Quantitative impact</h2>
         <ul>
-          <li><strong>100% availability</strong> through TY24 and TY25 tax peaks. Zero customer-visible incidents during Intuit's highest-stakes annual window.</li>
+          <li><strong>Zero 5xx on the services I own</strong> through both TY24 and TY25 tax peaks — the result of pre-peak load testing, pre-scaling, and runbook prep on those services specifically.</li>
           <li><strong>2,905,540 production reads parity-validated</strong> in a 7-day audit; 99.987% match rate; every failing class root-caused.</li>
           <li><strong>3,550 production notifications</strong> rendered through the new Preview API as the evidence base for the home-page redesign initiative.</li>
           <li><strong>278 multi-channel notifications</strong> identified, planned, and migrated across the RFM Revamp Phase 3.</li>

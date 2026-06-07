@@ -97,9 +97,15 @@ message templates     ┘         (every write)                (join 2 tables,
           The index schema deliberately splits fields by how they're queried. Fields you filter or facet on exactly — <strong>status</strong>, <strong>workspace name</strong> — are mapped as <em>keywords</em>, so they match precisely and aggregate cleanly. Fields you actually search into — subject lines, body copy, author — are mapped for <strong>full-text</strong> analysis. Getting this split right up front is most of what makes the results feel correct: exact things stay exact, fuzzy things stay fuzzy. Once the schema was in place, the existing ~10,000 records were <strong>backfilled</strong> so search was useful from day one rather than only for notifications edited after launch.
         </p>
 
-        <h3>Preview thumbnails</h3>
+        <h3>Preview thumbnails — turning the catalog into something authors can see</h3>
         <p>
-          On top of search we added a <strong>preview / thumbnail</strong> for each notification. The CDC consumer does a little extra massaging of the record before indexing so a result can render as a visual preview, not just a row of text. That same preview data later became the backbone of the visual home-page redesign — see <a href="oinp-accelerate.html" data-basepath="true">Home-page redesign</a>.
+          On top of search we added a <strong>preview / thumbnail</strong> for each notification. The CDC consumer does a little extra massaging of the record before indexing so a result can render as a visual preview, not just a row of text. That single change is what lets the home page stop feeling like a database browser.
+        </p>
+        <p>
+          The platform's authoring home page had been a dense list — names, statuses, modification dates. To know <em>what a notification actually looks like</em>, an author had to click in, preview, and click back. Across ~10,000 notifications and hundreds of workspaces that's a lot of clicks. Once a Preview API existed on the new authoring stack, I ran it across <strong>all 3,550 active notifications in the prod-equivalent environment</strong>, captured the rendered output, and proposed the obvious next step: stop showing rows, show the notification.
+        </p>
+        <p>
+          The interesting question wasn't whether to do it — the screenshots made that decision easy. It was <em>how</em>. The straightforward implementation (render on demand, three API calls per visible card) would have made a dense home page feel slow. Pre-building previews on the change stream and serving them out of the search index — the same pipeline that already existed for text search — keeps the home page instant and reuses infrastructure we operate. Same shape as the search pipeline above: capture the change, assemble the document, index it; the thumbnail is just another field on the same record.
         </p>
       </section>
 
