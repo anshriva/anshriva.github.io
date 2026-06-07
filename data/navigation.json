@@ -146,24 +146,6 @@
       ]
     },
     {
-      "title": "Open source",
-      "category": "oss",
-      "items": [
-        {
-          "id": "oss-rate-limiter",
-          "title": "Rate limiter",
-          "path": "/work/oss/rate-limiter.html",
-          "status": "draft"
-        },
-        {
-          "id": "oss-redis-chat",
-          "title": "Redis + WebSockets chat",
-          "path": "/work/oss/redis-websockets-chat.html",
-          "status": "draft"
-        }
-      ]
-    },
-    {
       "title": "Better Dev with Anubhav · YouTube",
       "category": "youtube",
       "items": [
