@@ -109,3 +109,7 @@ Self-contained HTML — its own inline `<style>` block (not the portfolio dark t
 ## Deploy
 
 Push to `main` on `anshriva/anshriva.github.io` → GitHub Pages serves from the repository root. No CI, no build.
+
+## Commits
+
+Never run `git commit` on this repo without the user explicitly asking in the current turn. Confirming "commit this" once does not authorize subsequent commits later in the same session — each commit needs its own ask. After completing edits, stop at the staged-changes boundary (or describe what would be committed) and wait. Same posture for `git push`, `git rebase`, `git reset`, branch deletes, and PR creation.
