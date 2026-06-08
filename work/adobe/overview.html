@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../js/base-path.js"></script>
+  <script src="../../js/theme.js"></script>
+  <script>
+    document.write('<link rel="stylesheet" href="' + window.BASE_PATH + 'css/styles.css" />');
+  </script>
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Adobe — Centralizing Code Signing — Anubhav Shrivastava</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Fraunces:wght@500;600&display=swap" rel="stylesheet" />
+</head>
+<body class="layout-docs" data-page-id="adobe-overview">
+  <aside id="site-sidebar" aria-label="Topics"></aside>
+<main class="topic-main">
+    <article class="article topic-page">
+      <header class="page-header">
+        <p class="page-status">Status: <strong>ready</strong></p>
+        <h1>Adobe — taking the signing keys away from everyone</h1>
+        <p class="subtitle">Jun 2014 – Aug 2016 · Engineering Security · SDE-1 · first job out of college</p>
+      </header>
+
+      <section class="content-section" id="problem">
+        <h2>What the team owned</h2>
+        <p>
+          I joined Adobe straight out of college in June 2014, on the Engineering Security team. The team had several charters; the slice I worked on was code signing — the signatures on every build that ships outside Adobe. When you install a Mac app, a Windows installer, a signed JAR or ZIP and your machine tells you the publisher is <strong>Adobe Systems, verified</strong>, that trust comes from a build being signed with Adobe's private signing key. My team owned the machinery that put those signatures on.
+        </p>
+        <p>
+          The problem we were there to fix was where that private key lived. Historically, individual product teams each held a copy of the signing key so they could sign their own builds. That's convenient and it's also the thing a security team loses sleep over: the most sensitive secret the company has — the one that lets you publish software <em>as Adobe</em> — copied onto who-knows-how-many build machines, with no single place to audit or revoke it. Our charter was to pull all of those keys back, into one centralized store that only production systems could reach, and give teams a service to sign through instead of a key to hold.
+        </p>
+      </section>
+
+      <section class="content-section" id="architecture">
+        <h2>The signing service</h2>
+        <p>
+          Taking the keys away only works if signing-as-a-service is easy enough that no team misses holding the key. So the team built a portal and a pipeline around it. A user submits a build and the list of files inside it that need signing. The request goes through an <strong>approval step</strong> — someone has to sign off before a signature gets minted, which is the control you trade the convenience of local keys for. Once approved, the pipeline runs: it signs the build with the centrally-held key and delivers the signed artifacts back to a given path. The builds themselves moved through an <strong>FTP location</strong> — the portal fetched the submitted files from FTP, signed them, and wrote the signed output back out.
+        </p>
+        <p>
+          The point of the whole design is the separation it enforces: the key never leaves production, the humans never touch it, and every signature has an approval and a record behind it. Teams get their builds signed without ever holding the thing that makes the signature trustworthy.
+        </p>
+      </section>
+
+      <section class="content-section" id="decisions">
+        <h2>What I actually built</h2>
+        <p>
+          I was an SDE-1 here, and I'll be straight about the altitude: I wasn't the architect or the lead. The shape of the system came from the leads; my job was enhancement and coding against that design. Within that, the pieces I owned were real and they're the kind of work that keeps an infrastructure service honest:
+        </p>
+        <ul>
+          <li>
+            <strong>ZXP signing.</strong> I implemented a new signing type for <code>.zxp</code> packages — the format Adobe extensions ship in — so that class of artifact could go through the same centralized service as everything else.
+          </li>
+          <li>
+            <strong>An integration-test framework.</strong> Signing is the kind of thing where a silent regression is expensive — a broken signature isn't found until a customer's machine rejects the install. I built a framework to exercise the signing scenarios end to end so we could catch those before they shipped.
+          </li>
+          <li>
+            <strong>Retry handling.</strong> Signing jobs fail for boring reasons — a flaky download, a transient pipeline error — and a failed sign shouldn't mean a human re-submits from scratch. I added retry scripts so the pipeline recovered from those on its own.
+          </li>
+          <li>
+            <strong>A shared FTP library.</strong> The code to pull content from FTP was scattered, so I pulled it into one library. That gave us a single place to handle the cross-cutting concerns that bite you in production — read timeouts chief among them — instead of re-solving them per call site.
+          </li>
+          <li>
+            <strong>REST API SDK.</strong> I enhanced the SDK that client teams used to talk to the service, so consuming signing-as-a-service was a clean integration rather than a hand-rolled HTTP call.
+          </li>
+        </ul>
+      </section>
+
+      <section class="content-section" id="impact">
+        <h2>The honest scope</h2>
+        <p>
+          This was my first job, and a lot of it was maintenance: fixing bugs, keeping the signing pipeline running, and working closely with the customer teams who depended on it to get their builds out the door. I won't dress it up as more than that — there wasn't a big innovation bucket here, and the architecture wasn't mine. What it was, was a good first lesson in what infrastructure work actually is: a service that other teams build on top of is judged on whether it's boring and reliable, and the unglamorous pieces — the retries, the timeouts, the test framework, the one place the FTP code lives — are most of what makes it that. The signing keys came out of everyone's hands and into one auditable place, and the teams that used to hold them barely noticed, which for a security migration is the whole point.
+        </p>
+      </section>
+    </article>
+</main>
+    <script id="nav-data-script"></script>
+  <script id="sidebar-script"></script>
+  <script>
+    const navDataScript = document.getElementById('nav-data-script');
+    navDataScript.src = window.BASE_PATH + 'js/nav-data.js';
+    const sidebarScript = document.getElementById('sidebar-script');
+    sidebarScript.src = window.BASE_PATH + 'js/sidebar.js';
+
+    document.querySelectorAll('[data-basepath="true"]').forEach(link => {
+      const href = link.getAttribute('href');
+      if (!href.startsWith('http')) {
+        link.setAttribute('href', window.BASE_PATH + 'work/adobe/' + href);
+      }
+    });
+  </script>
+</body>
+</html>

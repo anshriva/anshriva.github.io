@@ -144,10 +144,10 @@
       "category": "adobe",
       "items": [
         {
-          "id": "adobe-signing",
-          "title": "Code-signing platform",
-          "path": "/work/adobe/code-signing.html",
-          "status": "draft"
+          "id": "adobe-overview",
+          "title": "Centralizing code signing",
+          "path": "/work/adobe/overview.html",
+          "status": "ready"
         }
       ]
     },
