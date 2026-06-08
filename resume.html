@@ -358,21 +358,16 @@
             <span class="company">Microsoft</span>
             <span class="job-meta">April 2019 – Feb 2024 | Bengaluru</span>
         </div>
-        <div class="job-description">Founding engineer → tech lead on Graph Connectors — the platform crawling enterprise data sources (file shares, Azure DevOps, SQL, SharePoint, ServiceNow) and indexing into Microsoft Search and Microsoft 365 Copilot.</div>
-
-        <div class="subsection-title">Senior Software Engineer (L63) · Sep 2022 – Feb 2024</div>
+        <div class="job-title">Founding Engineer → Lead, Connectors Domain (~4 engineers) · L61 → L63, Senior SWE</div>
+        <div class="job-description">Two promotions, one team, five years, ideation to GA. Graph Connectors Enterprise — the platform that crawls enterprise data sources (databases, file shares, wikis, internal websites, dev tools) and indexes them into Microsoft Search and Microsoft 365 Copilot.</div>
         <ul class="bullet-list">
-            <li><strong>60× latency improvement</strong> — reduced data-source move-next from 30s to 0.5s for Fortune 500 customers (Equinor, Napier City Council, FTB) via Windows Performance Recorder profiling and memory analysis. Unblocked customers from impossible crawl timelines.</li>
-            <li><strong>Platform-wide Crawl Success Rate ownership</strong> — drove all connectors to 99%+ CSR; automated tracking + dashboards; led root-cause investigations across 4 connectors.</li>
-            <li><strong>ServiceNow ACL model revamp</strong> and <strong>File Share Exclusion Rule revamp</strong> — co-designed API architecture, crawl flow, caching layers, migration + rollback jobs. Validated by multiple Fortune 500 enterprises pre-GA; zero regressions on ship.</li>
+            <li><strong>Made the architecture bet the portfolio rests on</strong> — kept the data and execution contracts identical across cloud and on-prem so one connector codebase runs in either place, with only the orchestration layer differing. The payoff was measured in code that didn't get written: Microsoft SQL Server on-prem went live with <strong>zero code change</strong>, and Oracle shipped with query-layer changes only — every crawl, logging, and observability layer reused wholesale.</li>
+            <li><strong>Owned the connector portfolio end to end</strong> — ~10 GA connectors across 4 database engines plus file shares, the Azure DevOps connectors, Enterprise Web (robots.txt handling and web-graph cycle detection), Confluence, Azure Data Lake, and MediaWiki — spanning two traversal shapes: linear DB cursors with resumable checkpoints and graph traversal. First line of defense for the whole set: enterprise-customer calls, escalations, and debugging blind — no customer data, no PII in logs — at 99%+ crawl success.</li>
+            <li><strong>Added access control and on-prem operability</strong> — flattened each source's native permissions into Microsoft's four-list identity model (allowed/denied users and groups) with identity sync running alongside content sync, shipped on the Azure DevOps Work Item and Wiki connectors. Made un-redeployable on-prem agents operable: heartbeat/liveness, version-deprecation surfacing in the admin portal, and opt-in auto-upgrade; certified crawls of <strong>50M items</strong> with the disk benchmarks customers plan against.</li>
+            <li><strong>Where it started</strong> — the first thing I shipped was platform plumbing, not a crawler: integrated Microsoft's internal experimentation and configuration system as a reusable library that became the baseline for ring-based staged rollout, internal employees out to government cloud — done through a Java/Maven → C#/.NET stack switch. Then built the first connectors (Azure SQL, then File Share on the <strong>Akka.NET</strong> actor model) and was an early developer on the Graph Connector Agent that made on-prem crawling possible.</li>
         </ul>
 
-        <div class="subsection-title">Software Engineer 2 (L61–L62) · April 2019 – Sep 2022</div>
-        <ul class="bullet-list">
-            <li>Founding engineer; foundational crawler architecture decisions with lasting product impact; engineered pipeline to 25+ items/sec throughput (core product benchmark); primary enterprise-customer contact; mentored engineers on team and through Microsoft's College Connect program.</li>
-        </ul>
-
-        <div class="tech-line"><span class="tech-label">Tech:</span> C#, .NET, Akka, Azure, Redis, SQL</div>
+        <div class="tech-line"><span class="tech-label">Tech:</span> C#, .NET, Akka.NET (actor model), Azure, Redis, SQL</div>
 
         <div class="job-header">
             <span class="company">Yatra Online</span>
