@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../js/base-path.js"></script>
+  <script src="../../js/theme.js"></script>
+  <script>
+    document.write('<link rel="stylesheet" href="' + window.BASE_PATH + 'css/styles.css" />');
+  </script>
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Booking-health observability & alerting — Anubhav Shrivastava</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Fraunces:wght@500;600&display=swap" rel="stylesheet" />
+</head>
+<body class="layout-docs" data-page-id="yatra-observability">
+  <aside id="site-sidebar" aria-label="Topics"></aside>
+<main class="topic-main">
+    <article class="article topic-page">
+      <header class="page-header">
+        <p class="page-status">Status: <strong>ready</strong></p>
+        <h1>Booking-health alerting, before Yatra had alerting</h1>
+        <p class="subtitle">Topic · Yatra · Bus &amp; Trains team · first project, and the gap nobody owned</p>
+      </header>
+
+      <section class="content-section" id="problem">
+        <h2>The dashboard, and what it couldn't do</h2>
+        <p>
+          One of the first things I was given after the onboarding bugs was a dashboard: bookings per hour across bus and trains, plus a handful of related metrics, for the product managers and engineers who needed to know the business was flowing. It read from the service that already held the booking data, pulled the numbers, and drew them. The backend was Java; the frontend was ExtJS — an old framework even then, but what the team used, so that's what I learned and built in.
+        </p>
+        <p>
+          Once it was running I noticed the thing dashboards can't fix about themselves: someone has to look. Bookings are a heartbeat — if they stop, you want to know in minutes, not whenever a person next happens to open a browser tab. And nobody opens the tab every hour. A drop could sit unseen for half a day, which on a booking platform is real lost revenue and usually a real bug upstream. The dashboard answered "how are we doing?" only if you asked. The question that mattered was the one nobody was awake to ask at 3am.
+        </p>
+      </section>
+
+      <section class="content-section" id="context">
+        <h2>No tooling to lean on</h2>
+        <p>
+          Today the answer is "wire it to your alerting stack." Yatra didn't have one — no Splunk, no Graylog, none of the log-and-alert infrastructure that would make this a five-minute config change. There was nothing to point at the booking stream and say "page me when this dips." If booking-health monitoring was going to exist, it had to be built, not configured. So I built it into the same observability service that backed the dashboard — the data was already there; what was missing was something that watched it on its own.
+        </p>
+      </section>
+
+      <section class="content-section" id="architecture">
+        <h2>What I built</h2>
+        <p>
+          Two scheduled jobs, both running inside the observability service, both turning data that already existed into something that reached a human without a human asking.
+        </p>
+        <ul>
+          <li>
+            <strong>Hourly booking-health check.</strong> A scheduler runs every hour, looks at the last hour's bookings, and if there were none — or fewer than a threshold — sends an email describing the breaking scenario: which segment, how far below normal, when. That's the alert that turns a silent dip into a notification while it's still an hour old instead of a day old. Email was the channel because email was the channel that existed; the point wasn't the transport, it was that the system noticed on its own.
+          </li>
+          <li>
+            <strong>Daily morning digest.</strong> A second scheduled job sends a morning email with the previous 24 hours: bookings completed, number of searches, and a few more metrics. Not an alarm — a standing pulse, so the team starts the day knowing the shape of the night without logging into anything.
+          </li>
+        </ul>
+      </section>
+
+      <section class="content-section" id="impact">
+        <h2>Why a "small" feature is the right one to start with</h2>
+        <p>
+          On its face this is a scheduler and two emails. What it actually did was give the team a sense the platform didn't have before: the booking pipeline could tell you when it was sick instead of waiting to be checked on. Building it is also where the habit that runs through the rest of my time at Yatra started — I wasn't asked to add the alerting or the digest; I noticed the dashboard left a gap that no one owned, and filled it. The hourly alert and the morning pulse were the version of observability you can build with no observability platform underneath you, which was the only version available at the time.
+        </p>
+      </section>
+    </article>
+</main>
+    <script id="nav-data-script"></script>
+  <script id="sidebar-script"></script>
+  <script>
+    const navDataScript = document.getElementById('nav-data-script');
+    navDataScript.src = window.BASE_PATH + 'js/nav-data.js';
+    const sidebarScript = document.getElementById('sidebar-script');
+    sidebarScript.src = window.BASE_PATH + 'js/sidebar.js';
+
+    document.querySelectorAll('[data-basepath="true"]').forEach(link => {
+      const href = link.getAttribute('href');
+      if (!href.startsWith('http')) {
+        link.setAttribute('href', window.BASE_PATH + 'work/yatra/' + href);
+      }
+    });
+  </script>
+</body>
+</html>

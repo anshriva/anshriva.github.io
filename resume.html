@@ -373,11 +373,13 @@
             <span class="company">Yatra Online</span>
             <span class="job-meta">Sep 2016 – Mar 2019 | Gurgaon</span>
         </div>
-        <div class="job-title">Senior Software Engineer</div>
+        <div class="job-title">Software Engineer → Senior Software Engineer (promoted 2018) · Bus &amp; Trains, then Booking Data Platform</div>
         <ul class="bullet-list">
-            <li><strong>Led the bus-booking platform migration</strong> and brought a new supplier online through a supplier-integration framework that cut onboarding from months to weeks. Also built train booking on the IRCTC APIs and migrated the booking-management system.</li>
-            <li><strong>15× latency improvement</strong> on the GET Booking API (3s → 0.2s) for the core financial-verification system serving millions of bookings; <strong>3× cost reduction</strong> on third-party API calls via Redis caching.</li>
+            <li><strong>Replaced the third-party SOAP tool</strong> that fanned bus search out to suppliers with an in-house Java aggregation service — each vendor an adapter behind one common interface, so a new vendor onboards by implementing the interface and registering, no XML/XSD transformation tangle. Hystrix circuit breakers drop a failing vendor out of the path so search stays fast. It's still the path Yatra makes vendor calls through.</li>
+            <li><strong>Senior SE on a live database migration</strong> — owned the bus and train slices of moving the booking store off Microsoft SQL Server (third-party-generated, thousand-line stored procedures) onto in-house PostgreSQL, against an architect's design. A change pipeline mirrored every write into the new store within ~1–2s while bookings kept arriving; a denormalized MongoDB read model (key = booking ID, value = full booking JSON) took record reads from seconds to milliseconds. Earlier: rebuilt the legacy B2B trains bookings page end to end (gutted 2–3k-line methods, self-taught JSP/Tiles frontend) and built booking-health alerting before the org had any log tooling.</li>
         </ul>
+
+        <div class="tech-line"><span class="tech-label">Tech:</span> Java · Spring · Hystrix · PostgreSQL, MongoDB, MS SQL Server · Kafka · ExtJS, JSP/Tiles</div>
 
         <div class="job-header">
             <span class="company">Adobe Systems</span>

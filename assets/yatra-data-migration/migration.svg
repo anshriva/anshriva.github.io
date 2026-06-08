@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 560" font-family="'DM Sans', system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#334155"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="980" height="560" fill="#ffffff"/>
+
+  <!-- Old store -->
+  <rect x="60" y="180" width="300" height="150" rx="16" fill="#f8fafc" stroke="#334155" stroke-width="2"/>
+  <text x="210" y="222" text-anchor="middle" font-size="18" font-weight="600" fill="#0f172a">Old store</text>
+  <text x="210" y="246" text-anchor="middle" font-size="13" fill="#64748b">Microsoft SQL Server</text>
+  <text x="210" y="270" text-anchor="middle" font-size="12" fill="#64748b">third-party tool generates data</text>
+  <text x="210" y="290" text-anchor="middle" font-size="12" fill="#64748b">stored procs thousands of lines</text>
+  <text x="210" y="313" text-anchor="middle" font-size="12" font-weight="600" fill="#b45309">still taking live writes</text>
+
+  <!-- change pipeline arrow -->
+  <line x1="360" y1="255" x2="610" y2="255" stroke="#334155" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <text x="485" y="238" text-anchor="middle" font-size="13" font-weight="600" fill="#0f172a">change pipeline</text>
+  <text x="485" y="282" text-anchor="middle" font-size="12" fill="#64748b">every write replayed · ~1–2s</text>
+
+  <!-- PostgreSQL -->
+  <rect x="620" y="150" width="300" height="92" rx="16" fill="#eff6ff" stroke="#334155" stroke-width="2.5"/>
+  <text x="770" y="186" text-anchor="middle" font-size="17" font-weight="600" fill="#0f172a">PostgreSQL</text>
+  <text x="770" y="208" text-anchor="middle" font-size="12" fill="#475569">normalized · in-house tooling</text>
+  <text x="770" y="226" text-anchor="middle" font-size="12" fill="#475569">no SQL Server subscription</text>
+
+  <!-- MongoDB -->
+  <rect x="620" y="268" width="300" height="92" rx="16" fill="#eff6ff" stroke="#334155" stroke-width="2.5"/>
+  <text x="770" y="300" text-anchor="middle" font-size="17" font-weight="600" fill="#0f172a">MongoDB read model</text>
+  <text x="770" y="322" text-anchor="middle" font-size="12" fill="#475569">denormalized · key = booking ID</text>
+  <text x="770" y="340" text-anchor="middle" font-size="12" fill="#475569">value = full booking JSON</text>
+
+  <!-- Application reads -->
+  <rect x="620" y="430" width="300" height="74" rx="16" fill="#f8fafc" stroke="#334155" stroke-width="2"/>
+  <text x="770" y="463" text-anchor="middle" font-size="16" font-weight="600" fill="#0f172a">Application reads</text>
+  <text x="770" y="485" text-anchor="middle" font-size="12" fill="#15803d">few seconds → few milliseconds</text>
+
+  <!-- reads from Mongo -->
+  <line x1="770" y1="430" x2="770" y2="362" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <!-- reads from Postgres (curved-ish via elbow) -->
+  <path d="M 700 430 L 700 246" fill="none" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <text x="585" y="467" text-anchor="end" font-size="12" fill="#475569">reads move to the new stores</text>
+  <text x="585" y="485" text-anchor="end" font-size="12" fill="#475569">before the old one is retired</text>
+</svg>

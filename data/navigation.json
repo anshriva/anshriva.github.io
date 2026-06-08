@@ -108,22 +108,34 @@
       "category": "yatra",
       "items": [
         {
-          "id": "yatra-booking",
-          "title": "Booking API latency",
-          "path": "/work/yatra/booking-api-latency.html",
-          "status": "draft"
+          "id": "yatra-overview",
+          "title": "Bus, trains & the booking platform",
+          "path": "/work/yatra/overview.html",
+          "status": "ready"
         },
         {
-          "id": "yatra-redis",
-          "title": "Redis cost optimization",
-          "path": "/work/yatra/redis-cost-optimization.html",
-          "status": "draft"
+          "id": "yatra-vendor-aggregation",
+          "title": "Replacing the SOAP tool — vendor aggregation",
+          "path": "/work/yatra/vendor-aggregation.html",
+          "status": "ready"
         },
         {
-          "id": "yatra-supplier",
-          "title": "Supplier framework",
-          "path": "/work/yatra/supplier-framework.html",
-          "status": "draft"
+          "id": "yatra-observability",
+          "title": "Booking-health alerting",
+          "path": "/work/yatra/booking-observability.html",
+          "status": "ready"
+        },
+        {
+          "id": "yatra-b2b-bookings",
+          "title": "The B2B trains rebuild",
+          "path": "/work/yatra/b2b-bookings.html",
+          "status": "ready"
+        },
+        {
+          "id": "yatra-data-migration",
+          "title": "Booking data-platform migration",
+          "path": "/work/yatra/data-migration.html",
+          "status": "ready"
         }
       ]
     },
