@@ -72,39 +72,33 @@
       "category": "microsoft",
       "items": [
         {
-          "id": "ms-overview",
-          "title": "Graph Connectors overview",
+          "id": "microsoft-overview",
+          "title": "Graph Connectors — scope, role & arc",
           "path": "/work/microsoft/graph-connectors-overview.html",
           "status": "ready"
         },
         {
-          "id": "ms-csr",
-          "title": "Crawl Success Rate",
-          "path": "/work/microsoft/crawl-success-rate.html",
+          "id": "microsoft-parity",
+          "title": "One connector, two homes: the cloud/on-prem parity bet",
+          "path": "/work/microsoft/cloud-onprem-parity.html",
           "status": "ready"
         },
         {
-          "id": "ms-fileshare",
-          "title": "File Share exclusions",
-          "path": "/work/microsoft/file-share-exclusion.html",
+          "id": "microsoft-connectors",
+          "title": "The connector portfolio — the breadth, source by source",
+          "path": "/work/microsoft/connector-portfolio.html",
           "status": "ready"
         },
         {
-          "id": "ms-servicenow",
-          "title": "ServiceNow ACL",
-          "path": "/work/microsoft/servicenow-acl.html",
+          "id": "microsoft-acl",
+          "title": "Access control — mapping every source onto one identity model",
+          "path": "/work/microsoft/access-control.html",
           "status": "ready"
         },
         {
-          "id": "ms-latency",
-          "title": "Move-next latency (60×)",
-          "path": "/work/microsoft/move-next-latency.html",
-          "status": "ready"
-        },
-        {
-          "id": "ms-admin",
-          "title": "Admin self-serve",
-          "path": "/work/microsoft/admin-self-serve.html",
+          "id": "microsoft-agent",
+          "title": "The on-prem agent platform — operability & scale",
+          "path": "/work/microsoft/agent-platform.html",
           "status": "ready"
         }
       ]

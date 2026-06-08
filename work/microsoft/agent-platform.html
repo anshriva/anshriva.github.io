@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../js/base-path.js"></script>
+  <script src="../../js/theme.js"></script>
+  <script>
+    document.write('<link rel="stylesheet" href="' + window.BASE_PATH + 'css/styles.css" />');
+  </script>
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>The on-prem agent platform — Anubhav Shrivastava</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Fraunces:wght@500;600&display=swap" rel="stylesheet" />
+</head>
+<body class="layout-docs" data-page-id="microsoft-agent">
+  <aside id="site-sidebar" aria-label="Topics"></aside>
+<main class="topic-main">
+    <article class="article topic-page">
+      <header class="page-header">
+        <p class="page-status">Status: <strong>ready</strong></p>
+        <h1>Making software you can't redeploy operable: the on-prem agent platform</h1>
+        <p class="subtitle">Topic · Microsoft · Graph Connector Agent · platform features &amp; scale</p>
+      </header>
+
+      <section class="content-section" id="problem">
+        <h2>The constraint that shaped everything</h2>
+        <p>
+          The agent runs inside the customer's network, which is the whole reason it exists — but it's also why operating it is hard. Cloud software you fix by deploying; the next request hits the fixed version and you move on. On-prem software you fix by convincing a customer to install a new build. That's slow, it's political, and sometimes it just doesn't happen for months. A bug that ships to the agent can live in the field far longer than any cloud bug ever would.
+        </p>
+        <p>
+          You can't make that constraint disappear, but you can soften it. A lot of the platform work on the agent was exactly that — features whose only job is to make a thing you can't reach across the wire still observable, still upgradeable, and still safe. These got built into the agent as the need for each one surfaced. (<a href="https://learn.microsoft.com/en-us/microsoft-365/copilot/connectors/connector-agent" target="_blank" rel="noopener">Public docs.</a>)
+        </p>
+      </section>
+
+      <section class="content-section" id="architecture">
+        <h2>The operability features</h2>
+
+        <h3>Heartbeat and liveness</h3>
+        <p>
+          The agent continually sends a heartbeat to the server. If the heartbeat stops for long enough, the server marks the agent dead and surfaces that state on the admin portal. Without this, a stalled crawler inside a customer's network is invisible — the data just quietly stops being fresh and nobody knows until someone notices stale search results. The heartbeat turns a silent failure into a visible one, which on-prem is most of the battle.
+        </p>
+
+        <h3>Version-deprecation surfacing</h3>
+        <p>
+          Admins see, in the portal, when the version they're running is deprecated or no longer supported, which prompts them to upgrade. This is the gentle-pressure mechanism for the update problem: you can't force a customer to move, but you can make the cost of staying behind legible to the person who can decide to move. The agent's <a href="https://learn.microsoft.com/en-us/microsoft-365/copilot/connectors/connector-agent-releases" target="_blank" rel="noopener">release-notes history</a> shows the long trail of deprecated versions this was managing against.
+        </p>
+
+        <h3>Auto-upgrade</h3>
+        <p>
+          The real answer to "updates are hard to push" is to stop pushing them. Admins can opt the agent into auto-upgrade: it keeps checking for the latest build and upgrades itself. Given the whole constraint at the top of this page, this is the most valuable feature on it — it converts the worst part of on-prem (you can't redeploy) into something close to cloud behavior for the customers who opt in. It also has the highest correctness bar, because an auto-upgrade that breaks is an auto-upgrade that breaks itself out of your reach.
+        </p>
+
+        <h3>Admin visibility, end to end</h3>
+        <p>
+          Heartbeat, deprecation status, and upgrade state are all the same idea pointed at the same surface: give the admin a true picture of their fleet from the portal, so the agent running somewhere you can't see still answers the questions "is it alive, is it current, and is it healthy?" On-prem, that visibility is the substitute for the access you don't have.
+        </p>
+      </section>
+
+      <section class="content-section" id="decisions">
+        <h2>Scale: certification and the numbers customers plan against</h2>
+        <p>
+          Alongside operability, the agent had to prove it scaled, because enterprise data sources are large and a customer needs to know what they're signing up for before they install anything.
+        </p>
+        <ul>
+          <li><strong>50 million items.</strong> Added and certified the capability to crawl 50M items in a single source — the scale certification for the product, and the number adopted by customers running at that size.</li>
+          <li><strong>Disk-space benchmarks.</strong> Established the planning figures customers size their machines against: roughly 40&nbsp;GB for the first 5M items, then about 9&nbsp;GB for each additional million beyond that. These are published in the agent's troubleshooting and capacity guidance so an admin can provision correctly rather than discover the limit mid-crawl.</li>
+        </ul>
+        <p>
+          Benchmarks like these are unglamorous and they're exactly what an enterprise buyer asks for first. Having concrete, documented numbers — rather than "it depends" — is part of what makes a crawler something a large company will actually deploy at scale.
+        </p>
+      </section>
+
+      <section class="content-section" id="impact">
+        <h2>Why this is platform work, not feature work</h2>
+        <p>
+          None of these ship a new connector. What they do is make the entire fleet of connectors operable in an environment that's hostile to operating anything — you can't reach in, you can't hotfix, you can't see the data, and you can't log the sensitive parts. Heartbeat, deprecation surfacing, and auto-upgrade are the difference between an on-prem product that quietly rots in the field and one that keeps itself current and observable. The scale certification and benchmarks are what let customers commit to it at real size. Both are the kind of work that doesn't show up as a marquee feature but is the reason the marquee features stay up in production.
+        </p>
+      </section>
+    </article>
+</main>
+    <script id="nav-data-script"></script>
+  <script id="sidebar-script"></script>
+  <script>
+    const navDataScript = document.getElementById('nav-data-script');
+    navDataScript.src = window.BASE_PATH + 'js/nav-data.js';
+    const sidebarScript = document.getElementById('sidebar-script');
+    sidebarScript.src = window.BASE_PATH + 'js/sidebar.js';
+
+    document.querySelectorAll('[data-basepath="true"]').forEach(link => {
+      const href = link.getAttribute('href');
+      if (!href.startsWith('http')) {
+        link.setAttribute('href', window.BASE_PATH + 'work/microsoft/' + href);
+      }
+    });
+  </script>
+</body>
+</html>

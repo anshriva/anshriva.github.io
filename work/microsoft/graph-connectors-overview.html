@@ -3,73 +3,133 @@
 <head>
   <script src="../../js/base-path.js"></script>
   <script src="../../js/theme.js"></script>
-  
   <script>
-    document.write('<link rel=\"stylesheet\" href=\"' + window.BASE_PATH + 'css/styles.css\" />');
+    document.write('<link rel="stylesheet" href="' + window.BASE_PATH + 'css/styles.css" />');
   </script>
-  <script src="../../js/theme.js"></script>
 
-<meta charset="UTF-8" />
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Microsoft Graph Connectors — Overview — Anubhav Shrivastava</title>
+  <title>Microsoft — Graph Connectors — Anubhav Shrivastava</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Fraunces:wght@500;600&display=swap" rel="stylesheet" />
 </head>
-<body class="layout-docs" data-page-id="ms-overview">
+<body class="layout-docs" data-page-id="microsoft-overview">
   <aside id="site-sidebar" aria-label="Topics"></aside>
 <main class="topic-main">
     <article class="article topic-page">
       <header class="page-header">
         <p class="page-status">Status: <strong>ready</strong></p>
-        <h1>Graph Connectors — zero to GA</h1>
-        <p class="subtitle">Founding engineer (2019) → Senior L63 tech lead (2024)</p>
+        <h1>Microsoft — Graph Connectors Enterprise</h1>
+        <p class="subtitle">Apr 2019 – 2024 · One team, five years · L61 → L63 (Senior SWE), two promotions, developer → lead</p>
       </header>
 
       <section class="content-section" id="problem">
-        <h2>Problem statement</h2>
+        <h2>What this is, and what these pages cover</h2>
         <p>
-          Enterprise customers need Microsoft Search and Copilot to index content outside M365 —
-          file shares, Azure DevOps, SQL, SharePoint, ServiceNow, and more. Connectors crawl,
-          normalize, and feed the index with high reliability at enterprise scale.
+          Graph Connectors is the part of Microsoft that crawls data out of external systems — databases, file shares, wikis, internal websites, developer tools — and indexes it so it shows up in Microsoft Search and, later, Microsoft 365 Copilot. The team I joined was building the enterprise side of that: not consumer data, but the systems large companies run inside their own walls. Public docs for most of what's below live on <a href="https://learn.microsoft.com/en-us/microsoft-365/copilot/connectors/" target="_blank" rel="noopener">learn.microsoft.com</a>, since these connectors are generally available and in production today.
+        </p>
+        <p>
+          I joined in April 2019 when this project was still at the ideation stage, and I stayed on the same team the whole five years. That's unusual, and it's the reason these pages read the way they do — I was there from the first connector through to leading the connector domain, so I watched (and made) the decisions that compounded. I came in at L61 and left at L63, a Senior SWE, two promotions over the run.
+        </p>
+        <p>
+          The chapters below each have their own page in the left nav. Taken together they're the point: the breadth of production-grade systems I built and then owned, and the single architectural bet that let that breadth happen without the team drowning in it.
+        </p>
+        <p>
+          The breadth wasn't only connectors, either. The first thing I shipped here was platform plumbing, not a crawler — and the surface area over five years looked like this:
+        </p>
+        <ul class="domain-chips">
+          <li>10 connectors, GA</li>
+          <li>Cloud + on-prem parity</li>
+          <li>4 database engines</li>
+          <li>Web crawling (robots.txt, cycles)</li>
+          <li>Identity / ACL crawl</li>
+          <li>Experimentation &amp; config platform</li>
+          <li>Ring-based rollout → gov cloud</li>
+          <li>Akka.NET actor model</li>
+          <li>Agent operability (heartbeat, auto-upgrade)</li>
+          <li>50M-item scale certification</li>
+        </ul>
+        <p>
+          And it spanned a language switch: I came in from Java and Maven and did all of this in C# on .NET. Below, the chapters; then how the role itself changed underneath the work.
         </p>
       </section>
 
-      <section class="content-section" id="context">
-        <h2>Two phases</h2>
-        <h3>2019 – 2022 — Founding</h3>
-        <p>Architecture decisions, 25+ items/sec crawl pipeline, 5 connectors to GA, primary enterprise contact.</p>
-        <h3>2022 – 2024 — Tech lead</h3>
-        <ul>
-          <li><strong>Crawl Success Rate:</strong> Owned reliability metric, reached 99%+ across most connectors via systematic failure analysis and fix prioritization</li>
-          <li><strong>Performance at scale:</strong> Reduced move-next latency 60× (30s → 0.5s) through deep profiling of memory and logging overhead</li>
-          <li><strong>Feature delivery:</strong> Led File Share exclusion rule revamp, ServiceNow ACL model redesign, connector transition from Redmond team (3+ connectors)</li>
-          <li><strong>Customer adoption:</strong> Unblocked high-value customers (Napier City Council 5M+ items, Equinor, FTB) by fixing platform blockers</li>
-          <li><strong>Admin self-serve:</strong> Co-designed FHL (Future Hack Lounge) hack that received judges' special mention — enabling admins to diagnose crawl issues independently</li>
-          <li><strong>Mentorship:</strong> Peer mentoring series on backend engineering; helped UI engineers ramp on backend contributions</li>
-        </ul>
-        <p>Use the left nav for each problem deep-dive.</p>
+      <section class="content-section" id="architecture">
+        <h2>The chapters</h2>
+
+        <h3>1. Cloud and on-prem parity — the architectural bet that paid off <span style="color: var(--text-muted); font-weight: 400;">(founding-era design decision)</span></h3>
+        <p>
+          Customers won't always hand their data to the cloud, so a lot of crawling has to run inside the customer's own network. We were early developers on the Graph Connector Agent — a Windows background process that runs on-prem, crawls, and indexes back to Microsoft. The decision that mattered: keep the data contract and the execution contract identical between cloud and on-prem, so one connector codebase runs in either place and only the orchestration layer changes. The payoff showed up later when two new connectors went live with near-zero new code. <a href="cloud-onprem-parity.html" data-basepath="true">The parity page</a> walks through the bet and the payoff.
+        </p>
+
+        <h3>2. The connector portfolio — the breadth <span style="color: var(--text-muted); font-weight: 400;">(built, then owned)</span></h3>
+        <p>
+          Azure SQL was the first I built end to end. After that came File Share, Microsoft SQL Server on-prem, Oracle, the Azure DevOps connectors, the Enterprise Web connector, and a set handed to me to own — Confluence, Azure Data Lake, MediaWiki. Some read data linearly, like a database cursor with checkpoints; others traverse a graph and have to handle robots.txt and cycles in the web. <a href="connector-portfolio.html" data-basepath="true">The portfolio page</a> covers the range and what made each one its own problem.
+        </p>
+
+        <h3>3. Access control — mapping every source onto one identity model <span style="color: var(--text-muted); font-weight: 400;">(connector ownership)</span></h3>
+        <p>
+          Indexed content is useless — and a leak risk — if the search results don't respect who's allowed to see what. The charter was to add access control to the connectors: take each source's native permission model and flatten it into the four lists Microsoft's index understands (allowed users, allowed groups, denied users, denied groups), and crawl identity as its own sync alongside content. I built the Azure DevOps Work Item and Wiki connectors against that model. <a href="access-control.html" data-basepath="true">The access-control page</a> has the detail.
+        </p>
+
+        <h3>4. The on-prem agent platform — making a thing you can't redeploy operable <span style="color: var(--text-muted); font-weight: 400;">(platform features + scale)</span></h3>
+        <p>
+          On-prem software has a brutal constraint: you can't hotfix it. The customer runs the build, and getting them to update is the hard part. So a lot of work went into the agent itself — heartbeat and liveness so a dead agent shows as dead, version-deprecation surfacing in the admin portal, and opt-in auto-upgrade so the agent keeps itself current. Plus the scale work: certifying crawls of 50 million items and publishing the disk benchmarks customers plan against. <a href="agent-platform.html" data-basepath="true">The agent-platform page</a> covers both.
+        </p>
       </section>
 
-      <section class="content-section" id="architecture">
-        <h2>Crawl platform (placeholder diagram)</h2>
-        <div class="diagram-slot">
-          <pre class="diagram">[Data source] → [Connector worker] → [Crawl pipeline] → [Index service] → Search / Copilot</pre>
-        </div>
+      <section class="content-section" id="decisions">
+        <h2>How the role changed over five years</h2>
+        <p>
+          The growth from L61 to L63 wasn't a title change with the same job underneath it. The work genuinely changed shape.
+        </p>
+        <ul>
+          <li>
+            <strong>Started in execution.</strong> The first project was integrating Microsoft's internal experimentation and configuration system into the service and packaging it as a reusable library. New domain, new language — I came from Java and Maven and was suddenly in .NET Framework wrestling with NuGet, with no support in the India time zone from the product team that owned the experimentation system. I got far enough on my own to do the integration and ship the shared library, and it became the baseline for staged, ring-based rollout across the project — internal Microsoft first, all the way out to government cloud.
+          </li>
+          <li>
+            <strong>Became the person who builds connectors end to end.</strong> Low-level design, implementation, getting data into the index, and proving it surfaced correctly on the search page. Each connector meant learning a new source's data model and its failure modes.
+          </li>
+          <li>
+            <strong>Then the one connectors get handed to.</strong> Once building a connector became "use the framework and write the source-specific code," it stopped needing a crowd. Connectors other engineers had built were handed to me to maintain and extend, and I owned the complex live scenarios on them.
+          </li>
+          <li>
+            <strong>By 2024, lead of the connectors domain</strong> with a team of about four developers under me, owning the full set above. The job by then was as much enterprise-customer work as code — getting on calls with big clients to understand their workflows, debugging their issues directly, and handling escalations as the first line of defense for the whole connector portfolio.
+          </li>
+        </ul>
+      </section>
+
+      <section class="content-section" id="impact">
+        <h2>The constraints that ran underneath all of it</h2>
+        <p>
+          Two things shaped nearly every decision on this team, and they're worth naming once here because the topic pages assume them.
+        </p>
+        <ul>
+          <li>
+            <strong>Debugging blind.</strong> No access to customer data, and no PII allowed in logs — ever. You diagnose production issues for enterprise customers with deliberately minimal logging, which means the logging and observability you do have has to be designed for exactly that, well before you need it.
+          </li>
+          <li>
+            <strong>On-prem has no undo.</strong> On the cloud you hotfix and redeploy in minutes. On-prem you have to convince a customer to roll out a new build, which is slow and sometimes doesn't happen. So the bar for on-prem is simply higher: a bug that ships there can sit in the field for a long time. Most of the agent-platform work exists to soften that constraint.
+          </li>
+        </ul>
       </section>
     </article>
 </main>
     <script id="nav-data-script"></script>
-  <script src="../../js/theme.js"></script>
   <script id="sidebar-script"></script>
-  <script src="../../js/theme.js"></script>
   <script>
     const navDataScript = document.getElementById('nav-data-script');
     navDataScript.src = window.BASE_PATH + 'js/nav-data.js';
     const sidebarScript = document.getElementById('sidebar-script');
     sidebarScript.src = window.BASE_PATH + 'js/sidebar.js';
-  </script>
-  <script src="../../js/theme.js"></script>
 
+    document.querySelectorAll('[data-basepath="true"]').forEach(link => {
+      const href = link.getAttribute('href');
+      if (!href.startsWith('http')) {
+        link.setAttribute('href', window.BASE_PATH + 'work/microsoft/' + href);
+      }
+    });
+  </script>
 </body>
 </html>

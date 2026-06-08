@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../js/base-path.js"></script>
+  <script src="../../js/theme.js"></script>
+  <script>
+    document.write('<link rel="stylesheet" href="' + window.BASE_PATH + 'css/styles.css" />');
+  </script>
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>The connector portfolio — Anubhav Shrivastava</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Fraunces:wght@500;600&display=swap" rel="stylesheet" />
+</head>
+<body class="layout-docs" data-page-id="microsoft-connectors">
+  <aside id="site-sidebar" aria-label="Topics"></aside>
+<main class="topic-main">
+    <article class="article topic-page">
+      <header class="page-header">
+        <p class="page-status">Status: <strong>ready</strong></p>
+        <h1>The connector portfolio — the breadth, source by source</h1>
+        <p class="subtitle">Topic · Microsoft · Graph Connectors · built, then owned</p>
+      </header>
+
+      <section class="content-section" id="problem">
+        <h2>What a connector actually has to do</h2>
+        <p>
+          Every connector solves the same shape of problem and none of them solve it the same way. It has to authenticate to a source it doesn't control, walk everything in that source without missing items or looping forever, read each item without holding the whole dataset in memory, checkpoint so a crawl that dies at item nine million resumes at item nine million and not at zero, attach the right access-control lists, and hand a clean stream of indexable items to Microsoft's index. Then it has to do that again next sync, noticing what changed.
+        </p>
+        <p>
+          The differences live in the source. A database is a cursor you read in order. A file share is a tree you descend. A website is a graph that links back on itself and tries to trap you. Each of those is a different traversal problem with its own failure modes, and that's the variety this page is about. The shared parts — lifecycle, checkpointing, observability — were reused across all of them, which is the whole point of <a href="cloud-onprem-parity.html" data-basepath="true">the parity bet</a>.
+        </p>
+      </section>
+
+      <section class="content-section" id="architecture">
+        <h2>The two traversal shapes</h2>
+        <p>
+          Almost every connector falls into one of two camps, and which camp it's in decides most of its hard parts.
+        </p>
+        <ul>
+          <li>
+            <strong>Linear reads (databases).</strong> You read records in a sequential, ordered stream and checkpoint your position as you go. The crawl is a cursor: simple to reason about, and resumable by remembering where you were. Azure SQL, SQL Server, and Oracle are all this shape.
+          </li>
+          <li>
+            <strong>Graph traversal (file shares, websites, wikis).</strong> There's no clean linear order. You're walking a tree or a general graph, and you have to track what you've already visited so you don't re-crawl or loop. Hierarchy, cycles, and "where am I in the walk" all become real problems. File shares, the Enterprise Web connector, and the wiki-style sources live here.
+          </li>
+        </ul>
+      </section>
+
+      <section class="content-section" id="decisions">
+        <h2>The connectors, and what made each one its own problem</h2>
+
+        <div class="catalog-scroll">
+          <table class="connector-catalog">
+            <thead>
+              <tr>
+                <th>Connector</th>
+                <th>Cloud</th>
+                <th>On-prem</th>
+                <th>Nature of the crawl</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td><strong>Azure SQL</strong></td><td>✓</td><td></td><td><span class="domain-tag">linear · database cursor</span></td></tr>
+              <tr><td><strong>Microsoft SQL Server</strong></td><td></td><td>✓</td><td><span class="domain-tag">linear · zero-code-change port of Azure SQL</span></td></tr>
+              <tr><td><strong>Oracle</strong></td><td></td><td>✓</td><td><span class="domain-tag">linear · new queries, everything else reused</span></td></tr>
+              <tr><td><strong>File Share</strong></td><td></td><td>✓</td><td><span class="domain-tag">graph · tree descent + exclusion rules</span></td></tr>
+              <tr><td><strong>Enterprise / Internet Web</strong></td><td>✓</td><td>✓</td><td><span class="domain-tag">graph · robots.txt + cycle detection</span></td></tr>
+              <tr><td><strong>Azure DevOps Work Items</strong></td><td>✓</td><td></td><td><span class="domain-tag">graph + identity · four-list ACL</span></td></tr>
+              <tr><td><strong>Azure DevOps Wiki</strong></td><td>✓</td><td></td><td><span class="domain-tag">graph + identity · four-list ACL</span></td></tr>
+              <tr><td><strong>Confluence</strong></td><td>✓</td><td>✓</td><td><span class="domain-tag">graph · handed over to own</span></td></tr>
+              <tr><td><strong>Azure Data Lake</strong></td><td>✓</td><td></td><td><span class="domain-tag">file-tree · handed over to own</span></td></tr>
+              <tr><td><strong>MediaWiki</strong></td><td>✓</td><td></td><td><span class="domain-tag">graph · handed over to own</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: -0.5rem;">
+          Every row above is generally available / in production today. Ten connectors across two environments, three traversal shapes, and four database engines — built, ported, or taken over and owned.
+        </p>
+
+        <h3>Azure SQL — the first one, end to end</h3>
+        <p>
+          The first connector I built, and the one I owned all of: low-level design, implementation, getting data into the index, and proving it surfaced correctly on the search page. The premise is that plenty of sites and apps are just a database rendered onto pages, and some companies would rather give Microsoft read access to the database directly than have us scrape the surface. So the connector reads the data in a linear stream, checkpoints, and indexes — cleaner and more complete than crawling the rendered pages. I also contributed to the front-end repo for surfacing it, working inside the framework the FE developers had set rather than owning that framework. Shipped to GA, available to anyone using Microsoft for business. (<a href="https://learn.microsoft.com/en-us/microsoft-365/copilot/connectors/mssql-connector" target="_blank" rel="noopener">Public docs.</a>)
+        </p>
+
+        <h3>File Share — the first graph traversal, and the first on-prem proof</h3>
+        <p>
+          Built on-premise, this was the jump from linear to graph: a file share is a tree, and crawling it means descending the hierarchy, tracking where you are, and handling the structure rather than reading a flat stream. It mattered for more than itself — File Share going live in production is what proved the on-prem model was stable, which unlocked the cheap SQL Server and Oracle on-prem wins on <a href="cloud-onprem-parity.html" data-basepath="true">the parity page</a>. It's still in GA and powering users. (<a href="https://learn.microsoft.com/en-us/microsoft-365/copilot/connectors/azure-file-share-overview" target="_blank" rel="noopener">Public docs.</a>) Admins can also exclude unwanted content and file types from a crawl through exclusion rules built into this connector.
+        </p>
+
+        <h3>SQL Server on-prem &amp; Oracle — the parity payoff</h3>
+        <p>
+          SQL Server on-prem went live with zero code change (same engine as Azure SQL, just hosted in the customer's data center). Oracle was a new GA connector whose only new code was the database queries. Both are covered in full on <a href="cloud-onprem-parity.html" data-basepath="true">the parity page</a> because they're the clearest evidence that the shared-core decision paid off. (<a href="https://learn.microsoft.com/en-us/microsoft-365/copilot/connectors/oraclesql-connector" target="_blank" rel="noopener">Oracle docs.</a>)
+        </p>
+
+        <h3>Azure DevOps Work Items &amp; Wiki — content and identity together</h3>
+        <p>
+          The first connectors built against the access-control charter: they crawl not just the content but the source's permission model, flattening Azure DevOps groups and hierarchies into the four-list identity model the index expects. Both are live in production. The access-control mechanics get their own treatment on <a href="access-control.html" data-basepath="true">the access-control page</a>. (<a href="https://learn.microsoft.com/en-us/microsoft-365/copilot/connectors/azure-devops-work-items-overview" target="_blank" rel="noopener">Work Items docs</a> · <a href="https://learn.microsoft.com/en-us/microsoft-365/copilot/connectors/azure-devops-wiki-connector" target="_blank" rel="noopener">Wiki docs</a>.)
+        </p>
+
+        <h3>Enterprise / Internet Website connector — graph traversal with adversarial edges</h3>
+        <p>
+          Live on both on-prem and cloud. This is web crawling, with the two classic web problems front and center: respecting and persisting <code>robots.txt</code> so the crawl stays inside what the site permits, and detecting cycles in the web graph so pages that link back to each other don't send the crawler into an infinite loop. (<a href="https://learn.microsoft.com/en-us/microsoft-365/copilot/connectors/enterprise-web-connector" target="_blank" rel="noopener">Cloud docs</a> · <a href="https://learn.microsoft.com/en-us/microsoft-365/copilot/connectors/enterprise-web-connector-onprem" target="_blank" rel="noopener">on-prem docs</a>.)
+        </p>
+
+        <h3>Confluence, Azure Data Lake, MediaWiki — handed over to own</h3>
+        <p>
+          By this point building a connector was "use the framework, write the source-specific code," so connectors others had built were handed to me to maintain, extend, and own the complex live scenarios on. Confluence runs on both on-prem and cloud; Azure Data Lake and MediaWiki rounded out the set. Owning them meant carrying the production support, the live incidents, and the enhancement work on connectors I hadn't written. (<a href="https://learn.microsoft.com/en-us/microsoft-365/copilot/connectors/confluence-cloud-overview" target="_blank" rel="noopener">Confluence</a> · <a href="https://learn.microsoft.com/en-us/microsoft-365/copilot/connectors/azure-data-lake-connector" target="_blank" rel="noopener">Data Lake</a> · <a href="https://learn.microsoft.com/en-us/microsoft-365/copilot/connectors/mediawiki-connector" target="_blank" rel="noopener">MediaWiki</a>.)
+        </p>
+      </section>
+
+      <section class="content-section" id="impact">
+        <h2>What the breadth actually demanded</h2>
+        <p>
+          The connector code is only half of it. Each connector serves different enterprises with their own use cases, and as the first line of defense for the whole portfolio I was on calls with big clients understanding their workflows and fixing their issues directly — across ten sources, each with its own quirks. That support ran under the two constraints described on the <a href="graph-connectors-overview.html" data-basepath="true">overview</a> (debugging blind, and no undo on-prem), which is what made first-line support for this many sources genuinely hard rather than routine.
+        </p>
+        <p>
+          Crawl success rate — every connector hitting its success number — was a constant rather than a feature. It's table stakes for a crawler, and it held across the portfolio. The interesting engineering is in the traversal problems above and the platform work on <a href="agent-platform.html" data-basepath="true">the agent</a>; the success rate is just the floor all of it had to clear.
+        </p>
+      </section>
+    </article>
+</main>
+    <script id="nav-data-script"></script>
+  <script id="sidebar-script"></script>
+  <script>
+    const navDataScript = document.getElementById('nav-data-script');
+    navDataScript.src = window.BASE_PATH + 'js/nav-data.js';
+    const sidebarScript = document.getElementById('sidebar-script');
+    sidebarScript.src = window.BASE_PATH + 'js/sidebar.js';
+
+    document.querySelectorAll('[data-basepath="true"]').forEach(link => {
+      const href = link.getAttribute('href');
+      if (!href.startsWith('http')) {
+        link.setAttribute('href', window.BASE_PATH + 'work/microsoft/' + href);
+      }
+    });
+  </script>
+</body>
+</html>

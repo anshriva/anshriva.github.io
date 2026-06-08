@@ -1310,3 +1310,72 @@ body.layout-docs .page-status {
     transform: translateX(0);
   }
 }
+
+/* ─── Connector catalog table ─── */
+.catalog-scroll {
+  overflow-x: auto;
+  margin: 1.25rem 0;
+}
+
+.connector-catalog {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  min-width: 40rem;
+}
+
+.connector-catalog th,
+.connector-catalog td {
+  text-align: left;
+  padding: 0.65rem 0.8rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.connector-catalog thead th {
+  font-weight: 600;
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 2px solid var(--border);
+  white-space: nowrap;
+}
+
+.connector-catalog tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.connector-catalog td strong {
+  color: var(--text);
+}
+
+.connector-catalog .domain-tag {
+  display: inline-block;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.connector-catalog .doc-link {
+  white-space: nowrap;
+  font-size: 0.85rem;
+}
+
+/* Domain-breadth chips */
+.domain-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1.25rem 0;
+  padding: 0;
+  list-style: none;
+}
+
+.domain-chips li {
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  border-radius: 999px;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.85rem;
+  color: var(--text);
+}
