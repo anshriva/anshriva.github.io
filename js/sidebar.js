@@ -43,7 +43,6 @@
       '<div class="sidebar-footer">' +
         `<a href="${window.BASE_PATH}resume.html">Resume</a>` +
         `<a href="${window.BASE_PATH}work/youtube.html">YouTube</a>` +
-        '<a href="https://github.com/anshriva" target="_blank" rel="noopener">GitHub ↗</a>' +
         '<a href="https://www.linkedin.com/in/anubhavsri" target="_blank" rel="noopener">LinkedIn ↗</a>' +
         '<button class="theme-toggle" title="Toggle theme"></button>' +
         "</div>"
