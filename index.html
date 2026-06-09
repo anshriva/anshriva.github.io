@@ -18,14 +18,17 @@
 
   <main class="docs-main-content">
     <article class="article overview-page">
-      <section class="hero">
+      <section class="hero hero-chat">
         <p class="hero-eyebrow">Platform &amp; Distributed Systems · 12+ years</p>
         <h1>Anubhav Shrivastava</h1>
         <p class="hero-lead">
-          I work on the notification platform at Intuit — the system every product team there uses to send the email, SMS, and in-product messages that reach customers. I came onto it in 2024, picked up a few different pieces of it over time, and the sidebar is the long version of each one.
+          Ask anything about my work — the platforms I've owned, the decisions and trade-offs behind them, the systems I've built. The assistant answers from my full portfolio.
         </p>
+
+        <div id="ask-hero" class="ask-hero"></div>
+
         <div class="hero-actions">
-          <a class="btn btn-primary" href="/work/intuit/platform-overview.html" data-basepath="true">Start with the overview →</a>
+          <a class="btn btn-ghost" href="/work/intuit/platform-overview.html" data-basepath="true">Or read the overview →</a>
           <a class="btn btn-ghost" href="/resume.html" data-basepath="true">Resume</a>
         </div>
       </section>
@@ -72,6 +75,7 @@
       const href = link.getAttribute('href');
       link.setAttribute('href', window.BASE_PATH + href.replace(/^\//, ''));
     });
-  </script>
+</script>
+  <script src="/js/assistant.js" defer></script>
 </body>
 </html>
