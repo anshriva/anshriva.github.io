@@ -1505,6 +1505,22 @@ body.layout-docs .page-status {
   font-size: 0.88rem;
 }
 
+.ask-error-detail {
+  margin: 0.5rem 0 0;
+  padding: 0.5rem 0.6rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 180px;
+  overflow-y: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
 .ask-suggestions {
   display: flex;
   flex-wrap: wrap;

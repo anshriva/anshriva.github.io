@@ -132,7 +132,6 @@
   // ---- Network ------------------------------------------------------------
   async function ask(question) {
     addMsg(question, 'user');
-    history.push({ role: 'user', text: question });
     pending = true;
     sendBtn.disabled = true;
     input.value = '';
@@ -149,14 +148,22 @@
       const res = await fetch(WORKER_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: question, history: history.slice(0, -1) }),
+        body: JSON.stringify({ question: question, history: history }),
       });
       typing.remove();
       if (!res.ok) {
-        // Surface the Worker's actual error message (e.g. AI quota hit).
+        // Surface the Worker's message and the raw upstream detail.
         let msg = 'Something went wrong reaching the assistant. You can email Anubhav at anubhav.workemail@gmail.com or connect on LinkedIn.';
-        try { const e = await res.json(); if (e && e.error) msg = e.error; } catch (_) {}
-        addMsg(msg, 'error');
+        let detail = '';
+        try { const e = await res.json(); if (e && e.error) msg = e.error; if (e && e.detail) detail = e.detail; } catch (_) {}
+        const el = addMsg(msg, 'error');
+        if (detail) {
+          const pre = document.createElement('pre');
+          pre.className = 'ask-error-detail';
+          pre.textContent = detail;
+          el.appendChild(pre);
+          log.scrollTop = log.scrollHeight;
+        }
         return;
       }
       if (!res.body) throw new Error('no response body');
@@ -174,6 +181,9 @@
         log.scrollTop = log.scrollHeight;
       }
       if (full.trim()) {
+        // Record the exchange only on success, so a failed turn never leaves a
+        // dangling user message that breaks role alternation on the next call.
+        history.push({ role: 'user', text: question });
         history.push({ role: 'model', text: full });
       } else {
         botEl.innerHTML = renderText("Sorry, I couldn't generate an answer just now. Reach Anubhav at anubhav.workemail@gmail.com.");

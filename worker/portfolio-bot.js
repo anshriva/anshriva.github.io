@@ -264,14 +264,21 @@ export default {
     const corpus = await getCorpus();
     const systemPrompt = SYSTEM_PROMPT_HEAD + corpus;
 
-    // Build conversation: prior turns (capped) + the new question.
+    // Build conversation: prior turns (capped) + the new question. Gemini requires
+    // contents to start with a user turn and alternate user/model, so sanitize:
+    // never lead with a model turn, never repeat a role back-to-back.
     const priorTurns = Array.isArray(payload.history) ? payload.history.slice(-8) : [];
     const contents = [];
     for (const turn of priorTurns) {
       if (!turn || typeof turn.text !== 'string') continue;
       const role = turn.role === 'model' ? 'model' : 'user';
+      const prevRole = contents.length ? contents[contents.length - 1].role : null;
+      if (contents.length === 0 && role === 'model') continue; // don't lead with model
+      if (role === prevRole) continue;                          // no consecutive same role
       contents.push({ role, parts: [{ text: String(turn.text).slice(0, 2000) }] });
     }
+    // The new question is a user turn, so the last prior turn must be a model turn.
+    if (contents.length && contents[contents.length - 1].role === 'user') contents.pop();
     contents.push({ role: 'user', parts: [{ text: question }] });
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:streamGenerateContent?alt=sse&key=${env.GEMINI_API_KEY}`;
@@ -300,7 +307,9 @@ export default {
     if (!upstream.ok || !upstream.body) {
       const detail = await upstream.text().catch(() => '');
       console.error('Gemini error', upstream.status, detail);
-      return json({ error: upstreamMessage(upstream.status), status: upstream.status }, upstream.status === 429 ? 429 : 502, origin);
+      // Surface the raw upstream detail too — the audience is technical and the
+      // response body never contains the API key (it rides in the request URL).
+      return json({ error: upstreamMessage(upstream.status), status: upstream.status, detail: detail.slice(0, 1500) }, upstream.status === 429 ? 429 : 502, origin);
     }
 
     // Pipe the answer back as a plain-text token stream.
