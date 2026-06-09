@@ -39,6 +39,18 @@ If you add a new page, follow one of these two patterns exactly — don't hand-a
 
 **Diagrams.** Topic-page diagrams are hand-authored SVGs under `assets/<page-id>/<name>.svg`, embedded as `<img>` inside a `<figure>` with a thorough `alt` text describing every node and edge (so the page reads without the image) and a short `<figcaption>` underneath reinforcing the one idea the diagram is making. Visual style matches across pages: white background (`#ffffff`), `#334155` stroke, DM Sans font, rounded corners (`rx="16"` for primary nodes, `rx="8"` for secondary), explicit `viewBox`. **Use generic node labels** — no vendor names, no internal hostnames, no team channels — the same sanitization that applies to prose. References: `work/intuit/notification-tray.html` (architecture.svg) and `work/intuit/rcs-launch.html` (inbound-flow.svg). The explicit white background means the SVG renders the same in both light and dark site themes without needing CSS-var theming.
 
+**Homepage "Ask about me" assistant.** The homepage hero is a chat: visitors ask about the work and get streamed, evidence-based answers. Two parts:
+
+- **Frontend** (`js/assistant.js`, styled in `css/styles.css`, mounted at `<div id="ask-hero">` in `index.html`). Renders the hero chat — suggestion chips, an immersive full-screen toggle, live token streaming, and lightweight markdown rendering. It POSTs `{ question, history }` to the Worker and reads the response as a text stream. The only config is `WORKER_URL` (the public Cloudflare Worker URL); **no API key lives in the frontend.** On an error response it shows the Worker's actual message (e.g. the quota notice).
+- **Backend** (`worker/portfolio-bot.js`, a Cloudflare Worker — see `worker/README.md`). Holds the Gemini API key as an encrypted dashboard **Secret** (`GEMINI_API_KEY`), never in the repo. On each request it grounds the answer in the **live site**: fetches `data/navigation.json`, fetches each page, strips HTML to text, caches the corpus ~1h. So the bot tracks the deployed site automatically — editing a page and pushing updates the bot, no Worker redeploy needed. It streams Gemini `2.5-flash` (thinking disabled for speed) and retries transient upstream errors.
+
+Conventions for the assistant (they mirror the portfolio's own rules):
+- **The system prompt enforces honesty over persuasion.** It makes the Staff case through *evidence* (decisions, trade-offs, patterns set, cross-team impact), never by inflating scale or adding hype words. It stays **title-honest** — current title is Senior Software Engineer; it says so if asked, then pivots to the evidence. It never claims a Staff/Principal title. Keep this when editing the prompt; it's the same anti-exaggeration, no-begging posture as the content conventions below.
+- **The bot only echoes what's on the live pages** — it has no private knowledge. So sanitization is governed entirely by the page content; there's nothing extra to sanitize in the Worker. It will freely share contact details (already public on the resume).
+- **Token budget matters.** The corpus is sent on every call, so `worker/portfolio-bot.js` caps per-page and total corpus size (`PER_PAGE_CHARS`, `MAX_CORPUS_CHARS`) to stay under Gemini's free-tier per-minute token limit. Don't remove these caps without a plan for the quota.
+- **Model/quota gotcha:** the free tier is model-specific. `gemini-2.5-flash` has free quota on this project; `gemini-2.0-flash` returned HTTP 429 `limit: 0`. Don't switch the `MODEL` constant without checking quota.
+- Editing the Worker requires re-pasting it into the Cloudflare dashboard and deploying — committing the repo file does **not** redeploy it. Deployment is dashboard-only (no `wrangler.toml`); `worker/README.md` has the full setup.
+
 ## Content conventions (load-bearing for the Intuit section)
 
 The Intuit pages are the active pitch artifact—the evidence for a Staff Engineer role. Several conventions emerged from iterative work and should be maintained.
@@ -111,6 +123,8 @@ Self-contained HTML — its own inline `<style>` block (not the portfolio dark t
 ## Deploy
 
 Push to `main` on `anshriva/anshriva.github.io` → GitHub Pages serves from the repository root. No CI, no build.
+
+The homepage assistant's Cloudflare Worker (`worker/portfolio-bot.js`) deploys **separately** through the Cloudflare dashboard (paste the file → Deploy; the `GEMINI_API_KEY` Secret is set there). Pushing the repo does not touch it. Because the Worker grounds on the live site, content edits go live to the bot via the normal GitHub Pages deploy — only changes to the Worker's own code require a dashboard redeploy. See `worker/README.md`.
 
 ## Commits
 
