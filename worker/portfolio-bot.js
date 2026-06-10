@@ -24,9 +24,14 @@ const ALLOWED_ORIGINS = [
 // Claude model. Haiku 4.5 is cheap, fast, and strong for grounded Q&A.
 const MODEL = 'claude-haiku-4-5';
 
-// How many retrieved chunks to ground each answer on. A bit generous so broad,
-// multi-topic questions still pull chunks from several projects.
-const MAX_RESULTS = 12;
+// How many retrieved chunks to ground each answer on. Generous on purpose: the
+// corpus is Intuit-heavy, and short generic queries ("what did he do at X?")
+// otherwise crowd small sections (e.g. Adobe = 2 chunks) out of the top results.
+// Paired with match_threshold: 0 below — AI Search applies the similarity
+// threshold BEFORE the count, so a default threshold was silently dropping the
+// low-scoring small-section chunks; 0 disables that gate and lets MAX_RESULTS
+// (ranked by score) be the only limit.
+const MAX_RESULTS = 18;
 
 const TEMPERATURE = 0.2;        // low — stay close to the source, don't embellish
 const MAX_OUTPUT_TOKENS = 1024;
@@ -34,7 +39,7 @@ const MAX_OUTPUT_TOKENS = 1024;
 // How many prior conversation turns to send to Claude (cost control). 2 = one
 // prior question+answer pair. Each turn is billed input tokens; raise if you
 // want longer conversational memory.
-const HISTORY_TURNS = 2;
+const HISTORY_TURNS = 1;
 
 const SYSTEM_PROMPT = `You are Anubhav Shrivastava's portfolio assistant. You speak with recruiters, hiring managers, and engineers about Anubhav's work. Answer using the retrieved portfolio context provided in the user message. Represent his work accurately and let its real substance show that he operates at a Staff Engineer level. Honesty matters more than persuasion.
 
@@ -180,7 +185,7 @@ export default {
       const result = await env.AI_SEARCH.search({
         query: question,
         ai_search_options: {
-          retrieval: { retrieval_type: 'vector', max_num_results: MAX_RESULTS },
+          retrieval: { retrieval_type: 'vector', max_num_results: MAX_RESULTS, match_threshold: 0 },
         },
       });
       const chunks = (result && Array.isArray(result.chunks)) ? result.chunks : [];

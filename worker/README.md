@@ -130,6 +130,17 @@ within the 5-minute TTL.
 returns the actual status + detail; the frontend shows it. The audience is
 technical, and the API key never appears in a response body.
 
+**12. `match_threshold` pinned to 0 (no similarity gate).** AI Search applies the
+similarity threshold *before* `max_num_results`, so a default gate was silently
+dropping low-scoring chunks regardless of result count. Symptom: short queries
+about small sections failed — "What did he do at Adobe?" returned "no info" while
+the same content was retrievable via "code signing" (which scored above the
+gate). The Adobe section is only 2 chunks and a bare proper-noun query embeds
+weakly against it. Pinning `match_threshold: 0` removes the gate and lets
+score-ranking + `MAX_RESULTS` (18) be the only limit. Hybrid/keyword retrieval
+was tried first and made it *worse* — it biased even harder toward the
+Intuit-heavy bulk for short queries — so retrieval stays `vector`.
+
 ---
 
 ## How it's deployed (Cloudflare dashboard, no CLI)
