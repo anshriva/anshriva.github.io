@@ -1,78 +1,170 @@
-# Portfolio "Ask about me" assistant — Cloudflare Worker
+# Portfolio "Ask about me" assistant
 
-This folder holds the backend for the chat on the homepage hero. It's a single
-Cloudflare Worker ([portfolio-bot.js](portfolio-bot.js)) that:
+The chat on the homepage hero. A visitor asks about Anubhav's work and gets a
+streamed, evidence-based answer grounded in the portfolio.
 
-1. Holds the **Gemini API key** as an encrypted Cloudflare secret (never in this
-   repo).
-2. On each request, grounds the answer in the **full live portfolio**: it fetches
-   `data/navigation.json` from `https://anshriva.github.io`, fetches every page
-   listed, strips the HTML to plain text, and caches that corpus in memory for an
-   hour. So the bot stays current with every `git push` to the site — no redeploy
-   needed when you edit content.
-3. Calls **Gemini 2.5 Flash** (thinking disabled, for speed) with a system prompt
-   that makes the Staff-level case and stays title-honest, and **streams** the
-   answer back token-by-token.
-
-The frontend that calls it is [`../js/assistant.js`](../js/assistant.js); the
-public Worker URL is hard-coded there (the API key is not — only the URL).
-
-This whole folder is safe to commit publicly. There are no secrets in it.
+This folder is the **backend**: a single Cloudflare Worker
+([portfolio-bot.js](portfolio-bot.js)). The frontend that calls it is
+[`../js/assistant.js`](../js/assistant.js). Everything here is safe to commit —
+there are **no secrets in the repo** (the API key lives only as a Cloudflare
+secret).
 
 ---
 
-## How it's deployed (Cloudflare dashboard)
+## Architecture — what is fetched from where
 
-It was set up entirely through the Cloudflare dashboard (no CLI / no Wrangler).
-This is the exact path used, so it can be reproduced or handed off.
+It's a **hybrid RAG** pipeline: Cloudflare AI Search does retrieval, the Claude
+API does generation.
 
-### Account
-- Cloudflare account: `anubhav.workemail@gmail.com` (free plan).
-- Workers subdomain: `anubhav-workemail.workers.dev`.
-- Worker name: **`portfolio-bot`**.
-- Live URL: **`https://portfolio-bot.anubhav-workemail.workers.dev`**.
+```
+ Browser (index.html + js/assistant.js)
+   │  POST { question, history }
+   ▼
+ Cloudflare Worker  (worker/portfolio-bot.js)
+   │
+   ├─ 1. RETRIEVE → env.AI_SEARCH.search(question)        ── Cloudflare AI Search
+   │       returns the top ~12 relevant chunks               (vector search over the
+   │                                                          indexed knowledge files)
+   │
+   ├─ 2. GENERATE → POST api.anthropic.com/v1/messages    ── Claude API
+   │       system prompt + retrieved chunks + question       (claude-haiku-4-5, stream:true)
+   │       streamed back as SSE
+   │
+   └─ 3. STREAM  → pipe Claude's token deltas to the browser as plain text
+         ▼
+ Browser renders the answer live as it streams in
+```
 
-### One-time creation steps
-1. **dash.cloudflare.com → Workers & Pages → Create application → Create Worker.**
-2. Chose **"Start with Hello World!"**, named it **`portfolio-bot`**, clicked
-   **Deploy** (deploys a placeholder).
-3. Opened **Edit code**, deleted the placeholder, pasted the entire contents of
-   [portfolio-bot.js](portfolio-bot.js), clicked **Deploy**.
-4. **Settings → Variables and Secrets → Add:**
-   - Type: **Secret** (encrypted, hidden — not "Text")
-   - Name: **`GEMINI_API_KEY`** (must match exactly — the code reads
-     `env.GEMINI_API_KEY`)
-   - Value: the Gemini API key from Google AI Studio
-   - **Save / Deploy** (the secret only reaches the running Worker after a deploy).
+**The two data paths:**
 
-### The Gemini API key
-- Created at **Google AI Studio** (`aistudio.google.com/api-keys`), **free tier**.
-  This is separate from any Gemini consumer subscription.
-- Project: `gen-lang-client-0221033046` ("Gemini Project").
-- **Model note:** the free tier quota is **model-specific**. `gemini-2.5-flash`
-  has free quota on this project; `gemini-2.0-flash` returned HTTP 429
-  (`limit: 0`) and must not be used here without checking quota. The model is set
-  by the `MODEL` constant in `portfolio-bot.js`.
+1. **Knowledge (build time, manual):** the portfolio's own HTML pages →
+   [`../scripts/build-knowledge.py`](../scripts/build-knowledge.py) strips them to
+   clean markdown → [`../assistant-knowledge/`](../assistant-knowledge/) → uploaded
+   to the **Cloudflare AI Search** instance (`anubhav-portfolio`, built-in
+   storage), which chunks + embeds + indexes them. Re-run the script and re-upload
+   when portfolio content changes.
 
-### CORS / allowed origins
-`ALLOWED_ORIGINS` in `portfolio-bot.js` pins who may call the Worker
-(`https://anshriva.github.io` + localhost for testing), so the key can't be
-driven from arbitrary sites.
+2. **Query (per question, live):** `question` → AI Search vector search → top
+   chunks → Claude generates the answer from *only* those chunks → streamed to the
+   browser.
+
+**So the model never sees the whole portfolio** — only the handful of chunks
+relevant to the question. That's the whole point of the RAG step (see design
+choices below).
+
+### What lives where
+
+| Thing | Where | Notes |
+|---|---|---|
+| Chat UI, streaming reader | `js/assistant.js`, `css/styles.css`, `#ask-hero` in `index.html` | Only holds the **public** Worker URL — no key |
+| Worker code | `worker/portfolio-bot.js` | Retrieval + Claude call + streaming |
+| `ANTHROPIC_API_KEY` | Cloudflare secret on the Worker | Claude API key; never in the repo |
+| `AI_SEARCH` binding | Cloudflare binding on the Worker → instance `anubhav-portfolio` | How the Worker calls retrieval |
+| Indexed knowledge | AI Search instance `anubhav-portfolio` (built-in storage) | Generated from `assistant-knowledge/*.md` |
+| Knowledge source files | `assistant-knowledge/*.md` (committed) | Regenerate with `scripts/build-knowledge.py` |
+
+---
+
+## Design choices (and why)
+
+This started as a much simpler "stuff the whole portfolio into the prompt"
+design and evolved under real free-tier constraints. The decisions:
+
+**1. Static site → serverless proxy.** The site is static (GitHub Pages), so
+there's no server to hold an API key, and a key in client-side JS on a public
+repo gets scraped within minutes. A tiny Cloudflare Worker holds the key and is
+the only thing the browser talks to. The frontend only knows the public Worker
+URL.
+
+**2. RAG instead of stuffing the whole portfolio into every prompt.** The first
+version sent the entire portfolio (~25k tokens) to the model on every question.
+That repeatedly hit free-tier walls — Gemini's free tier is **20 requests/day**,
+Groq's is **12k tokens/minute** (one full-corpus request exceeded it). RAG fixes
+the root cause: retrieve only the relevant chunks (~1.5–2k tokens) per question,
+so each call is small, cheap, and well under any rate limit — *and* full
+portfolio depth is preserved because the chunks come from the complete pages.
+
+**3. Managed AI Search instead of a hand-built vector DB.** Cloudflare AI Search
+does chunking, embedding, indexing, and retrieval as a managed service — far less
+code than wiring up Vectorize + an embedding model by hand. Retrieval is the part
+worth *not* hand-rolling.
+
+**4. Built-in storage (upload files), not website auto-crawl.** AI Search can
+auto-crawl a website, but only a domain on Cloudflare. The site is on GitHub
+Pages, so we upload generated markdown files instead. Trade-off: the index must
+be **refreshed when content changes** (re-run `build-knowledge.py`, re-upload) —
+inherent to RAG, and cheap since the portfolio changes rarely.
+
+**5. Claude for generation, not Cloudflare's own models.** AI Search's built-in
+generation (`chatCompletions`) only runs Cloudflare-hosted models. Those (a
+quantized Llama) **redacted/garbled phone numbers** (PII safety behavior) and
+were lower fidelity. So we use AI Search for **retrieval only** (`.search()`) and
+call the **Claude API** for generation. Claude is accurate, won't mangle a number
+the user has stated is public, and at this volume costs ~$0.006/answer on Haiku
+(\$5 of credit lasts months).
+
+**6. Claude Haiku 4.5 specifically.** Cheap (\$1/\$5 per 1M in/out), fast, and
+plenty strong for grounded Q&A over a fixed corpus. Swap `MODEL` to
+`claude-sonnet-4-6` for more reasoning at ~3× the cost.
+
+**7. Honesty over persuasion in the system prompt.** It makes the Staff-level
+case through *evidence* (decisions, trade-offs, patterns set), never by inflating
+scale or adding hype words, and stays title-honest (Senior Software Engineer at
+Intuit; never claims a Staff/Principal title). An exaggeration a reviewer catches
+discredits the whole pitch — accuracy is the more convincing choice.
+
+**8. Streaming end to end.** Claude streams SSE → the Worker pipes the text
+deltas through → the browser renders them live. First token ~4.5s (retrieval +
+first token), then it types out.
+
+**9. History capped at 2 turns** (`HISTORY_TURNS`) for cost — each prior turn is
+billed input tokens. Raise it for longer conversational memory.
+
+**10. Prompt caching deliberately *not* used.** It doesn't fit: the only stable
+prefix (the system prompt, ~700 tokens) is below Haiku 4.5's 4,096-token cache
+minimum, the retrieved chunks are different every question (not a reusable
+prefix), and portfolio traffic is too sparse to amortize the cache-write premium
+within the 5-minute TTL.
+
+**11. Raw upstream errors surfaced to the client.** On an error the Worker
+returns the actual status + detail; the frontend shows it. The audience is
+technical, and the API key never appears in a response body.
+
+---
+
+## How it's deployed (Cloudflare dashboard, no CLI)
+
+- **Account:** `anubhav.workemail@gmail.com` (free plan). Subdomain
+  `anubhav-workemail.workers.dev`.
+- **Worker:** `portfolio-bot` → `https://portfolio-bot.anubhav-workemail.workers.dev`.
+- **AI Search instance:** `anubhav-portfolio` (Build → AI → AI Search), data
+  source **Built-in storage**, indexed with the files in `assistant-knowledge/`.
+
+### Bindings + secret on the Worker (Settings)
+- **AI Search binding** — variable name **`AI_SEARCH`** → instance
+  `anubhav-portfolio`. (Note: the instance is **semantic/vector** only, so the
+  Worker requests `retrieval_type: 'vector'`.)
+- **Secret** **`ANTHROPIC_API_KEY`** — the Claude API key from
+  console.anthropic.com (buy ~\$5 of credit; new accounts get a small starter
+  credit).
+
+### Deploying a Worker change
+Edit `portfolio-bot.js`, then in the dashboard: **portfolio-bot → Edit code →**
+select-all, paste, **Deploy**. (Dashboard-only — intentionally no
+`wrangler.toml`.) Committing the repo file does **not** redeploy the Worker.
 
 ---
 
 ## Updating it
 
-- **Update what the bot knows** — just edit the portfolio pages and push. The
-  Worker re-reads the live site (cached ~1 hour; redeploy the Worker to refresh
-  immediately). Adding a page to `data/navigation.json` makes the bot pick it up
-  automatically.
-- **Change any Worker logic** (model, prompt, tone, CORS) — edit
-  `portfolio-bot.js`, then in the dashboard: **portfolio-bot → Edit code →**
-  select-all, paste the new contents, **Deploy**.
-- **Rotate the key** — if the key ever leaks: delete it in Google AI Studio,
-  create a new one, and update the `GEMINI_API_KEY` secret in
-  **Settings → Variables and Secrets**. No code change needed.
+- **Change what the bot knows** — edit the portfolio pages, run
+  `python3 scripts/build-knowledge.py`, then re-upload the
+  `assistant-knowledge/*.md` files to the AI Search instance (Items → Upload /
+  re-index). This is the one manual step RAG adds.
+- **Change behavior / tone / model** — edit `portfolio-bot.js`
+  (`SYSTEM_PROMPT`, `MODEL`, `MAX_RESULTS`, `HISTORY_TURNS`) and redeploy.
+- **Rotate the Claude key** — create a new key at console.anthropic.com, update
+  the `ANTHROPIC_API_KEY` secret. No code change.
 
 ## Quick test (after deploy)
 
@@ -80,21 +172,15 @@ driven from arbitrary sites.
 curl -s -X POST https://portfolio-bot.anubhav-workemail.workers.dev \
   -H "Content-Type: application/json" \
   -H "Origin: http://localhost:8080" \
-  -d '{"question":"How do I get in touch?"}'
+  -d '{"question":"What did he do at Microsoft?"}'
 ```
 
-Expect a streamed plain-text answer. A `{"error":...}` JSON with a 4xx/5xx means
-the key/secret or quota needs checking (see the model note above).
+Expect a streamed plain-text answer. A `{"error":...,"detail":...}` JSON means
+the binding, secret, or retrieval needs checking — the `detail` says which.
 
-## Free-tier limits
+## Cost & limits
 
-- **Cloudflare Workers:** 100,000 requests/day on the free plan.
-- **Gemini API:** free-tier rate/token limits per model (see Google AI Studio →
-  Rate Limit). Portfolio traffic stays comfortably within both.
-
-## Notes
-
-- Deployment is **dashboard-only** — there is intentionally no `wrangler.toml`.
-  If you later want CLI / push-to-deploy, add a Wrangler config then.
-- Observability/tracing can be toggled in the Worker's Settings; it's optional
-  and useful for reading the `console.error` logs this Worker writes on failures.
+- **Cloudflare AI Search / Workers AI / Vectorize** — free-plan allowances cover
+  portfolio traffic comfortably (retrieval is well within the free tier).
+- **Claude API** — ~\$0.006 per answer on Haiku 4.5; \$5 of credit ≈ ~800
+  answers. The only paid component, and trivially cheap at this volume.

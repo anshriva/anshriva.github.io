@@ -1,0 +1,76 @@
+# RCS — two-way messaging on the platform
+
+_Section: Intuit · Notifications Platform — source: /work/intuit/rcs-launch.html_
+
+Status: ready 
+
+# RCS — two-way messaging on the platform
+
+Topic · Intuit · Customer Communications platform
+
+## Problem statement
+
+RCS — Rich Communication Services — is the carrier-native successor to SMS: rich cards, suggested replies, media, and real two-way conversation, delivered to the recipient's default messaging app with nothing to install. The platform was already touching it passively — the SMS vendor would silently retry on RCS when SMS failed, and watching login completion during SMS incidents told us the union of the two bearers held up when SMS alone faltered. There are two distinct cases sitting on top of that observation. For transactional traffic like OTP and account alerts, what matters is the union — RCS pushes the floor up. For marketing and customer interaction, what matters is RCS on its own — the interactivity it carries that SMS cannot. RCS penetration is around 70%, so SMS stays as the floor either way.
+
+Two product teams arrived at the same time wanting the interactive case — both two-way conversations on a low-touch surface (one user-facing, one employee-facing), the kind of flow where forcing people into an authenticated webapp would be the wrong shape. RCS in the native messaging client was. The work that came out of that wasn't really "build the RCS channel" — it was adding a two-way capability to the notification platform, with RCS as the first bearer it carried. It's now live in production and rolling out gradually to consumer teams.
+
+## Context & constraints
+
+- ~70% RCS penetration meant SMS fallback was mandatory. Not every phone is RCS-eligible — carrier, device, region all matter. If ineligible users silently get nothing, the channel is unusable. Fallback had to happen at delivery time and stay invisible to the author. 
+
+- The existing inbound service didn't do conversations. It captured consent (STOP and friends) and firehosed every reply onto a single event-bus topic — no routing, no per-consumer separation. The client teams wanted real conversation features, which meant building the routing layer underneath rather than asking each consumer to filter a shared firehose. 
+
+- Two consumer teams sat in different organisational asset boundaries from the platform. Cross-asset routing on the broker isn't something one team can just turn on — it needs the messaging-infra team to enable the path. 
+
+- Inbound is structurally unlike outbound. Replies arrive on the same SMS-shaped webhook, but the actual reply text sits inside a vendor-specific metadata blob, and the contract has partial-outcome semantics (a single reply can carry text plus media plus warnings plus errors). 
+
+## What I built
+
+### The two-way capability: a new inbound model
+
+The inbound service that existed before this had a narrow job: capture consent keywords (STOP and its variants) and dump every other reply onto a single shared event-bus topic. There was no routing, no per-consumer separation — anyone who wanted user replies subscribed to the firehose and filtered in application code. That was fine when reply traffic was incidental telemetry; it broke down the moment a team wanted to build actual conversations, where each consumer needs only its own users' messages and nothing else.
+
+So I moved the inbound bus to Apache Pulsar specifically to use the broker's routing primitive. The platform publishes every inbound reply onto a single shared topic; the broker then fans events out to per-consumer topics, filtered by a header keyed on the recipient sender id. A new consumer team gets onboarded by creating their topic and requesting a routing rule through the messaging-infra portal — no platform-side code change, no deploy, no chance of one team consuming another team's traffic. The order and throughput trade-offs of swapping Kafka for Pulsar weren't load-bearing for inbound at our scale, which is what made the swap affordable.
+
+[diagram: Inbound routing flow: a user's reply (text, button tap, or image attachment) travels from the user's device to the SMS / RCS vendor, which forwards it via webhook to the platform's inbound service. The inbound service parses the vendor payload, captures consent keywords like STOP, re-hosts any attached media to an internal blob storage service (uploading from the inbound path), and publishes a single normalized event to a shared inbound topic on the message broker. The broker applies header-based routing rules — filtering on a 'to = sender-id' header — to fan the same shared topic out to per-consumer topics (Consumer A, Consumer B, Consumer C), so each team receives only its own traffic. Key idea: the platform publishes once; the broker fans out by header. New consumers onboard via a topic and a routing rule, with no platform code change.] 
+Inbound routing flow — one shared topic, broker-side header filter, per-consumer fanout. Re-hosting media on internal storage keeps the vendor credential and CDN inside the platform's domain.
+
+The reply itself arrives on the SMS-shaped webhook with the actual text and metadata buried inside a vendor-specific structure. The contract I exposed to consumers carries partial outcomes — a single inbound event can hold the reply text, the media attached to it, warnings for attachments that were skipped (unsupported MIME, type not onboarded for that sender), and errors for attachments that failed download or upload after retries. Misconfigurations are observable rather than silent: if a sender hasn't been onboarded for media but a user sends an image, the consumer gets a warning event with a specific code instead of just empty media. Quick-reply button taps come back with a stable button identifier the author chose, so consumers branch on that rather than string-matching the visible label.
+
+For inbound images the vendor returns a URL pointing at its own CDN, authenticated against the platform's vendor account. Passing that URL straight through to downstream teams would leak a boundary — the consumer would inherit a credential, a CDN, and an expiry clock that belong to the platform, not to them. So the inbound path downloads each attachment, uploads it to an internal blob storage service, and hands the consumer a document reference against that store. The vendor credential never leaves the platform; the consumer reads media the same way it reads any other internal asset, and the expiry and retention are governed by the internal store's policy rather than the vendor's. The cost is one download-plus-upload per attachment on the inbound path, which the volumes easily absorb.
+
+### The RCS service, brought to the SMS baseline
+
+The bearer itself needed its own service alongside the SMS one — same shape, different vendor contracts. Most of the work there was re-establishing the platform's reliability baseline for the new bearer: retry, fallback behaviour, observability, multi-vendor-account support — so the on-call posture and the dashboards looked the same regardless of which bearer a notification used. That parity is what let RCS go to production at the same operational quality as SMS.
+
+On the authoring side I worked with a UX designer and a frontend engineer on how a team configures an RCS notification — picking the template, mapping variables onto the event payload, choosing the consent mode and SMS-backup behaviour — so onboarding a new use case didn't require a platform engineer in the room.
+
+### Fallback and consent
+
+SMS fallback is silent when misconfigured: the vendor only falls back if a backup short code or toll-free number is wired onto the same vendor messaging service as the RCS sender, otherwise ineligible users get nothing with no error. That made it the first item in the onboarding guide. Consent reuses the SMS machinery — same per-workspace keyword config (STOP, START and variants), with the bearer changing only the sender id — so I drove the cross-team request for a single consent application id that gates both bearers.
+
+## Key decisions & tradeoffs
+
+- 
+Move the inbound bus to Apache Pulsar so the broker does the routing. The status quo was a single firehose event-bus topic that every consumer subscribed to and filtered in application code — workable for occasional telemetry, broken once consumers needed real per-user conversations. The two natural alternatives were both bad: keep the firehose and push the filtering cost into every consumer, or build the routing in the platform and take a code change for every onboarding. Pulsar's platform team supported header-based routing as a first-class primitive, which gave consumers a topic of just their own traffic without either of those costs. Kafka's strengths (raw TPS, strict per-partition ordering at high scale) weren't load-bearing for inbound at our volume, so the swap was affordable. The cost was running a second broker in the data path for inbound; the benefit was that consumers got isolated topics and onboarding stopped touching the platform's code at all.
+
+- 
+Ship on the stable content-template path; treat the rich-content preview API as a fast-follow. The vendor's newer API would have blocked launch by an unknown amount, on a release cadence I didn't control. Shipping on the stable surface let the first consumer go live without that dependency. I sized the eventual migration early — a couple of days of backend work — and flagged that we should switch before the first production customer rather than retrofit afterward, which is what happened.
+
+- 
+Add multi-subaccount support to the vendor integration. Originally the platform talked to a single shared vendor account, which was fine when one team used it. As adoption grew across teams, billing attribution became a real problem — there was no clean way to bill each consumer for their own traffic, and the shared account also concentrated risk (a rate-limit hit anywhere affected everyone). I added support for multiple subaccounts under the parent so each consumer team could be provisioned its own. Worth doing now rather than later because retrofitting account boundaries onto running traffic is harder than designing them in.
+
+- 
+Escalate the cross-asset routing block instead of waiting it out. The broker-level routing was approved in staging and then stalled going to production, with the infra team's staging routing paused in the meantime — which blocked the integration entirely. The alternative to escalating was every consumer integration sitting in a support queue indefinitely. So I went to the platform leaders forum for the right leadership contacts and set up the cross-team meeting myself. It spends political capital; the upside is that the path stays open for everyone who comes through it after.
+
+- 
+Parse inbound payloads permissively. The vendor's webhook varies by message type, provider, and API version. Strict schema validation would have rejected legitimate replies the first time a field shifted. The parser takes what's present, logs the anomalies, and doesn't fail the message — same posture I took on SMS phone-number parsing. Less tidy as validation, but it matches what actually arrives on the wire.
+
+- 
+Re-host inbound media on internal storage instead of passing through the vendor URL. The vendor returns its own authenticated CDN URL for each attachment. Forwarding that URL would push the vendor credential, the CDN dependency, and the expiry semantics onto every consumer team — a leaky abstraction where my platform's vendor relationship becomes theirs to operate. Downloading the bytes, uploading to internal blob storage, and handing back a document reference keeps that boundary clean: the consumer just reads from an internal store on its own auth. The cost is a download-plus-upload per attachment, which the inbound volumes easily absorb.
+
+## Impact
+
+- Live in production with RCS as the first bearer. Authoring, delivery, two-way inbound, SMS fallback, consent, multi-subaccount billing, and cross-asset routing all running at the same operational baseline as SMS, rolling out gradually to consumer teams. 
+
+- The routing model is a reusable primitive other teams onboard against. Subsequent consumer teams have come on by creating a topic and a routing rule, with no platform-side code change — the shape that justified moving the inbound bus in the first place, now load-bearing for everything that comes after.
