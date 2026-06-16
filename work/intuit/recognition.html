@@ -43,9 +43,42 @@
     .award-frame .flexibleContainer { margin: 0 auto !important; }
     .recognition-intro {
       color: var(--text-muted);
-      max-width: 60ch;
-      margin-bottom: 28px;
-      line-height: 1.65;
+      max-width: 62ch;
+      margin-bottom: 24px;
+      line-height: 1.7;
+      font-size: 1.02rem;
+    }
+    .recognition-intro strong { color: var(--text); font-weight: 600; }
+    /* Summary stat strip */
+    .award-stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin: 4px 0 28px;
+    }
+    .award-stat {
+      flex: 1 1 120px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+    }
+    .award-stat .num {
+      font-family: "Fraunces", Georgia, serif;
+      font-size: 1.7rem;
+      color: var(--text);
+      line-height: 1.1;
+    }
+    .award-stat .lbl {
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      margin-top: 4px;
+    }
+    .recognition-note {
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      max-width: 62ch;
+      line-height: 1.6;
     }
     .recognition-back {
       display: inline-block;
@@ -68,7 +101,19 @@
 
       <section class="content-section">
         <p class="recognition-intro">
-          Intuit's Spotlight Recognition program is the company's peer-to-peer recognition platform (powered by Workhuman). Award tiers in increasing order of impact: Applause &lt; Acclaim &lt; Encore &lt; Salute &lt; Bravo. The screenshots below are the actual recognition emails, lightly sanitized to remove redemption codes and internal contact links.
+          <strong>16 Spotlight awards over the last ~26 months</strong> — from my manager and a director, and from partner teams across Intuit and other orgs. Most of them cluster around two stretches of work: keeping notifications healthy through the tax peaks, and the launches that came out of modernizing the notification authoring stack (voice first, then SMS). The rest are for the less glamorous moments — a late-night prod-promotion fix, debugging another team's templates that had them stuck for days, and helping a US team find their way around the platform.
+        </p>
+
+        <div class="award-stats">
+          <div class="award-stat"><div class="num">16</div><div class="lbl">awards total</div></div>
+          <div class="award-stat"><div class="num">3</div><div class="lbl">Bravo (top tier)</div></div>
+          <div class="award-stat"><div class="num">2</div><div class="lbl">Salute</div></div>
+          <div class="award-stat"><div class="num">8</div><div class="lbl">Encore</div></div>
+          <div class="award-stat"><div class="num">3</div><div class="lbl">Acclaim &amp; Applause</div></div>
+        </div>
+
+        <p class="recognition-note">
+          Spotlight is Intuit's peer-to-peer recognition program. Tiers run, in increasing order of impact: Applause &lt; Acclaim &lt; Encore &lt; Salute &lt; Bravo. Every card below is the original recognition email, lightly sanitized to drop redemption codes and internal links.
         </p>
       </section>
 
@@ -235,11 +280,6 @@
         </div>
       </section>
 
-      <section class="content-section" style="margin-top: 40px;">
-        <p style="color: #8b9bb4; font-size: 0.9rem;">
-          Each card above is rendered from the original Intuit Spotlight Recognition email body, with the redemption code, redeem URL, "Say Thanks" mailto link, and expiry date removed.
-        </p>
-      </section>
     </article>
   </main>
 
