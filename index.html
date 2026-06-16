@@ -19,8 +19,13 @@
   <main class="docs-main-content">
     <article class="article overview-page">
       <section class="hero hero-chat">
-        <p class="hero-eyebrow">Platform &amp; Distributed Systems · 12+ years</p>
-        <h1>Anubhav Shrivastava</h1>
+        <div class="hero-head">
+          <img class="hero-avatar" src="/assets/avatar.jpg" alt="Anubhav Shrivastava" width="88" height="88" data-basepath-src="true" />
+          <div class="hero-head-text">
+            <p class="hero-eyebrow">Platform &amp; Distributed Systems · 12+ years</p>
+            <h1>Anubhav Shrivastava</h1>
+          </div>
+        </div>
         <p class="hero-lead">
           Ask anything about my work — the platforms I've owned, the decisions and trade-offs behind them, the systems I've built. The assistant answers from my full portfolio.
         </p>
@@ -74,6 +79,11 @@
     document.querySelectorAll('[data-basepath="true"]').forEach(link => {
       const href = link.getAttribute('href');
       link.setAttribute('href', window.BASE_PATH + href.replace(/^\//, ''));
+    });
+
+    document.querySelectorAll('img[data-basepath-src="true"]').forEach(img => {
+      const src = img.getAttribute('src');
+      img.setAttribute('src', window.BASE_PATH + src.replace(/^\//, ''));
     });
 </script>
   <script src="/js/assistant.js" defer></script>

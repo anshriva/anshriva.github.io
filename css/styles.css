@@ -156,6 +156,36 @@ main {
   margin-bottom: 0.75rem;
 }
 
+.hero-head {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  margin-bottom: 1.25rem;
+}
+
+.hero-avatar {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 2px solid var(--border);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+}
+
+.hero-head-text .hero-eyebrow {
+  margin-bottom: 0.4rem;
+}
+
+.hero-head-text h1 {
+  margin: 0;
+}
+
+@media (max-width: 600px) {
+  .hero-head { gap: 0.85rem; }
+  .hero-avatar { width: 64px; height: 64px; }
+}
+
 .hero h1 {
   font-family: var(--font-display);
   font-size: clamp(2.2rem, 5vw, 3.2rem);
@@ -1458,12 +1488,38 @@ body.layout-docs .page-status {
   border-bottom-right-radius: 5px;
 }
 
-.ask-msg.bot {
+/* Bot + typing render as "AI Anubhav": avatar beside a bubble body. The wrapper
+   itself is transparent; the bubble styling lives on .ask-msg-body. */
+.ask-msg.bot,
+.ask-msg.typing {
   align-self: flex-start;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+.ask-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  margin-top: 1px;
+  border: 1px solid var(--border);
+}
+
+.ask-msg-body {
+  flex: 1;
+  min-width: 0;
   background: var(--bg-elevated);
   color: var(--text);
   border: 1px solid var(--border);
+  border-radius: 14px;
   border-bottom-left-radius: 5px;
+  padding: 0.7rem 0.95rem;
 }
 
 .ask-msg.bot p {
@@ -1488,13 +1544,12 @@ body.layout-docs .page-status {
   color: var(--accent);
 }
 
-.ask-msg.typing {
-  align-self: flex-start;
+.ask-msg.typing .ask-msg-body {
   color: var(--text-muted);
   font-style: italic;
   background: transparent;
   border: none;
-  padding-left: 0.2rem;
+  padding: 0.3rem 0;
 }
 
 .ask-msg.error {

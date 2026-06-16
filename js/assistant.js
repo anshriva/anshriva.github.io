@@ -8,6 +8,7 @@
 
   // ---- Config -------------------------------------------------------------
   const WORKER_URL = 'https://portfolio-bot.anubhav-workemail.workers.dev';
+  const AVATAR_URL = (window.BASE_PATH || '/') + 'assets/avatar.jpg';
 
   const SUGGESTIONS = [
     'Walk me through the authoring-stack redesign',
@@ -89,11 +90,30 @@
   function addMsg(text, kind) {
     const el = document.createElement('div');
     el.className = 'ask-msg ' + kind;
-    if (kind === 'bot') el.innerHTML = renderText(text);
-    else el.textContent = text;
+    // Bot and typing messages render as "AI Anubhav" — avatar + a bubble body.
+    if (kind === 'bot' || kind === 'typing') {
+      const av = document.createElement('img');
+      av.className = 'ask-avatar';
+      av.src = AVATAR_URL;
+      av.alt = '';
+      av.setAttribute('aria-hidden', 'true');
+      const body = document.createElement('div');
+      body.className = 'ask-msg-body';
+      if (kind === 'bot') body.innerHTML = renderText(text);
+      else body.textContent = text;
+      el.appendChild(av);
+      el.appendChild(body);
+    } else {
+      el.textContent = text;
+    }
     log.appendChild(el);
     log.scrollTop = log.scrollHeight;
     return el;
+  }
+
+  // The streamed text target inside a bot message (the bubble, not the avatar).
+  function msgBody(el) {
+    return el.querySelector('.ask-msg-body') || el;
   }
 
   function addSuggestions() {
@@ -177,7 +197,7 @@
         const { done, value } = await reader.read();
         if (done) break;
         full += decoder.decode(value, { stream: true });
-        botEl.innerHTML = renderText(full);
+        msgBody(botEl).innerHTML = renderText(full);
         log.scrollTop = log.scrollHeight;
       }
       if (full.trim()) {
@@ -186,7 +206,7 @@
         history.push({ role: 'user', text: question });
         history.push({ role: 'model', text: full });
       } else {
-        botEl.innerHTML = renderText("Sorry, I couldn't generate an answer just now. Reach Anubhav at anubhav.workemail@gmail.com.");
+        msgBody(botEl).innerHTML = renderText("Sorry, I couldn't generate an answer just now. Reach Anubhav at anubhav.workemail@gmail.com.");
       }
     } catch (err) {
       typing.remove();
