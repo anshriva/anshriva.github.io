@@ -8,7 +8,24 @@ _Section: Intuit · Notifications Platform — source: /work/intuit/recognition.
 
 Verbatim citations from the original Spotlight emails
 
-Intuit's Spotlight Recognition program is the company's peer-to-peer recognition platform (powered by Workhuman). Award tiers in increasing order of impact: Applause < Acclaim < Encore < Salute < Bravo. The screenshots below are the actual recognition emails, lightly sanitized to remove redemption codes and internal contact links.
+16 Spotlight awards over the last ~26 months — from my manager and a director, and from partner teams across Intuit and other orgs. Most of them cluster around two stretches of work: keeping notifications healthy through the tax peaks, and the launches that came out of modernizing the notification authoring stack (voice first, then SMS). The rest are for the less glamorous moments — a late-night prod-promotion fix, debugging another team's templates that had them stuck for days, and helping a US team find their way around the platform.
+
+16
+awards total
+
+3
+Bravo (top tier)
+
+2
+Salute
+
+8
+Encore
+
+3
+Acclaim & Applause
+
+Spotlight is Intuit's peer-to-peer recognition program. Tiers run, in increasing order of impact: Applause < Acclaim < Encore < Salute < Bravo. Every card below is the original recognition email, lightly sanitized to drop redemption codes and internal links.
 
 ## Bravo & Salute tier — 5 awards
 
@@ -180,6 +197,4 @@ September 6, 2025
 Deployment FMH 
 Thanks for all the inputs during deployments on AIR.
 Applause (non-cash) Award
-INR 1000 
-
-Each card above is rendered from the original Intuit Spotlight Recognition email body, with the redemption code, redeem URL, "Say Thanks" mailto link, and expiry date removed.
+INR 1000

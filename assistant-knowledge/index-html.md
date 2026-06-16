@@ -2,6 +2,8 @@
 
 _Section: Start — source: /index.html_
 
+[diagram: Anubhav Shrivastava] 
+
 Platform & Distributed Systems · 12+ years
 
 # Anubhav Shrivastava
@@ -9,7 +11,7 @@ Platform & Distributed Systems · 12+ years
 Ask anything about my work — the platforms I've owned, the decisions and trade-offs behind them, the systems I've built. The assistant answers from my full portfolio.
 
 Or read the overview → 
-Resume 
+Résumé 
 
 ## If you're scanning
 
@@ -21,7 +23,7 @@ Resume
 
 - SMS was handed over to me after the high-volume sign-in traffic was already stable. I've spent that chapter onboarding new teams onto the channel, adding two-way replies, and being the person on the pager when something with a vendor breaks. 
 
-- Two tax seasons in a row, the services I own went through the busiest weeks of the year at 100% availability, with zero customer-visible incidents. Senior leadership recognised the work with peer awards at the two highest tiers — citations on the Recognition page. 
+- Two tax seasons in a row, the services I own went through the busiest weeks of the year at 100% availability, with zero customer-visible incidents. Senior leadership recognised the work with peer awards at the two highest tiers — citations on the Recognition page . 
 
 ## Before Intuit
 
