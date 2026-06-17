@@ -63,6 +63,16 @@ Conventions for the assistant (they mirror the portfolio's own rules):
 3. In the Cloudflare dashboard: **AI → AI Search → `anubhav-portfolio` → Items → Upload files**, upload the regenerated `.md` files (replacing the old ones), and wait for them to show **Indexed**.
 4. No Worker redeploy needed — only the index changed. Test with a question about the edited content.
 
+## Analytics
+
+Visitor/click analytics run on **GoatCounter** (privacy-first, cookieless — **no consent banner needed**). Free hosted instance `anshriva` at `https://anshriva.goatcounter.com` (the dashboard is currently **public**; toggle under Settings → "Show public statistics").
+
+- **All logic lives in `js/analytics.js`** — one shared file. It injects GoatCounter's `count.js` (auto-counts the pageview) and adds a single delegated click listener that records custom events: `nav-*` (sidebar topic clicks), `btn-*` (`.btn` CTAs), `chat-chip-*` (suggestion chips), `chat-immersive-toggle`, and `outbound-*` (mailto/external links). The **only config is the `ENDPOINT` constant** at the top — it's absolute, so the file is depth-independent.
+- **Loaded once per page** via `<script src="…/js/analytics.js">` before `</head>` on all 21 HTML pages. There's no shared `<head>`, so the src path is **depth-relative**: `/js/…` on `index.html`, `js/…` on `resume.html`, `../js/…` on `work/youtube.html`, `../../js/…` on the `work/*/*` topic pages. **If you add a new page, add this loader line with the correct relative depth.**
+- **Chat usage** is tracked by a `window.trackEvent('chat-question')` call in `js/assistant.js` (top of `ask()`). It fires on every question (typed or chip) but **sends no question text** — count only, by design.
+- **Localhost is ignored by default** (GoatCounter skips localhost/`file://` to keep prod stats clean). The opt-in `allow_local` block in `analytics.js` is **commented out**; uncomment those four lines to count local testing, re-comment before relying on prod numbers. Events appear in the same "Pages" list on the dashboard (filter by `chat`/`btn`/`nav` prefix).
+- **No re-index / no Worker redeploy** — analytics is JS + markup only, not portfolio content. Editing it does **not** require refreshing the assistant's knowledge index. It deploys with the rest of the site on push to `main` (GitHub Pages); GoatCounter itself needs no deploy step.
+
 ## Content conventions (load-bearing for the Intuit section)
 
 The Intuit pages are the active pitch artifact—the evidence for a Staff Engineer role. Several conventions emerged from iterative work and should be maintained.

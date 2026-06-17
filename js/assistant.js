@@ -151,6 +151,8 @@
 
   // ---- Network ------------------------------------------------------------
   async function ask(question) {
+    // Count assistant usage (no question text is sent — just that one was asked).
+    if (window.trackEvent) window.trackEvent('chat-question', 'Chat question');
     addMsg(question, 'user');
     pending = true;
     sendBtn.disabled = true;
