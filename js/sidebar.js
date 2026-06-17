@@ -41,7 +41,7 @@
     parts.push("</nav>");
     parts.push(
       '<div class="sidebar-footer">' +
-        `<a href="${window.BASE_PATH}resume.html">Resume</a>` +
+        `<a href="${window.BASE_PATH}resume.html">Résumé</a>` +
         `<a href="${window.BASE_PATH}work/youtube.html">YouTube</a>` +
         '<a href="https://www.linkedin.com/in/anubhavsri" target="_blank" rel="noopener">LinkedIn ↗</a>' +
         '<button class="theme-toggle" title="Toggle theme"></button>' +
