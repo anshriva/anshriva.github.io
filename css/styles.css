@@ -311,6 +311,229 @@ main {
   font-weight: 500;
 }
 
+/* Career timeline diagram (homepage) — bars scaled to tenure on a real year axis */
+.timeline-diagram {
+  margin: 0 0 2rem;
+}
+
+/* Bars butt together into one continuous track; only the outer ends are rounded */
+.tl-bars {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+}
+
+.tl-bar {
+  position: relative;
+  flex-basis: 0;
+  min-width: 0;
+  height: 56px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.1rem;
+  padding: 0 0.4rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-left-width: 0;
+  font: inherit;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.tl-bar:first-child {
+  border-left-width: 1px;
+  border-radius: 8px 0 0 8px;
+}
+
+.tl-bar:last-child {
+  border-radius: 0 8px 8px 0;
+}
+
+.tl-bar:hover:not(.is-active) {
+  background: var(--bg-card);
+  border-color: var(--accent-dim);
+}
+
+.tl-bar:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  z-index: 1;
+}
+
+.tl-bar.is-active {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.tl-name {
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* Year range lives inside each segment, tied to the company name */
+.tl-range {
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.tl-bar.is-active .tl-name,
+.tl-bar.is-active .tl-range {
+  color: var(--bg);
+}
+
+/* Chevron hints that each segment expands a panel below */
+.tl-chev {
+  position: absolute;
+  top: 3px;
+  right: 6px;
+  font-size: 0.85rem;
+  line-height: 1;
+  color: var(--text-muted);
+  opacity: 0.65;
+  transition: opacity 0.15s, color 0.15s;
+}
+
+.tl-bar:hover .tl-chev {
+  opacity: 1;
+  color: var(--accent-dim);
+}
+
+.tl-bar.is-active .tl-chev {
+  color: var(--bg);
+  opacity: 0.9;
+}
+
+/* "Pick a company" helper above the timeline */
+.tl-hint {
+  margin: 0 0 0.6rem;
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+}
+
+/* Chapter header above the Intuit work cards */
+.chapter-head {
+  margin-bottom: 1.1rem;
+}
+
+.chapter-head h3 {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  margin: 0 0 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.chip-now {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--bg);
+  background: var(--accent);
+  border-radius: 999px;
+  padding: 0.18rem 0.55rem;
+}
+
+.chip-past {
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.16rem 0.6rem;
+}
+
+.chapter-foot {
+  margin: 1.25rem 0 0;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.chapter-head p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+@media (max-width: 560px) {
+  .tl-name {
+    font-size: 0.78rem;
+  }
+  .tl-range {
+    font-size: 0.64rem;
+  }
+}
+
+/* Compact scannable card grid (homepage highlights / pre-Intuit history) */
+.scan-grid {
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.scan-grid .card {
+  padding: 1.1rem 1.25rem;
+}
+
+.scan-grid .card p {
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.scan-grid .card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.scan-grid .card-link {
+  margin-top: 0.75rem;
+}
+
+/* Whole-card links */
+a.card {
+  text-decoration: none;
+  color: inherit;
+}
+
+a.card:hover {
+  border-color: var(--accent);
+}
+
+.card-arrow {
+  color: var(--text-muted);
+  font-weight: 400;
+  transition: color 0.15s, transform 0.15s;
+}
+
+a.card:hover .card-arrow {
+  color: var(--accent);
+  transform: translateX(2px);
+}
+
 /* Impact stats */
 .stats-row {
   display: grid;
