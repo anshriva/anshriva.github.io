@@ -8,12 +8,12 @@ _Section: Intuit · Notifications Platform — source: /work/intuit/recognition.
 
 Verbatim citations from the original Spotlight emails
 
-16 Spotlight awards over the last ~26 months — from my manager and a director, and from partner teams across Intuit and other orgs. Most of them cluster around two stretches of work: keeping notifications healthy through the tax peaks, and the launches that came out of modernizing the notification authoring stack (voice first, then SMS). The rest are for the less glamorous moments — a late-night prod-promotion fix, debugging another team's templates that had them stuck for days, and helping a US team find their way around the platform.
+17 Spotlight awards over the last ~26 months — from my manager and a director, and from partner teams across Intuit and other orgs. Most of them cluster around two stretches of work: keeping notifications healthy through the tax peaks, and the launches that came out of modernizing the notification authoring stack (voice first, then SMS) and onboarding new consumer teams onto it. The rest are for the less glamorous moments — a late-night prod-promotion fix, debugging another team's templates that had them stuck for days, and helping a US team find their way around the platform.
 
-16
+17
 awards total
 
-3
+4
 Bravo (top tier)
 
 2
@@ -27,9 +27,19 @@ Acclaim & Applause
 
 Spotlight is Intuit's peer-to-peer recognition program. Tiers run, in increasing order of impact: Applause < Acclaim < Encore < Salute < Bravo. Every card below is the original recognition email, lightly sanitized to drop redemption codes and internal links.
 
-## Bravo & Salute tier — 5 awards
+## Bravo & Salute tier — 6 awards
 
 The two highest tiers. Bravo (₹20K) and Salute (₹10K) are reserved for impact recognised by senior leadership.
+
+Sheetal Sureka Spotlighted You 
+
+Stronger Together
+July 2, 2026
+
+Launch of CK SMS notifications through OINP 
+Team, congratulations on enabling the first CK notification use case for SMS live on OINP. While this was a primarily onboarding use case, it took months of collaboration to take care of nuances on their data compliance policies, consent handling and enabling integration of CK use case with OINP. You worked through multiple hurdles wrt setting up advanced consent messages, live testing sessions with the CK team and meticulously ensuring we segregate billing accounts for CK, paving the path for a chargeback model. This was slow and steady work over 2 quarters and we have now unlocked a path for growing OINP to 4x its current capacity with CK traffic slowing migrating over. Keep up the excellent work!
+Bravo (non-cash) Award
+INR 20000 
 
 Sheetal Sureka Spotlighted You 
 

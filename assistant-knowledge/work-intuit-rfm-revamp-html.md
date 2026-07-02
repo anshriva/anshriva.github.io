@@ -8,23 +8,41 @@ Status: ready
 
 Topic · Intuit · 13 months · Lead engineer
 
-## The architectural trap: two incompatible workloads in one system
+## The architectural trap: two opposite workloads forced through one database
 
-In 2024, Intuit's Notifications Authoring Portal—used by teams at QuickBooks, TurboTax, Mailchimp, Credit Karma, and 10+ other products to configure Email, SMS, Voice, RCS, Push, and Tray notifications—was built with a fundamental mismatch that was invisible to casual observers but catastrophic at scale.
+In 2024, Intuit's Notifications Authoring Portal—used by teams at QuickBooks, TurboTax, Mailchimp, Credit Karma, and 10+ other products to configure Email, SMS, Voice, RCS, Push, and Tray notifications—was built on a mismatch that was invisible to casual observers but catastrophic at scale.
 
-The setup: A single DynamoDB database stored a hierarchy of entities: Offerings (products) → Services (team groupings) → Notifications → Message Templates. Simple structure, single schema, one place to look. Seemed efficient.
+The defining property of this domain is asymmetry : a notification is authored rarely—a team configures it once, occasionally edits it—but delivered constantly, at 2,000+ TPS, to real customers. Authoring is low-throughput and correctness-critical. Delivery is high-throughput and revenue-critical. One careless authoring change doesn't affect one record; it fans out to millions of deliveries. The blast radius of any mistake is multiplied by the read amplification.
 
-The trap: The database was trying to satisfy two completely opposite workloads simultaneously.
+The setup: A single DynamoDB database stored a hierarchy of entities: Offerings (products) → Services (team groupings) → Notifications → Message Templates. One schema, one place to look. It seemed efficient.
 
-Authoring (where teams build notifications) requires ACID transactions, complex joins across the hierarchy, flexible schema evolution. When a team adds a field—a description, a retry policy, a translation workflow—the database needs to absorb it without blocking other teams. This is a low-throughput system optimized for correctness.
+### Why a database swap wouldn't have fixed it
 
-Delivery (where notifications execute at 2,000+ TPS) requires the opposite: pre-computed, denormalized data with zero joins. At 2,000 TPS, a single join doubles latency. This is a high-throughput system optimized for speed.
+The easy framing was "we picked the wrong database; which one should we use instead?" That framing is a trap. The data model (key-value vs. relational) is only one axis, and it's independent of the axis that was actually hurting us: coupling . A single shared database meant authoring and delivery were forced into one schema, one failure domain, and one access/control plane —regardless of which database engine sat underneath. Swapping engines doesn't change that; separation does.
 
-Optimizing DynamoDB for authoring (flexible schema, complex queries) made delivery slower. Optimizing for delivery (flat denormalized data) made authoring fragile. The system was being pulled in two directions simultaneously, and every change in one direction broke something in the other.
+And the two workloads pulled the schema in genuinely opposite directions:
 
-The real cost: Changes to authoring schemas rippled into delivery and caused production incidents. Database maintenance (scaling, schema changes, table locks) on the authoring side threatened delivery SLA. Teams couldn't evolve independently. Each notification channel (voice, SMS, email, RCS, Push, Tray) had different field semantics and constraints, forcing schema compromises everywhere.
+Authoring is a relational problem. The hierarchy has real referential integrity—a template belongs to a notification, which belongs to a service, which belongs to an offering—and editing it safely requires transactions across those entities. It also accretes concerns over time: descriptions, retry policies, access control, localization and translation workflows, channel-specific validation. It wants a flexible, normalized, evolving schema. DynamoDB was the wrong tool for this half: integrity the engine couldn't enforce had to be hand-rolled in application code.
 
-The system served 10,000 notifications across 800 services owned by 10+ teams. Downtime was unacceptable. A "rip and replace" rebuild wasn't an option.
+Delivery wants the exact opposite: pre-computed, denormalized data with zero joins, read at 2,000+ TPS. At that volume a single join is a latency tax on every delivery. It needs a flat record it can fetch in one shot—and it needs almost none of authoring's concerns (it doesn't care about translation workflows or authoring permissions).
+
+Optimizing the shared store for authoring made delivery slower. Optimizing it for delivery made authoring fragile. The system was pulled both ways at once, and every change in one direction broke something in the other.
+
+### One database meant one blast radius
+
+Because authoring and delivery shared a schema, a failure domain, and an access plane, problems crossed a boundary that should never have existed. We were repeatedly burned by the same class of incident:
+
+- Schema changes rippled into delivery. An authoring-side change to a field as innocuous as a description could break the delivery read path, because delivery was reading the same columns authoring was editing. 
+
+- Authoring access control leaked into the read path. Adding authorization to authoring operations caused delivery read calls to start failing with 401/403—delivery had no business carrying authoring's access logic, but a shared plane gave it no choice. 
+
+- Maintenance threatened the SLA. Scaling, schema changes, and table locks on the authoring side stalled delivery reads. Routine authoring operations put a revenue-critical, 2,000+ TPS path at risk. 
+
+- Nobody could safely remove anything. We couldn't drop a stale column or refactor the schema, because we didn't know which consumer—authoring or delivery—depended on it. The schema had become an undocumented shared contract that no one could change with confidence. 
+
+Each notification channel (Voice, SMS, Email, RCS, Push, Tray) compounded this: each has different field semantics and constraints, and a single shared schema forced compromises that optimized for none of them.
+
+The system served 10,000 notifications across 800 services owned by 10+ teams. Downtime was unacceptable, and a "rip and replace" rebuild wasn't an option. The problem wasn't to find a better database—it was to separate two bounded contexts that should never have shared one , without the live revenue path ever noticing.
 
 ## Why this was genuinely hard
 

@@ -1,4 +1,4 @@
-# Resume
+# Résumé
 
 _Section: Start — source: /resume.html_
 
@@ -20,7 +20,7 @@ SCOPE & RECOGNITION
 
 - Five distinct ownership chapters on one platform, each on its own terms — lead engineer (authoring redesign), capability owner (two-way messaging), post-handover steward (SMS), platform owner (notification tray), solo build (platform search) — plus tax-peak readiness and the cross-org integration surface (single escalation point for partner teams across 10+ products). 
 
-- Senior-leadership recognition — 16 Spotlight awards in tenure, including all five at the two highest tiers (Bravo and Salute): TY25 tax peak (Salute, Sheetal Sureka GEM, Apr 2026) · TY24 tax peak (Bravo, Shanti Kuropati Director, May 2025) · SMS launch on the new stack (Bravo, Sheetal, Dec 2025) · Voice launch on the new stack (Bravo, Sheetal, Nov 2025) · Credit Karma Critical Money Alerts (Salute, Anand Abhyankar, Apr 2026). Includes the Lightning Award (fastest GenAI hackathon POC, Nov 2025). 
+- Senior-leadership recognition — 17 Spotlight awards in tenure, including all six at the two highest tiers (Bravo and Salute): Credit Karma SMS launch on the platform (Bravo, Sheetal Sureka GEM, Jul 2026) · TY25 tax peak (Salute, Sheetal, Apr 2026) · TY24 tax peak (Bravo, Shanti Kuropati Director, May 2025) · SMS launch on the new stack (Bravo, Sheetal, Dec 2025) · Voice launch on the new stack (Bravo, Sheetal, Nov 2025) · Credit Karma Critical Money Alerts (Salute, Anand Abhyankar, Apr 2026). Includes the Lightning Award (fastest GenAI hackathon POC, Nov 2025). 
 
 EXPERIENCE
 

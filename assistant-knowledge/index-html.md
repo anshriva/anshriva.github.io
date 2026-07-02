@@ -13,20 +13,104 @@ Ask anything about my work — the platforms I've owned, the decisions and trade
 Or read the overview → 
 Résumé 
 
-## If you're scanning
+Pick a company to see that chapter ↓ 
 
-- I led a 13-month redesign of the authoring side of the platform — the part product teams use to configure notifications — and moved all the traffic over to the new stack before tax season hit. 
+⌄ 
+Adobe 
+2014–16 
 
-- I'm the owner of the in-product inbox (the bell icon inside Intuit products). I've been the single point of contact on it since 2024 — teams come to me to integrate, and I run its reliability. 
+⌄ 
+Yatra 
+2016–19 
 
-- I built a two-way messaging capability on the platform so users can reply to a notification and the right team gets the reply. RCS is the first channel it carries; SMS is the second. 
+⌄ 
+Microsoft 
+2019–24 
 
-- SMS was handed over to me after the high-volume sign-in traffic was already stable. I've spent that chapter onboarding new teams onto the channel, adding two-way replies, and being the person on the pager when something with a vendor breaks. 
+⌄ 
+Intuit 
+2024–now 
 
-- Two tax seasons in a row, the services I own went through the busiest weeks of the year at 100% availability, with zero customer-visible incidents. Senior leadership recognised the work with peer awards at the two highest tiers — citations on the Recognition page . 
+### Intuit Now · 2+ yrs 
 
-## Before Intuit
+Senior Software Engineer on the company-wide notification platform — two tax seasons under my ownership closed at 100% availability with zero customer-visible incidents. Five ownership chapters:
 
-Five years at Microsoft (2019–2024) on the Graph Connectors team. I joined when the project was still at the ideation stage and grew from founding engineer to lead of the connectors domain, with a small team under me. The work was building the connectors that crawl enterprise data into Microsoft's indexes, and the architecture bet behind them: one connector codebase that runs in the cloud or on a customer's on-prem agent, with only the orchestration layer differing. Around ten connectors shipped to GA across database engines, file shares, Azure DevOps, and the web. It's written up in the Graph Connectors pages in the left nav.
+Authoring redesign → 
 
-Before that, Yatra (2016–2019), where I replaced the third-party tool the bus business used to aggregate supplier inventory with an in-house service the company still routes vendor calls through, and — after a promotion to Senior Engineer — owned the bus and train slices of a live booking-database migration. It's written up in the left nav. Earlier, code signing at Adobe (2014–2016), my first job out of college — centralizing the product-signing keys out of every team into one approve-and-sign service. The resume has the full timeline.
+Led a 13-month redesign of the platform's authoring side and migrated all traffic to the new stack before tax season.
+
+In-product inbox → 
+
+Owner of the bell-icon inbox inside Intuit products — single point of contact for integration and reliability since 2024.
+
+Two-way messaging → 
+
+Built reply-to-a-notification routing on the platform. RCS is the first channel it carries; SMS is the second.
+
+SMS ownership → 
+
+Took over SMS after sign-in traffic stabilized — onboarding teams, adding replies, and on the pager for vendor incidents.
+
+Platform search → 
+
+Added full-text discovery across the platform's notifications — shipped with zero incidents.
+
+Recognition → 
+
+Peer awards at the two highest tiers for the work across these chapters.
+
+The full platform scope & role → 
+
+### Microsoft 2019–2024 · 5 yrs 
+
+Graph Connectors — founding engineer to lead of the connectors domain, with a small team.
+
+Cloud / on-prem parity → 
+
+One connector codebase that runs in the cloud or on a customer's on-prem agent — only the orchestration layer differs.
+
+Connector portfolio → 
+
+Around ten connectors reached GA across database engines, file shares, Azure DevOps, and the web.
+
+Access control → 
+
+Mapped every source's permissions onto one identity model so indexed results stay correctly access-trimmed.
+
+On-prem agent → 
+
+The agent that runs connectors inside a customer's network — built for operability and scale.
+
+The full Graph Connectors scope, role & arc → 
+
+### Yatra 2016–2019 · 2.5 yrs 
+
+Software Engineer → Senior Engineer — bus & trains, then the booking data platform.
+
+Vendor aggregation → 
+
+Replaced the third-party SOAP tool the bus business used to aggregate supplier inventory with an in-house service still in use.
+
+B2B trains rebuild → 
+
+Gutted the legacy agent-facing "My Bookings" trains view — backend and front — that had grown into 2,000–3,000-line methods.
+
+Booking-health alerting → 
+
+Built booking-health alerting — bookings per hour across bus and trains — where the company had none before.
+
+Booking data migration → 
+
+After a promotion to Senior Engineer, owned the bus and train slices of a live booking-database migration.
+
+The full Yatra overview → 
+
+### Adobe 2014–2016 · 2 yrs 
+
+Software Engineer — code signing. First job out of college.
+
+Centralizing code signing → 
+
+Centralized the product-signing keys out of every team into one approve-and-sign service that gated every build before it shipped.
+
+The resume has the full timeline.
